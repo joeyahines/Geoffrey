@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import sessionmaker
 
 engine = create_engine('sqlite:///:memory:', echo=True)
@@ -15,18 +15,28 @@ least he knows where your bases are.'''
 
 bot = commands.Bot(command_prefix=command_prefix , description=description)
 
+class Player(SQL_Base):
+	__tablename__ = 'Players'
+	in_game_name = Column(String, primary_key=True)
+	
+	def __init__(self,name) :
+		self.in_game_name = name
+	
+
 class Location(SQL_Base):
 	__tablename__ = 'Locations'
 	name = Column(String, primary_key=True)
 	x = Column(Integer)
 	y = Column(Integer)
 	z = Column(Integer)
+	owner = Column(String, ForeignKey('Players.in_game_name'))
 	
-	def __init__(self,args) :
+	def __init__(self,args,owner) :
 		self.name = args[0]
 		self.x = int(args[1])
 		self.y = int(args[2])
 		self.z = int(args[3])
+		self.owner = owner
 
 	def  posToStr(self) :
 		return '(x=' + str(self.x) + ', y=' + str(self.y) + ', z=' + str(self.z) + ')' 
@@ -49,7 +59,7 @@ async def on_ready():
 
 @bot.command()
 async def test():
-	'''Check if the bot is alive'''
+	'''Check if the bot is alive.'''
 	await bot.say('I\'m here you ding dong')
 
 @bot.command(pass_context=True)
@@ -57,7 +67,10 @@ async def addbase(ctx, * args):
 	'''Add your base to the database.'''
 	if (len(args) == 4) :
 		try:
-			base = Location(args)
+			owner = Player(str(ctx.message.author.nick))
+			base = Location(args,owner.in_game_name)
+			
+			session.add(owner)
 			session.add(base)
 			await bot.say('{}, your base named {} located at {} has been added'
 				' to the database.'.format(ctx.message.author.mention, base.name, base.posToStr()))
@@ -71,12 +84,17 @@ async def addbase(ctx, * args):
 @bot.command(pass_context=True)			
 async def findbase(ctx, * args):
 	'''Allows you to find a base in the database.'''
-	base = session.query(Location).filter_by(name=args[0]).first()
-	if (base is not None) :
-		await bot.say('{}, {} is located at {}.'.format(ctx.message.author.mention, base.name, base.posToStr()))
+	if (len(args) > 0) :
+		
+		base = session.query(Location).filter_by(owner=args[0]).first()
+		if (base is not None) :
+			await bot.say('{}, {}\'s base named {} is located at {}.'.format(ctx.message.author.mention, base.owner ,base.name, base.posToStr()))
+		else :
+			await bot.say('{}, {} is not in the database'.format(ctx.message.author.mention, args[0]))
 	else :
-		await bot.say('{}, {} is not in the database'.format(ctx.message.author.mention, args[0]))
-				
+		await bot.say('Allows you to add your base location to the database. '
+			'Syntax: ?findbase [Base Name] ')
+	
 #Bot Startup ******************************************************************	
 try :
 	file = open('token.dat','r')
