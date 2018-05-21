@@ -15,14 +15,14 @@ class Location:
 	y = 0;
 	z = 0;
 	
-	def __init__(self,str) :
-		try:
-			name = args[0]
-			x = int(args[1])
-			y = int(args[2])
-			z = int(args[3])
-		except ValueError:
-			raise parseError
+	def __init__(self,args) :
+		self.name = args[0]
+		self.x = int(args[1])
+		self.y = int(args[2])
+		self.z = int(args[3])
+
+	def  posToStr(self) :
+		return '(x=' + str(self.x) + ', y=' + str(self.y) + ', z=' + str(self.z) + ')' 
 			
 			
 	
@@ -40,10 +40,11 @@ async def test():
 
 @bot.command(pass_context=True)
 async def addBase(ctx, * args):
-	if (len(args) > 0) :
+	if (len(args) == 4) :
 		try:
-			base = location(args)
-		except parseError:
+			base = Location(args)
+			await bot.say('{}, your base named {} located at {} has been added to the database.'.format(ctx.message.author.mention, base.name, base.posToStr()))
+		except ValueError:
 			await bot.say('Invalid syntax, try again (?addbase [name] [x coord] [z coord])')
 			
 	else :
