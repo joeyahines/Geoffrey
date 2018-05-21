@@ -9,7 +9,23 @@ least he knows where your bases are.'''
 
 bot = commands.Bot(command_prefix=command_prefix , description=description)
 
-playing = 'Waiting for you to type ''?'''
+class Location:
+	name = ''
+	x = 0;
+	y = 0;
+	z = 0;
+	
+	def __init__(self,str) :
+		try:
+			name = args[0]
+			x = int(args[1])
+			y = int(args[2])
+			z = int(args[3])
+		except ValueError:
+			raise parseError
+			
+			
+	
 
 @bot.event
 async def on_ready():
@@ -26,14 +42,11 @@ async def test():
 async def addBase(ctx, * args):
 	if (len(args) > 0) :
 		try:
-			name = args[0]
-			x = int(args[1])
-			z = int(args[2])
-			await bot.say('{}, your base named {} located at (x={},z={}) has been added to the database.'.format(ctx.message.author.mention, name, x, z))
-		except ValueError:
+			base = location(args)
+		except parseError:
 			await bot.say('Invalid syntax, try again (?addbase [name] [x coord] [z coord])')
 			
 	else :
 		await bot.say('Allows you to add your base location to the database. Syntax: ?addbase [Base Name] [X Cordinate] [Z Cordinate]')
-	
+
 bot.run(TOKEN)
