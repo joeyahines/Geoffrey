@@ -11,13 +11,18 @@ SQL_Base = declarative_base()
 TOKEN = ''
 command_prefix = '?'
 description = '''Geoffrey is an inside joke none of you will understand, at 
-least he knows where your bases are.'''
+least he knows where your bases are.
+
+Please respect Geoffrey, the bot is very sensitive.
+'''
 
 bot = commands.Bot(command_prefix=command_prefix , description=description)
 
 class Player(SQL_Base):
 	__tablename__ = 'Players'
-	in_game_name = Column(String, primary_key=True)
+	
+	id = Column(Integer, primary_key=True)
+	in_game_name = Column(String)
 	
 	def __init__(self,name) :
 		self.in_game_name = name
@@ -25,7 +30,8 @@ class Player(SQL_Base):
 
 class Location(SQL_Base):
 	__tablename__ = 'Locations'
-	name = Column(String, primary_key=True)
+	id = Column(Integer, primary_key=True)
+	name = Column(String)	
 	x = Column(Integer)
 	y = Column(Integer)
 	z = Column(Integer)
@@ -64,7 +70,9 @@ async def test():
 
 @bot.command(pass_context=True)
 async def addbase(ctx, * args):
-	'''Add your base to the database.'''
+	'''Add your base to the database.
+		?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate]
+	'''
 	if (len(args) == 4) :
 		try:
 			owner = Player(str(ctx.message.author.nick))
@@ -72,6 +80,7 @@ async def addbase(ctx, * args):
 			
 			session.add(owner)
 			session.add(base)
+			
 			await bot.say('{}, your base named {} located at {} has been added'
 				' to the database.'.format(ctx.message.author.mention, base.name, base.posToStr()))
 		except ValueError:
@@ -83,12 +92,17 @@ async def addbase(ctx, * args):
 
 @bot.command(pass_context=True)			
 async def findbase(ctx, * args):
-	'''Allows you to find a base in the database.'''
+	'''Allows you to find a base in the database.
+		?findbase [Player name]
+	'''
 	if (len(args) > 0) :
 		
-		base = session.query(Location).filter_by(owner=args[0]).first()
-		if (base is not None) :
-			await bot.say('{}, {}\'s base named {} is located at {}.'.format(ctx.message.author.mention, base.owner ,base.name, base.posToStr()))
+		baseList = session.query(Location).filter_by(owner=args[0]).all()
+		
+		if (baseList is not None) :
+			await bot.say('{}, {} has {} base(s):'.format(ctx.message.author.mention,args[0], len(baseList)))
+			for base in baseList:
+				await bot.say('{} is located at {}'.format(base.name, base.posToStr()))
 		else :
 			await bot.say('{}, {} is not in the database'.format(ctx.message.author.mention, args[0]))
 	else :
