@@ -101,7 +101,7 @@ async def test():
 @bot.command(pass_context=True)
 async def addbase(ctx, * args):
 	'''Add your base to the database.
-		?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate]
+		?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position]
 	'''
 	if (len(args) == 4) :
 		try:
@@ -126,7 +126,7 @@ async def addbase(ctx, * args):
 			await bot.say('{}, your base named {} located at {} has been added'
 				' to the database.'.format(ctx.message.author.mention, base.name, base.posToStr()))
 		except ValueError:
-			await bot.say('Invalid syntax, try again (?addbase [name] [x coord] [z coord])')
+			await bot.say('Invalid syntax, try again (?addbase [name] [x coord] [z coord]  [Tunnel Color] [Tunnel Position])')
 		
 	else :
 		await bot.say('Allows you to add your base location to the database. '
