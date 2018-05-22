@@ -1,12 +1,10 @@
 import discord
+import enum
 from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum
 from sqlalchemy.orm import sessionmaker
-
-engine = create_engine('sqlite:///:memory:', echo=True)
-SQL_Base = declarative_base()
 
 TOKEN = ''
 command_prefix = '?'
@@ -15,8 +13,16 @@ least he knows where your bases are.
 
 Please respect Geoffrey, the bot is very sensitive.
 '''
+engine = create_engine('sqlite:///:memory:', echo=True)
+SQL_Base = declarative_base()		
 
 bot = commands.Bot(command_prefix=command_prefix , description=description)
+
+class TunnelDirection(enum.Enum) :
+	North = 'green'
+	East = 'blue'
+	South = 'red'
+	West = 'yellow'
 
 class Player(SQL_Base):
 	__tablename__ = 'Players'
@@ -30,11 +36,14 @@ class Player(SQL_Base):
 
 class Location(SQL_Base):
 	__tablename__ = 'Locations'
+	
 	id = Column(Integer, primary_key=True)
 	name = Column(String)	
 	x = Column(Integer)
 	y = Column(Integer)
 	z = Column(Integer)
+	tunnelNumber = Column(Integer)
+	direction = Column(Enum(TunnelDirection))
 	owner = Column(String, ForeignKey('Players.in_game_name'))
 	
 	def __init__(self,args,owner) :
@@ -43,18 +52,39 @@ class Location(SQL_Base):
 		self.y = int(args[2])
 		self.z = int(args[3])
 		self.owner = owner
+		
+		if (len(args) >= 5) :
+			self.tunnelNumber =  int(args[5])
+			self.direction =  strToTunnelDirection(args[4])
 
 	def  posToStr(self) :
-		return '(x=' + str(self.x) + ', y=' + str(self.y) + ', z=' + str(self.z) + ')' 
-		
-	def __repr__(self):
-		return "(name= {}, pos={})".format(self.name,posToStr)
+		return '(x= {}, y= {}, z= {})'.format(self.x, self.y, self.z)
+	def netherTunnelAddrToStr(self) :
+		return '{} {}'.format(self.direction.value.title(), self.tunnelNumber)
+	
+	def __str__(self):
+		if (self.direction is not None) :
+			return "Name: {}, Position: {}, Tunnel: {}".format(self.name,self.posToStr(),self.netherTunnelAddrToStr())
+		else :
+			return "Name: {}, Position: {}".format(self.name,self.posToStr())
 		
 SQL_Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
 session = Session()
-
+		
+def strToTunnelDirection(str) :
+	str = str.lower()
+	if (str == TunnelDirection.North.value) :
+		return TunnelDirection.North
+	elif (str == TunnelDirection.East.value) :
+		return TunnelDirection.East
+	elif (str == TunnelDirection.South.value):
+		return TunnelDirection.South
+	elif (str == TunnelDirection.West.value):
+		return TunnelDirection.West
+	else:
+		raise ValueError
 			
 #Bot Commands ******************************************************************		
 @bot.event
@@ -85,10 +115,24 @@ async def addbase(ctx, * args):
 				' to the database.'.format(ctx.message.author.mention, base.name, base.posToStr()))
 		except ValueError:
 			await bot.say('Invalid syntax, try again (?addbase [name] [x coord] [z coord])')
+	elif(len(args) == 6) :
+		try:
+			owner = Player(str(ctx.message.author.nick))
+			base = Location(args,owner.in_game_name)
 			
+			session.add(owner)
+			session.add(base)
+			
+			await bot.say('{}, your base named {} located at {} has been added'
+				' to the database.'.format(ctx.message.author.mention, base.name, base.posToStr()))
+		except ValueError:
+			await bot.say('Invalid syntax, try again (?addbase [name] [x coord] [z coord])')
+		
 	else :
 		await bot.say('Allows you to add your base location to the database. '
 			'Syntax: ?addbase [Base Name] [X Coordinate] [Z Coordinate]')
+			
+
 
 @bot.command(pass_context=True)			
 async def findbase(ctx, * args):
@@ -102,7 +146,7 @@ async def findbase(ctx, * args):
 		if (baseList is not None) :
 			await bot.say('{}, {} has {} base(s):'.format(ctx.message.author.mention,args[0], len(baseList)))
 			for base in baseList:
-				await bot.say('{} is located at {}'.format(base.name, base.posToStr()))
+				await bot.say(base)
 		else :
 			await bot.say('{}, {} is not in the database'.format(ctx.message.author.mention, args[0]))
 	else :
