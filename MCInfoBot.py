@@ -166,7 +166,7 @@ async def findbase(ctx, name: str):
 
     base_list = session.query(Location).filter_by(owner=name).all()
 
-    if base_list is not None:
+    if len(base_list) != 0:
         base_string = ''
 
         for base in base_list:
@@ -174,7 +174,8 @@ async def findbase(ctx, name: str):
 
         await bot.say('{}, {} has {} base(s): \n {}'.format(ctx.message.author.mention, name, len(base_list), base_string))
     else:
-        await bot.say('{}, {} is not in the database'.format(ctx.message.author.mention, name))
+        await bot.say('{}, the player {} is not in the database'.format(ctx.message.author.mention, name))
+
 
 @bot.command(pass_context=True)
 async def deletebase(ctx, name: str):
@@ -182,11 +183,11 @@ async def deletebase(ctx, name: str):
     Deletes a base from the database.
         ?deletebase [Base name]
     '''
-    
+
     user = str(ctx.message.author.nick)
     base = session.query(Location).filter_by(owner=user, name=name)
 
-    if base is not None:
+    if base.first() is not None:
         base.delete()
         await bot.say('{}, your base named "{}" has been deleted.'.format(ctx.message.author.mention, name))
     else:
