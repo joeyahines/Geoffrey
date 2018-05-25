@@ -160,7 +160,7 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
 @bot.command(pass_context=True)
 async def findbase(ctx, name: str):
     '''
-    Allows you to find a base in the database.
+    Finds a base in the database.
         ?findbase [Player name]
     '''
 
@@ -175,6 +175,22 @@ async def findbase(ctx, name: str):
         await bot.say('{}, {} has {} base(s): \n {}'.format(ctx.message.author.mention, name, len(base_list), base_string))
     else:
         await bot.say('{}, {} is not in the database'.format(ctx.message.author.mention, name))
+
+@bot.command(pass_context=True)
+async def deletebase(ctx, name: str):
+    '''
+    Deletes a base from the database.
+        ?deletebase [Base name]
+    '''
+    
+    user = str(ctx.message.author.nick)
+    base = session.query(Location).filter_by(owner=user, name=name)
+
+    if base is not None:
+        base.delete()
+        await bot.say('{}, your base named "{}" has been deleted.'.format(ctx.message.author.mention, name))
+    else:
+        await bot.say('{}, you do not have a base named "{}".'.format(ctx.message.author.mention, name))
 
 # Bot Startup ******************************************************************
 
