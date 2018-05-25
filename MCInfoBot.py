@@ -71,23 +71,23 @@ class Location(SQL_Base):
             self.z = int(args[3])
             self.owner = owner
 
-            if (len(args) >= 5):
+            if len(args) >= 5:
                 self.tunnelNumber = int(args[5])
                 self.direction = strToTunnelDirection(args[4])
         except (ValueError, IndexError):
             raise LocationInitError
 
-    def posToStr(self):
+    def pos_to_str(self):
         return '(x= {}, y= {}, z= {})'.format(self.x, self.y, self.z)
 
-    def netherTunnelAddrToStr(self):
+    def nether_tunnel_addr_to_str(self):
         return '{} {}'.format(self.direction.value.title(), self.tunnelNumber)
 
     def __str__(self):
-        if (self.direction is not None):
-            return "Name: {}, Position: {}, Tunnel: {}".format(self.name, self.posToStr(), self.netherTunnelAddrToStr())
+        if self.direction is not None:
+            return "Name: {}, Position: {}, Tunnel: {}".format(self.name, self.pos_to_str(), self.nether_tunnel_addr_to_str())
         else:
-            return "Name: {}, Position: {}".format(self.name, self.posToStr())
+            return "Name: {}, Position: {}".format(self.name, self.pos_to_str())
 
 
 SQL_Base.metadata.create_all(engine)
@@ -96,15 +96,15 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-def strToTunnelDirection(str):
-    str = str.lower()
-    if (str == TunnelDirection.North.value):
+def strToTunnelDirection(arg):
+    arg = arg.lower()
+    if (arg == TunnelDirection.North.value):
         return TunnelDirection.North
-    elif (str == TunnelDirection.East.value):
+    elif (arg == TunnelDirection.East.value):
         return TunnelDirection.East
-    elif (str == TunnelDirection.South.value):
+    elif (arg == TunnelDirection.South.value):
         return TunnelDirection.South
-    elif (str == TunnelDirection.West.value):
+    elif (arg == TunnelDirection.West.value):
         return TunnelDirection.West
     else:
         raise ValueError
@@ -122,7 +122,13 @@ async def on_ready():
 
 @bot.event
 async def on_command_error(error, ctx):
-    error_str = 'Error in command {}, please use ?help {}'.format(ctx.invoked_with, ctx.invoked_with)
+    if isinstance(error, commands.CommandNotFound):
+        error_str = 'Command not found, please use ?help to see all the commands this bot can do.'
+    elif isinstance(error, commands.UserInputError):
+        error_str = 'Invalid syntax for {}, please read ?help {}.'.format(ctx.invoked_with, ctx.invoked_with)
+    else:
+        error_str = 'Error using the {} command, yell at the admins to fix it'.format(ctx.invoked_with)
+
     await bot.send_message(ctx.message.channel, error_str)
 
 
@@ -147,7 +153,7 @@ async def addbase(ctx, *args, ):
     session.add(base)
 
     await bot.say('{}, your base named {} located at {} has been added'
-                  ' to the database.'.format(ctx.message.author.mention, base.name, base.posToStr()))
+                  ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
 
 @bot.command(pass_context=True)
@@ -165,9 +171,8 @@ async def findbase(ctx, *args):
     else:
         await bot.say('{}, {} is not in the database'.format(ctx.message.author.mention, args[0]))
 
-
-
 # Bot Startup ******************************************************************
+
 try:
     file = open('token.dat', 'r')
     TOKEN = file.read()
