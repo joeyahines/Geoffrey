@@ -63,17 +63,18 @@ class Location(SQL_Base):
     direction = Column(Enum(TunnelDirection))
     owner = Column(String, ForeignKey('Players.in_game_name'))
 
-    def __init__(self, args, owner):
+    def __init__(self, name, x, y, z, owner, args):
         try:
-            self.name = args[0]
-            self.x = int(args[1])
-            self.y = int(args[2])
-            self.z = int(args[3])
+            self.name = name
+            self.x = x
+            self.y = y
+            self.z = z
             self.owner = owner
 
-            if len(args) >= 5:
-                self.tunnelNumber = int(args[5])
-                self.direction = strToTunnelDirection(args[4])
+            if len(args) > 0:
+                self.direction = strToTunnelDirection(args[0])
+                self.tunnelNumber = int(args[1])
+
         except (ValueError, IndexError):
             raise LocationInitError
 
@@ -111,8 +112,6 @@ def strToTunnelDirection(arg):
 
 
 # Bot Commands ******************************************************************
-
-
 @bot.event
 async def on_ready():
     print('GeoffreyBot')
@@ -134,12 +133,14 @@ async def on_command_error(error, ctx):
 
 @bot.command()
 async def test():
-    '''Check if the bot is alive.'''
+    '''
+    Checks if the bot is alive.
+    '''
     await bot.say('I\'m here you ding dong')
 
 
 @bot.command(pass_context=True)
-async def addbase(ctx, *args, ):
+async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     '''
     Add your base to the database.
      The tunnel address is optional.
@@ -147,7 +148,7 @@ async def addbase(ctx, *args, ):
     '''
 
     owner = Player(str(ctx.message.author.nick))
-    base = Location(args, owner.in_game_name)
+    base = Location(name, x_pos, y_pos, z_pos, owner.in_game_name, args)
 
     session.add(owner)
     session.add(base)
@@ -157,19 +158,23 @@ async def addbase(ctx, *args, ):
 
 
 @bot.command(pass_context=True)
-async def findbase(ctx, *args):
-    '''Allows you to find a base in the database.
+async def findbase(ctx, name: str):
+    '''
+    Allows you to find a base in the database.
         ?findbase [Player name]
     '''
-    search_key = args[0]
-    baseList = session.query(Location).filter_by(owner=search_key).all()
 
-    if baseList is not None:
-        await bot.say('{}, {} has {} base(s):'.format(ctx.message.author.mention, args[0], len(baseList)))
-        for base in baseList:
-            await bot.say(base)
+    base_list = session.query(Location).filter_by(owner=name).all()
+
+    if base_list is not None:
+        base_string = ''
+
+        for base in base_list:
+            base_string = '{} \n{}'.format(base_string, base)
+
+        await bot.say('{}, {} has {} base(s): \n {}'.format(ctx.message.author.mention, name, len(base_list), base_string))
     else:
-        await bot.say('{}, {} is not in the database'.format(ctx.message.author.mention, args[0]))
+        await bot.say('{}, {} is not in the database'.format(ctx.message.author.mention, name))
 
 # Bot Startup ******************************************************************
 
