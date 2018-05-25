@@ -15,6 +15,9 @@ At some point, she was to become an airhorn bot. Now, they know where your bases
 Please respect Geoffrey, the bot is very sensitive.
 '''
 
+bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \
+                        'headquarters are working VEWY HAWD to fix this! (Error running {})'
+
 engine = create_engine('sqlite:///:memory:', echo=True)
 SQL_Base = declarative_base()
 
@@ -126,7 +129,7 @@ async def on_command_error(error, ctx):
     elif isinstance(error, commands.UserInputError):
         error_str = 'Invalid syntax for {}, please read ?help {}.'.format(ctx.invoked_with, ctx.invoked_with)
     else:
-        error_str = 'Error using the {} command, yell at the admins to fix it'.format(ctx.invoked_with)
+        error_str = bad_error_message.format(ctx.invoked_with)
 
     await bot.send_message(ctx.message.channel, error_str)
 
