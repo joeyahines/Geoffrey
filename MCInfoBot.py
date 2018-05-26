@@ -125,7 +125,7 @@ async def on_ready():
 async def on_command_error(error, ctx):
     if isinstance(error, commands.CommandNotFound):
         error_str = 'Command not found, please use ?help to see all the commands this bot can do.'
-    elif isinstance(error, commands.UserInputError) :
+    elif isinstance(error, commands.UserInputError):
         error_str = 'Invalid syntax for {}, please read ?help {}.'.format(ctx.invoked_with, ctx.invoked_with)
     else:
         error_str = bad_error_message.format(ctx.invoked_with)
@@ -151,7 +151,11 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     '''
 
     owner = Player(str(ctx.message.author.nick))
-    base = Location(name, x_pos, y_pos, z_pos, owner.in_game_name, args)
+
+    try:
+        base = Location(name, x_pos, y_pos, z_pos, owner.in_game_name, args)
+    except LocationInitError:
+        raise commands.UserInputError
 
     session.add(owner)
     session.add(base)
@@ -213,7 +217,7 @@ async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
 
     radius = 200
     if len(args) > 0:
-        try :
+        try:
             radius = int(args[0])
         except ValueError:
             raise commands.UserInputError
