@@ -1,15 +1,13 @@
-import enum
 from discord.ext import commands
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum
 from sqlalchemy.orm import sessionmaker
+from DatabaseModels import *
 
 TOKEN = ''
 command_prefix = '?'
 description = '''
 Geoffrey started his life as inside joke none of you will understand.
-At some point, she was to become an airhorn bot. Now, they know where your bases are.
+At some point, she was to become an airhorn bot. Now, they know where your bases/shops are.
 
 Please respect Geoffrey, the bot is very sensitive.
 '''
@@ -17,95 +15,9 @@ Please respect Geoffrey, the bot is very sensitive.
 bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \
                         'headquarters are working VEWY HAWD to fix this! (Error in command {})'
 
-engine = create_engine('sqlite:///:memory:', echo=True)
-SQL_Base = declarative_base()
-
 bot = commands.Bot(command_prefix=command_prefix, description=description, case_insensitive=True)
 
-
-class DataBaseError(Exception):
-    '''Base class for exceptions in this module.'''
-    pass
-
-
-class LocationInitError(DataBaseError):
-    '''Error in initializing Location'''
-
-
-class LocationLookUpError(DataBaseError) :
-    '''Error in finding location in database'''
-
-
-class TunnelDirection(enum.Enum):
-    North = 'green'
-    East = 'blue'
-    South = 'red'
-    West = 'yellow'
-
-    def str_to_tunnel_dir(arg):
-        arg = arg.lower()
-        if arg == TunnelDirection.North.value:
-            return TunnelDirection.North
-        elif arg == TunnelDirection.East.value:
-            return TunnelDirection.East
-        elif arg == TunnelDirection.South.value:
-            return TunnelDirection.South
-        elif arg == TunnelDirection.West.value:
-            return TunnelDirection.West
-        else:
-            raise ValueError
-
-
-class Player(SQL_Base):
-    __tablename__ = 'Players'
-
-    id = Column(Integer, primary_key=True)
-    in_game_name = Column(String)
-
-    def __init__(self, name):
-        self.in_game_name = name
-
-
-class Location(SQL_Base):
-    __tablename__ = 'Locations'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    x = Column(Integer)
-    y = Column(Integer)
-    z = Column(Integer)
-    tunnelNumber = Column(Integer)
-    direction = Column(Enum(TunnelDirection))
-    owner = Column(String, ForeignKey('Players.in_game_name'))
-
-    def __init__(self, name, x, y, z, owner, args):
-        try:
-            self.name = name
-            self.x = x
-            self.y = y
-            self.z = z
-            self.owner = owner
-
-            if len(args) > 0:
-                self.direction = TunnelDirection.str_to_tunnel_direction(args[0])
-                self.tunnelNumber = int(args[1])
-
-        except (ValueError, IndexError):
-            raise LocationInitError
-
-    def pos_to_str(self):
-        return '(x= {}, y= {}, z= {})'.format(self.x, self.y, self.z)
-
-    def nether_tunnel_addr_to_str(self):
-        return '{} {}'.format(self.direction.value.title(), self.tunnelNumber)
-
-    def __str__(self):
-        if self.direction is not None:
-            return "Name: {}, Position: {}, Tunnel: {}".format(self.name, self.pos_to_str(),
-                                                               self.nether_tunnel_addr_to_str())
-        else:
-            return "Name: {}, Position: {}".format(self.name, self.pos_to_str())
-
+engine = create_engine('sqlite:///:memory:', echo=True)
 
 SQL_Base.metadata.create_all(engine)
 
@@ -233,11 +145,7 @@ async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
     else:
         await bot.say('{}, there are no base within {} of that point'.format(ctx.message.author.mention, radius))
 
-
-
-
 # Bot Startup ******************************************************************
-
 try:
     file = open('token.dat', 'r')
     TOKEN = file.read()
