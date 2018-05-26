@@ -1,5 +1,6 @@
 import discord
 import enum
+from math import sqrt
 from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -16,7 +17,7 @@ Please respect Geoffrey, the bot is very sensitive.
 '''
 
 bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \
-                        'headquarters are working VEWY HAWD to fix this! (Error running {})'
+                        'headquarters are working VEWY HAWD to fix this! (Error in command {})'
 
 engine = create_engine('sqlite:///:memory:', echo=True)
 SQL_Base = declarative_base()
@@ -170,15 +171,21 @@ async def findbase(ctx, name: str):
     base_list = session.query(Location).filter_by(owner=name).all()
 
     if len(base_list) != 0:
-        base_string = ''
+        base_string = base_list_string(base_list, '{} \n{}')
 
-        for base in base_list:
-            base_string = '{} \n{}'.format(base_string, base)
-
-        await bot.say('{}, {} has {} base(s): \n {}'.format(ctx.message.author.mention, name, len(base_list), base_string))
+        await bot.say('{}, {} has {} base(s): \n {}'.format(ctx.message.author.mention, name, len(base_list),
+                                                            base_string))
     else:
         await bot.say('{}, the player {} is not in the database'.format(ctx.message.author.mention, name))
 
+
+def base_list_string(base_list, str_format):
+    base_string = ''
+
+    for base in base_list:
+        base_string = str_format.format(base_string, base)
+
+    return base_string
 
 @bot.command(pass_context=True)
 async def deletebase(ctx, name: str):
@@ -195,6 +202,28 @@ async def deletebase(ctx, name: str):
         await bot.say('{}, your base named "{}" has been deleted.'.format(ctx.message.author.mention, name))
     else:
         await bot.say('{}, you do not have a base named "{}".'.format(ctx.message.author.mention, name))
+
+
+@bot.command(pass_context=True)
+async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
+    radius = 200
+    if len(args) > 0:
+        radius = int(args[0])
+
+    base_list = session.query(Location).filter(
+        Location.x < x_pos + radius, Location.x > x_pos - radius, Location.z < z_pos + radius, Location.z > z_pos
+                                                                                               - radius).all()
+
+    if len(base_list) != 0:
+        base_string = base_list_string(base_list, '{} \n{}')
+
+        await bot.say('{}, there are {} base(s) within {} 15 blocks of that point: \n {}'.format(
+            ctx.message.author.mention, len(base_list), radius, base_string))
+    else:
+        await bot.say('{}, there are no base within {} of that point'.format(ctx.message.author.mention, radius))
+
+
+
 
 # Bot Startup ******************************************************************
 
