@@ -1,6 +1,4 @@
-import discord
 import enum
-from math import sqrt
 from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -127,10 +125,11 @@ async def on_ready():
 async def on_command_error(error, ctx):
     if isinstance(error, commands.CommandNotFound):
         error_str = 'Command not found, please use ?help to see all the commands this bot can do.'
-    elif isinstance(error, commands.UserInputError):
+    elif isinstance(error, commands.UserInputError) :
         error_str = 'Invalid syntax for {}, please read ?help {}.'.format(ctx.invoked_with, ctx.invoked_with)
     else:
         error_str = bad_error_message.format(ctx.invoked_with)
+        print(error)
 
     await bot.send_message(ctx.message.channel, error_str)
 
@@ -206,13 +205,22 @@ async def deletebase(ctx, name: str):
 
 @bot.command(pass_context=True)
 async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
+    '''
+        Finds all the base around a certain point that are registered in the database
+        The Radius argument defaults to 200 blocks if no value is given
+            ?findbasearound [X Coordinate] [Z Coordinate] [Radius]
+    '''
+
     radius = 200
     if len(args) > 0:
-        radius = int(args[0])
+        try :
+            radius = int(args[0])
+        except ValueError:
+            raise commands.UserInputError
 
     base_list = session.query(Location).filter(
         Location.x < x_pos + radius, Location.x > x_pos - radius, Location.z < z_pos + radius, Location.z > z_pos
-                                                                                               - radius).all()
+        - radius).all()
 
     if len(base_list) != 0:
         base_string = base_list_string(base_list, '{} \n{}')
