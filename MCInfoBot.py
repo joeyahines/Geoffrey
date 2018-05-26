@@ -42,6 +42,19 @@ class TunnelDirection(enum.Enum):
     South = 'red'
     West = 'yellow'
 
+    def str_to_tunnel_dir(arg):
+        arg = arg.lower()
+        if arg == TunnelDirection.North.value:
+            return TunnelDirection.North
+        elif arg == TunnelDirection.East.value:
+            return TunnelDirection.East
+        elif arg == TunnelDirection.South.value:
+            return TunnelDirection.South
+        elif arg == TunnelDirection.West.value:
+            return TunnelDirection.West
+        else:
+            raise ValueError
+
 
 class Player(SQL_Base):
     __tablename__ = 'Players'
@@ -74,7 +87,7 @@ class Location(SQL_Base):
             self.owner = owner
 
             if len(args) > 0:
-                self.direction = strToTunnelDirection(args[0])
+                self.direction = TunnelDirection.str_to_tunnel_direction(args[0])
                 self.tunnelNumber = int(args[1])
 
         except (ValueError, IndexError):
@@ -88,7 +101,8 @@ class Location(SQL_Base):
 
     def __str__(self):
         if self.direction is not None:
-            return "Name: {}, Position: {}, Tunnel: {}".format(self.name, self.pos_to_str(), self.nether_tunnel_addr_to_str())
+            return "Name: {}, Position: {}, Tunnel: {}".format(self.name, self.pos_to_str(),
+                                                               self.nether_tunnel_addr_to_str())
         else:
             return "Name: {}, Position: {}".format(self.name, self.pos_to_str())
 
@@ -97,21 +111,6 @@ SQL_Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
 session = Session()
-
-
-def strToTunnelDirection(arg):
-    arg = arg.lower()
-    if (arg == TunnelDirection.North.value):
-        return TunnelDirection.North
-    elif (arg == TunnelDirection.East.value):
-        return TunnelDirection.East
-    elif (arg == TunnelDirection.South.value):
-        return TunnelDirection.South
-    elif (arg == TunnelDirection.West.value):
-        return TunnelDirection.West
-    else:
-        raise ValueError
-
 
 # Bot Commands ******************************************************************
 @bot.event
