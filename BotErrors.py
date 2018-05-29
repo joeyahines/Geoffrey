@@ -9,3 +9,6 @@ class LocationInitError(DataBaseError):
 
 class LocationLookUpError(DataBaseError) :
     '''Error in finding location in database'''
+
+class DeleteEntryError(DataBaseError) :
+    '''Error in deleting entry'''

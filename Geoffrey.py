@@ -2,6 +2,8 @@ from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from DatabaseModels import *
+from BotErrors import *
+import sqlalchemy
 
 TOKEN = ''
 command_prefix = '?'
@@ -9,7 +11,7 @@ description = '''
 Geoffrey started his life as inside joke none of you will understand.
 At some point, she was to become an airhorn bot. Now, they know where your bases/shops are.
 
-Please respect Geoffrey, the bot is very sensitive.
+Please respect Geoffrey, the bot is very sensitive.w
 '''
 
 bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \
@@ -17,12 +19,38 @@ bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko
 
 bot = commands.Bot(command_prefix=command_prefix, description=description, case_insensitive=True)
 
-engine = create_engine('sqlite:///:memory:', echo=True)
 
-SQL_Base.metadata.create_all(engine)
+class GeoffreyDatabase:
 
-Session = sessionmaker(bind=engine)
-session = Session()
+    def __init__(self, engine_arg):
+        self.engine = create_engine(engine_arg, echo=True)
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+        SQL_Base.metadata.create_all(self.engine)
+
+    def add_object(self, obj):
+        self.session.add(obj)
+
+    def query_by_filter(self, obj_type, * args):
+        filter_value = self.combine_filter(args)
+        return self.session.query(obj_type).filter(filter_value).all()
+
+    def delete_entry(self, obj_type, * args):
+        filter_value = self.combine_filter(args)
+        entry = self.session.query(obj_type).filter(filter_value)
+
+        if entry.first() is not None:
+            entry.delete()
+        else:
+            raise DeleteEntryError
+
+    def combine_filter(self, filter_value):
+        return sqlalchemy.sql.expression.and_(filter_value[0])
+
+
+
+
+database = GeoffreyDatabase('sqlite:///:memory:')
 
 # Bot Commands ******************************************************************
 @bot.event
@@ -68,8 +96,8 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     except LocationInitError:
         raise commands.UserInputError
 
-    session.add(owner)
-    session.add(base)
+    database.add_object(owner)
+    database.add_object(base)
 
     await bot.say('{}, your base named {} located at {} has been added'
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
@@ -82,7 +110,8 @@ async def findbase(ctx, name: str):
         ?findbase [Player name]
     '''
 
-    base_list = session.query(Location).filter_by(owner=name).all()
+    expr = Location.owner == name
+    base_list = database.query_by_filter(Location, expr)
 
     if len(base_list) != 0:
         base_string = base_list_string(base_list, '{} \n{}')
@@ -101,6 +130,7 @@ def base_list_string(base_list, str_format):
 
     return base_string
 
+
 @bot.command(pass_context=True)
 async def deletebase(ctx, name: str):
     '''
@@ -109,14 +139,14 @@ async def deletebase(ctx, name: str):
     '''
 
     user = str(ctx.message.author.nick)
-    base = session.query(Location).filter_by(owner=user, name=name)
 
-    if base.first() is not None:
-        base.delete()
+    expr = Location.owner == user, Location.name == name
+
+    try:
+        database.delete_entry(Location, expr)
         await bot.say('{}, your base named "{}" has been deleted.'.format(ctx.message.author.mention, name))
-    else:
+    except DeleteEntryError:
         await bot.say('{}, you do not have a base named "{}".'.format(ctx.message.author.mention, name))
-
 
 @bot.command(pass_context=True)
 async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
@@ -133,9 +163,9 @@ async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
         except ValueError:
             raise commands.UserInputError
 
-    base_list = session.query(Location).filter(
-        Location.x < x_pos + radius, Location.x > x_pos - radius, Location.z < z_pos + radius, Location.z > z_pos
-        - radius).all()
+    expr = (Location.x < x_pos + radius) & (Location.x > x_pos - radius) & (Location.z < z_pos + radius) & (Location.z > z_pos - radius)
+
+    base_list = database.query_by_filter(Location, expr)
 
     if len(base_list) != 0:
         base_string = base_list_string(base_list, '{} \n{}')
@@ -143,7 +173,7 @@ async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
         await bot.say('{}, there are {} base(s) within {} 15 blocks of that point: \n {}'.format(
             ctx.message.author.mention, len(base_list), radius, base_string))
     else:
-        await bot.say('{}, there are no base within {} of that point'.format(ctx.message.author.mention, radius))
+        await bot.say('{}, there are no bases within {} blocks of that point'.format(ctx.message.author.mention, radius))
 
 # Bot Startup ******************************************************************
 try:
