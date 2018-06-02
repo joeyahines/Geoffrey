@@ -1,10 +1,40 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum
 import enum
 from sqlalchemy.ext.declarative import declarative_base
-from BotErrors import LocationInitError
+from BotErrors import *
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import sqlalchemy
 
 SQL_Base = declarative_base()
 
+
+class GeoffreyDatabase:
+
+    def __init__(self, engine_arg):
+        self.engine = create_engine(engine_arg, echo=True)
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+        SQL_Base.metadata.create_all(self.engine)
+
+    def add_object(self, obj):
+        self.session.add(obj)
+
+    def query_by_filter(self, obj_type, * args):
+        filter_value = self.combine_filter(args)
+        return self.session.query(obj_type).filter(filter_value).all()
+
+    def delete_entry(self, obj_type, * args):
+        filter_value = self.combine_filter(args)
+        entry = self.session.query(obj_type).filter(filter_value)
+
+        if entry.first() is not None:
+            entry.delete()
+        else:
+            raise DeleteEntryError
+
+    def combine_filter(self, filter_value):
+        return sqlalchemy.sql.expression.and_(filter_value[0])
 
 class TunnelDirection(enum.Enum):
     North = 'green'

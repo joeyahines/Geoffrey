@@ -1,9 +1,6 @@
 from discord.ext import commands
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from DatabaseModels import *
 from BotErrors import *
-import sqlalchemy
 
 TOKEN = ''
 command_prefix = '?'
@@ -19,37 +16,6 @@ bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko
 
 bot = commands.Bot(command_prefix=command_prefix, description=description, case_insensitive=True)
 
-
-class GeoffreyDatabase:
-
-    def __init__(self, engine_arg):
-        self.engine = create_engine(engine_arg, echo=True)
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-        SQL_Base.metadata.create_all(self.engine)
-
-    def add_object(self, obj):
-        self.session.add(obj)
-
-    def query_by_filter(self, obj_type, * args):
-        filter_value = self.combine_filter(args)
-        return self.session.query(obj_type).filter(filter_value).all()
-
-    def delete_entry(self, obj_type, * args):
-        filter_value = self.combine_filter(args)
-        entry = self.session.query(obj_type).filter(filter_value)
-
-        if entry.first() is not None:
-            entry.delete()
-        else:
-            raise DeleteEntryError
-
-    def combine_filter(self, filter_value):
-        return sqlalchemy.sql.expression.and_(filter_value[0])
-
-
-
-
 database = GeoffreyDatabase('sqlite:///:memory:')
 
 # Bot Commands ******************************************************************
@@ -63,9 +29,10 @@ async def on_ready():
 @bot.event
 async def on_command_error(error, ctx):
     if isinstance(error, commands.CommandNotFound):
-        error_str = 'Command not found, please use ?help to see all the commands this bot can do.'
+        error_str = 'Command not found, ding dongs like you can use ?help to see all the commands this bot can do.'
     elif isinstance(error, commands.UserInputError):
-        error_str = 'Invalid syntax for {}, please read ?help {}.'.format(ctx.invoked_with, ctx.invoked_with)
+        error_str = 'Invalid syntax for {} you ding dong, please read ?help {}.'\
+            .format(ctx.invoked_with, ctx.invoked_with)
     else:
         error_str = bad_error_message.format(ctx.invoked_with)
         print(error)
@@ -140,7 +107,7 @@ async def deletebase(ctx, name: str):
 
     user = str(ctx.message.author.nick)
 
-    expr = Location.owner == user, Location.name == name
+    expr = (Location.owner == user) & (Location.name == name)
 
     try:
         database.delete_entry(Location, expr)
@@ -163,17 +130,19 @@ async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
         except ValueError:
             raise commands.UserInputError
 
-    expr = (Location.x < x_pos + radius) & (Location.x > x_pos - radius) & (Location.z < z_pos + radius) & (Location.z > z_pos - radius)
+    expr = (Location.x < x_pos + radius) & (Location.x > x_pos - radius) & (Location.z < z_pos + radius) & \
+           (Location.z > z_pos - radius)
 
     base_list = database.query_by_filter(Location, expr)
 
     if len(base_list) != 0:
         base_string = base_list_string(base_list, '{} \n{}')
 
-        await bot.say('{}, there are {} base(s) within {} 15 blocks of that point: \n {}'.format(
+        await bot.say('{}, there are {} base(s) within {} blocks of that point: \n {}'.format(
             ctx.message.author.mention, len(base_list), radius, base_string))
     else:
-        await bot.say('{}, there are no bases within {} blocks of that point'.format(ctx.message.author.mention, radius))
+        await bot.say('{}, there are no bases within {} blocks of that point'
+                      .format(ctx.message.author.mention, radius))
 
 # Bot Startup ******************************************************************
 try:
