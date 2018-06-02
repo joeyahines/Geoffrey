@@ -115,6 +115,7 @@ async def deletebase(ctx, name: str):
     except DeleteEntryError:
         await bot.say('{}, you do not have a base named "{}".'.format(ctx.message.author.mention, name))
 
+
 @bot.command(pass_context=True)
 async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
     '''

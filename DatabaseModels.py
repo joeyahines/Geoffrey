@@ -36,6 +36,7 @@ class GeoffreyDatabase:
     def combine_filter(self, filter_value):
         return sqlalchemy.sql.expression.and_(filter_value[0])
 
+
 class TunnelDirection(enum.Enum):
     North = 'green'
     East = 'blue'
