@@ -3,7 +3,7 @@ import enum
 from sqlalchemy.ext.declarative import declarative_base
 from BotErrors import *
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 import sqlalchemy
 
 SQL_Base = declarative_base()
@@ -78,6 +78,12 @@ class Location(SQL_Base):
     tunnelNumber = Column(Integer)
     direction = Column(Enum(TunnelDirection))
     owner = Column(String, ForeignKey('Players.in_game_name'))
+    type = Column(String)
+
+    __mapper_args__ = {
+        'polymorphic_on': type,
+        'polymorphic_identity': 'Location'
+    }
 
     def __init__(self, name, x, y, z, owner, args):
         try:
@@ -106,3 +112,37 @@ class Location(SQL_Base):
                                                                self.nether_tunnel_addr_to_str())
         else:
             return "Name: {}, Position: {}".format(self.name, self.pos_to_str())
+
+
+class Shop(Location):
+    __tablename__ = 'Shops'
+
+    id = Column(Integer, ForeignKey('Locations.id'), primary_key=True)
+    name = Column(String)
+    inventory = relationship('ItemListing', back_populates='shop')
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'Shop'
+    }
+
+    def __init__(self, name, x, y, z, owner, args):
+        Location.__init__(name, x, y, z, owner, args)
+
+
+class ItemListing(SQL_Base):
+    __tablename__ = 'Items'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    price = Column(Integer)
+
+    shop_id = Column(Integer, ForeignKey('Shops.id'))
+
+    shop = relationship('Shop', back_populates='inventory')
+
+    def __init__(self, name, price) :
+        self.name = name
+        self.price = price
+
+    def __str__(self):
+        return "Item: {}, Price: {}".format(self.name, self.price)
