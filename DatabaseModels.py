@@ -5,6 +5,7 @@ from BotErrors import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, relationship
 import sqlalchemy
+from MinecraftAccountInfoGrabber import *
 
 SQL_Base = declarative_base()
 
@@ -60,11 +61,13 @@ class TunnelDirection(enum.Enum):
 class Player(SQL_Base):
     __tablename__ = 'Players'
 
-    id = Column(Integer, primary_key=True)
-    in_game_name = Column(String)
+    uuid = Column(String, primary_key=True)
 
     def __init__(self, name):
-        self.in_game_name = name
+        if name == 'dootb.in ꙩ ⃤' :
+            name = 'aeskdar'
+
+        self.uuid = grab_UUID(name)
 
 
 class Location(SQL_Base):
@@ -77,7 +80,7 @@ class Location(SQL_Base):
     z = Column(Integer)
     tunnelNumber = Column(Integer)
     direction = Column(Enum(TunnelDirection))
-    owner = Column(String, ForeignKey('Players.in_game_name'))
+    owner_uuid = Column(String, ForeignKey('Players.uuid'))
     type = Column(String)
 
     __mapper_args__ = {
@@ -91,7 +94,7 @@ class Location(SQL_Base):
             self.x = x
             self.y = y
             self.z = z
-            self.owner = owner
+            self.owner_uuid = owner
 
             if len(args) > 0:
                 self.direction = TunnelDirection.str_to_tunnel_dir(args[0])

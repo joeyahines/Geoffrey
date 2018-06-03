@@ -1,6 +1,8 @@
 from discord.ext import commands
 from DatabaseModels import *
 from BotErrors import *
+from MinecraftAccountInfoGrabber import *
+
 
 TOKEN = ''
 command_prefix = '?'
@@ -18,6 +20,8 @@ bot = commands.Bot(command_prefix=command_prefix, description=description, case_
 
 database = GeoffreyDatabase('sqlite:///:memory:')
 
+
+
 # Bot Commands ******************************************************************
 @bot.event
 async def on_ready():
@@ -33,6 +37,8 @@ async def on_command_error(error, ctx):
     elif isinstance(error, commands.UserInputError):
         error_str = 'Invalid syntax for {} you ding dong, please read ?help {}.'\
             .format(ctx.invoked_with, ctx.invoked_with)
+    elif isinstance(error.original, UsernameLookupFailed):
+        error_str = error.original.__doc__
     else:
         error_str = bad_error_message.format(ctx.invoked_with)
         print(error)
@@ -59,7 +65,7 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     owner = Player(str(ctx.message.author.nick))
 
     try:
-        base = Location(name, x_pos, y_pos, z_pos, owner.in_game_name, args)
+        base = Location(name, x_pos, y_pos, z_pos, owner.uuid, args)
     except LocationInitError:
         raise commands.UserInputError
 
@@ -77,7 +83,8 @@ async def findbase(ctx, name: str):
         ?findbase [Player name]
     '''
 
-    expr = Location.owner == name
+    uuid = grab_UUID(name)
+    expr = Location.owner_uuid == uuid
     base_list = database.query_by_filter(Location, expr)
 
     if len(base_list) != 0:
@@ -107,7 +114,7 @@ async def deletebase(ctx, name: str):
 
     user = str(ctx.message.author.nick)
 
-    expr = (Location.owner == user) & (Location.name == name)
+    expr = (Location.owner_uuid == user) & (Location.name == name)
 
     try:
         database.delete_entry(Location, expr)
