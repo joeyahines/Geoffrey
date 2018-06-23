@@ -75,9 +75,9 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
 @bot.command(pass_context=True)
 async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     '''
-    Add your base to the database.
+    Adds a shop to the database.
      The tunnel address is optional.
-     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position]
+     ?addbase [Shop name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position]
     '''
 
     player_name = get_nickname(ctx.message.author)
@@ -94,8 +94,8 @@ async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
 @bot.command(pass_context=True)
 async def find(ctx, name: str):
     '''
-    Finds a base in the database.
-        ?findbase [Player name]
+    Finds all the locations a player has in the database.
+        ?find [Player name]
     '''
 
     base_list = database.find_location_by_owner(name)
@@ -112,8 +112,8 @@ async def find(ctx, name: str):
 @bot.command(pass_context=True)
 async def delete(ctx, name: str):
     '''
-    Deletes a base from the database.
-        ?deletebase [Base name]
+    Deletes a location from the database.
+        ?delete [Location name]
     '''
 
     player_name = get_nickname(ctx.message.author)
@@ -127,9 +127,9 @@ async def delete(ctx, name: str):
 @bot.command(pass_context=True)
 async def findaround(ctx, x_pos: int, z_pos: int, * args):
     '''
-        Finds all the base around a certain point that are registered in the database
-        The Radius argument defaults to 200 blocks if no value is given
-            ?findbasearound [X Coordinate] [Z Coordinate] [Radius]
+    Finds all the bases/shops around a certain point that are registered in the database
+    The Radius argument defaults to 200 blocks if no value is given
+        ?findbasearound [X Coordinate] [Z Coordinate] [Radius]
     '''
 
     radius = 200
@@ -153,6 +153,10 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
 
 @bot.command(pass_context=True)
 async def additem(ctx, shop_name: str, item_name: str, diamond_price: int):
+    '''
+    Adds an item to a shop's inventory
+        ?additem [Shop name] [Item Name] [Price]
+    '''
     player_name = get_nickname(ctx.message.author)
     database.add_item(player_name, shop_name, item_name, diamond_price)
 
@@ -162,6 +166,10 @@ async def additem(ctx, shop_name: str, item_name: str, diamond_price: int):
 
 @bot.command(pass_context=True)
 async def selling(ctx, item_name: str):
+    '''
+    Lists all the shops selling an item
+        ?selling [item]
+    '''
     shop_list = database.find_shop_selling_item(item_name)
 
     shop_list_str = loc_list_to_string(shop_list)
