@@ -18,15 +18,58 @@ class GeoffreyDatabase:
         self.session = Session()
         SQL_Base.metadata.create_all(self.engine)
 
+    def add_base(self, player_name, name, x_pos, y_pos, z_pos, args):
+        owner = self.add_player(player_name)
+        base = Location(name, x_pos, y_pos, z_pos, owner, args)
+        self.add_object(base)
+
+        return base
+
+    def add_player(self, player_name):
+        expr = Player.name == player_name
+        player_list = self.query_by_filter(Player, expr)
+
+        if len(player_list) == 0:
+            uuid = grab_UUID(player_name)
+            expr = Player.id == uuid
+            player_list = self.query_by_filter(Player, expr)
+
+            if len(player_list) == 0:
+                player = Player(player_name)
+                self.add_object(player)
+            else:
+                player_list[0].name = player_name
+        else:
+            player = player_list[0]
+
+        return player
+
     def add_object(self, obj):
         ret = not self.session.query(exists().where(type(obj).id == obj.id))
         if not ret:
             self.session.add(obj)
             self.session.commit()
 
+    def find_base_by_owner(self, owner_name):
+        player = self.add_player(owner_name)
+        expr = Location.owner == player
+        return self.query_by_filter(Location, expr)
+
+    def find_base_around(self, x_pos, z_pos, radius):
+        expr = (Location.x < x_pos + radius) & (Location.x > x_pos - radius) & (Location.z < z_pos + radius) & \
+               (Location.z > z_pos - radius)
+
+        return self.query_by_filter(Location, expr)
+
     def query_by_filter(self, obj_type, * args):
         filter_value = self.combine_filter(args)
         return self.session.query(obj_type).filter(filter_value).all()
+
+    def delete_base(self, player_name, base_name):
+        player = self.add_player(player_name)
+        expr = (Location.owner == player) & (Location.name == base_name)
+
+        self.delete_entry(Location, expr)
 
     def delete_entry(self, obj_type, * args):
         filter_value = self.combine_filter(args)
@@ -45,6 +88,7 @@ class GeoffreyDatabase:
         for obj in obj_list:
                 s = s + '\n' + obj.id
         return s
+
 
     def combine_filter(self, filter_value):
         return sqlalchemy.sql.expression.and_(filter_value[0])

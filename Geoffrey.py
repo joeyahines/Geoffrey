@@ -3,7 +3,6 @@ from DatabaseModels import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 
-
 TOKEN = ''
 command_prefix = '?'
 description = '''
@@ -21,8 +20,9 @@ bot = commands.Bot(command_prefix=command_prefix, description=description, case_
 database = GeoffreyDatabase('sqlite:///:memory:')
 
 
+# Bot Commands ******************************************************************'
 
-# Bot Commands ******************************************************************
+
 @bot.event
 async def on_ready():
     print('GeoffreyBot')
@@ -53,6 +53,7 @@ async def test():
     '''
     await bot.say('I\'m here you ding dong')
 
+
 @bot.command(pass_context=True)
 async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     '''
@@ -61,46 +62,13 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
      ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position]
     '''
 
-    if ctx.message.author.nick is None:
-        player_name = ctx.message.author.display_name
-    else:
-        player_name = ctx.message.author.nick
-
-    expr = Player.name == player_name
-    player_list = database.query_by_filter(Player, expr)
-
-    if len(player_list) == 0:
-        uuid = grab_UUID(player_name)
-        expr = Player.id == uuid
-        player_list = database.query_by_filter(Player, expr)
-
-        if len(player_list) == 0:
-            owner = Player(player_name)
-        else:
-            player_list[0].name == player_name
-    else:
-        owner = player_list[0]
+    player_name = get_nickname(ctx.message.author)
 
     try:
-        base = Location(name, x_pos, y_pos, z_pos, owner, args)
+        base = database.add_base(player_name, name, x_pos, y_pos, z_pos, args)
     except LocationInitError:
         raise commands.UserInputError
 
-    owner.locations.append(base)
-
-    database.add_object(base)
-    database.add_object(owner)
-
-    #expr = Player.id == owner.id
-    #player_list = database.query_by_filter(Player, expr)
-    '''
-    if len(player_list) == 0:
-        database.add_object(owner)
-    else:
-        if player_list[0].name != owner.name:
-            player_list[0].name = owner.name
-            database.session.commit()
-    '''
     await bot.say('{}, your base named {} located at {} has been added'
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
@@ -112,13 +80,7 @@ async def findbase(ctx, name: str):
         ?findbase [Player name]
     '''
 
-    uuid = grab_UUID(name)
-    expr = Player.id == uuid
-    p = database.query_by_filter(Player, expr)[0]
-
-    expr = Location.owner == p
-    base_list = database.query_by_filter(Location, expr)
-
+    base_list = database.find_base_by_owner(name)
 
     if len(base_list) != 0:
         base_string = base_list_string(base_list, '{} \n{}')
@@ -129,15 +91,6 @@ async def findbase(ctx, name: str):
         await bot.say('{}, the player {} is not in the database'.format(ctx.message.author.mention, name))
 
 
-def base_list_string(base_list, str_format):
-    base_string = ''
-
-    for base in base_list:
-        base_string = str_format.format(base_string, base)
-
-    return base_string
-
-
 @bot.command(pass_context=True)
 async def deletebase(ctx, name: str):
     '''
@@ -145,12 +98,9 @@ async def deletebase(ctx, name: str):
         ?deletebase [Base name]
     '''
 
-    uuid = grab_UUID(str(ctx.message.author.nick))
-
-    expr = (Location.owner_id == uuid) & (Location.name == name)
-
+    player_name = get_nickname(ctx.message.author)
     try:
-        database.delete_entry(Location, expr)
+        database.delete_base(player_name, name)
         await bot.say('{}, your base named "{}" has been deleted.'.format(ctx.message.author.mention, name))
     except DeleteEntryError:
         await bot.say('{}, you do not have a base named "{}".'.format(ctx.message.author.mention, name))
@@ -171,10 +121,7 @@ async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
         except ValueError:
             raise commands.UserInputError
 
-    expr = (Location.x < x_pos + radius) & (Location.x > x_pos - radius) & (Location.z < z_pos + radius) & \
-           (Location.z > z_pos - radius)
-
-    base_list = database.query_by_filter(Location, expr)
+    base_list = database.find_base_around(x_pos, z_pos, radius)
 
     if len(base_list) != 0:
         base_string = base_list_string(base_list, '{} \n{}')
@@ -185,7 +132,27 @@ async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
         await bot.say('{}, there are no bases within {} blocks of that point'
                       .format(ctx.message.author.mention, radius))
 
+# Helper Functions ************************************************************
+
+
+def get_nickname(discord_user) :
+    if discord_user.nick is None:
+        return discord_user.display_name
+    else:
+        return discord_user.nick
+
+
+def base_list_string(base_list, str_format):
+    base_string = ''
+
+    for base in base_list:
+        base_string = str_format.format(base_string, base)
+
+    return base_string
+
 # Bot Startup ******************************************************************
+
+
 try:
     file = open('token.dat', 'r')
     TOKEN = file.read()
