@@ -101,7 +101,7 @@ async def find(ctx, name: str):
     base_list = database.find_location_by_owner(name)
 
     if len(base_list) != 0:
-        base_string = base_list_string(base_list, '{} \n{}')
+        base_string = loc_list_to_string(base_list, '{} \n{}')
 
         await bot.say('{}, {} has {} base(s): \n {}'.format(ctx.message.author.mention, name, len(base_list),
                                                             base_string))
@@ -142,13 +142,31 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
     base_list = database.find_location_around(x_pos, z_pos, radius)
 
     if len(base_list) != 0:
-        base_string = base_list_string(base_list, '{} \n{}')
+        base_string = loc_list_to_string(base_list, '{} \n{}')
 
         await bot.say('{}, there are {} base(s) within {} blocks of that point: \n {}'.format(
             ctx.message.author.mention, len(base_list), radius, base_string))
     else:
         await bot.say('{}, there are no bases within {} blocks of that point'
                       .format(ctx.message.author.mention, radius))
+
+
+@bot.command(pass_context=True)
+async def additem(ctx, shop_name: str, item_name: str, diamond_price: int):
+    player_name = get_nickname(ctx.message.author)
+    database.add_item(player_name, shop_name, item_name, diamond_price)
+
+    await bot.say('{}, {} has been added to the inventory of {}.'.format(ctx.message.author.mention,
+                                                                         item_name, shop_name))
+
+
+@bot.command(pass_context=True)
+async def selling(ctx, item_name: str):
+    shop_list = database.find_shop_selling_item(item_name)
+
+    shop_list_str = loc_list_to_string(shop_list)
+    await bot.say('The following shops sell {}: \n {}'.format(item_name, shop_list_str))
+
 
 # Helper Functions ************************************************************
 
@@ -160,13 +178,13 @@ def get_nickname(discord_user) :
         return discord_user.nick
 
 
-def base_list_string(base_list, str_format):
-    base_string = ''
+def loc_list_to_string(loc_list, str_format='{}\n{}'):
+    loc_string = ''
 
-    for base in base_list:
-        base_string = str_format.format(base_string, base)
+    for loc in loc_list:
+        loc_string = str_format.format(loc_string, loc)
 
-    return base_string
+    return loc_string
 
 # Bot Startup ******************************************************************
 

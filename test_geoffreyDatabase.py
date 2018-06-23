@@ -16,6 +16,13 @@ class TestGeoffreyDatabase(TestCase):
 
         self.assertEqual(type(shop), Shop)
 
+    def test_add_item(self):
+        self.database.add_shop('ZeroHD', 'test', 1, 2, 3, ['Green', 0])
+        self.database.add_item('ZeroHD', 'test', 'dirt', 1)
+
+        shops = self.database.find_shop_selling_item('dirt')
+        self.assertEqual(shops[0].name, 'test')
+
     def test_add_object(self):
         self.database.add_object(self.loc)
         self.database.add_object(self.owner)

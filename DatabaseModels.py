@@ -31,6 +31,13 @@ class GeoffreyDatabase:
         self.add_object(shop)
         return shop
 
+    def add_item(self, player_name, shop_name, item_name, price):
+        shop = self.find_location_by_name_and_owner(player_name, shop_name)
+
+        item = ItemListing(item_name, price, shop[0])
+
+        return item
+
     def add_player(self, player_name):
         expr = Player.name == player_name
         player_list = self.query_by_filter(Player, expr)
@@ -61,11 +68,29 @@ class GeoffreyDatabase:
         expr = Location.owner == player
         return self.query_by_filter(Location, expr)
 
+    def find_location_by_name_and_owner(self, owner_name, name):
+        player = self.add_player(owner_name)
+        expr = (Location.owner == player) & (Location.name == name)
+        return self.query_by_filter(Location, expr)
+
     def find_location_around(self, x_pos, z_pos, radius):
         expr = (Location.x < x_pos + radius) & (Location.x > x_pos - radius) & (Location.z < z_pos + radius) & \
                (Location.z > z_pos - radius)
 
         return self.query_by_filter(Location, expr)
+
+    def find_item(self, item_name):
+        expr = ItemListing.name == item_name
+        return self.query_by_filter(ItemListing, expr)
+
+    def find_shop_selling_item(self, item_name):
+        listings = self.find_item(item_name)
+
+        shops = []
+        for listing in listings:
+            shops.append(listing.shop)
+
+        return shops
 
     def query_by_filter(self, obj_type, * args):
         filter_value = self.combine_filter(args)
@@ -184,11 +209,9 @@ class Location(SQL_Base):
 
 class Shop(Location):
     __tablename__ = 'Shops'
-
     shop_id = Column(Integer, ForeignKey('Locations.id'), primary_key=True)
     name = Column(String)
-    inventory = relationship('ItemListing', back_populates='shop')
-
+    inventory = relationship('ItemListing', back_populates='shop', lazy='dynamic')
     __mapper_args__ = {
         'polymorphic_identity': 'Shop',
     }
@@ -200,17 +223,17 @@ class Shop(Location):
 class ItemListing(SQL_Base):
     __tablename__ = 'Items'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
     price = Column(Integer)
 
-    shop_id = Column(Integer, ForeignKey('Locations.id'))
+    shop_id = Column(Integer, ForeignKey('Shops.shop_id'))
+    shop = relationship("Shop", back_populates="inventory")
 
-    shop = relationship('Shop', back_populates='inventory')
-
-    def __init__(self, name, price) :
+    def __init__(self, name, price, shop):
         self.name = name
         self.price = price
+        self.shop = shop
 
     def __str__(self):
         return "Item: {}, Price: {}".format(self.name, self.price)
