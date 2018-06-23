@@ -53,7 +53,6 @@ async def test():
     '''
     await bot.say('I\'m here you ding dong')
 
-
 @bot.command(pass_context=True)
 async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     '''
@@ -62,16 +61,46 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
      ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position]
     '''
 
-    owner = Player(str(ctx.message.author.nick))
+    if ctx.message.author.nick is None:
+        player_name = ctx.message.author.display_name
+    else:
+        player_name = ctx.message.author.nick
+
+    expr = Player.name == player_name
+    player_list = database.query_by_filter(Player, expr)
+
+    if len(player_list) == 0:
+        uuid = grab_UUID(player_name)
+        expr = Player.id == uuid
+        player_list = database.query_by_filter(Player, expr)
+
+        if len(player_list) == 0:
+            owner = Player(player_name)
+        else:
+            player_list[0].name == player_name
+    else:
+        owner = player_list[0]
 
     try:
-        base = Location(name, x_pos, y_pos, z_pos, owner.uuid, args)
+        base = Location(name, x_pos, y_pos, z_pos, owner, args)
     except LocationInitError:
         raise commands.UserInputError
 
-    database.add_object(owner)
-    database.add_object(base)
+    owner.locations.append(base)
 
+    database.add_object(base)
+    database.add_object(owner)
+
+    #expr = Player.id == owner.id
+    #player_list = database.query_by_filter(Player, expr)
+    '''
+    if len(player_list) == 0:
+        database.add_object(owner)
+    else:
+        if player_list[0].name != owner.name:
+            player_list[0].name = owner.name
+            database.session.commit()
+    '''
     await bot.say('{}, your base named {} located at {} has been added'
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
@@ -84,8 +113,12 @@ async def findbase(ctx, name: str):
     '''
 
     uuid = grab_UUID(name)
-    expr = Location.owner_uuid == uuid
+    expr = Player.id == uuid
+    p = database.query_by_filter(Player, expr)[0]
+
+    expr = Location.owner == p
     base_list = database.query_by_filter(Location, expr)
+
 
     if len(base_list) != 0:
         base_string = base_list_string(base_list, '{} \n{}')
@@ -112,9 +145,9 @@ async def deletebase(ctx, name: str):
         ?deletebase [Base name]
     '''
 
-    user = str(ctx.message.author.nick)
+    uuid = grab_UUID(str(ctx.message.author.nick))
 
-    expr = (Location.owner_uuid == user) & (Location.name == name)
+    expr = (Location.owner_id == uuid) & (Location.name == name)
 
     try:
         database.delete_entry(Location, expr)

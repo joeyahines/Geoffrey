@@ -1,32 +1,42 @@
 from unittest import TestCase
 from DatabaseModels import GeoffreyDatabase
-from DatabaseModels import Location
+from DatabaseModels import Location, Player
 from BotErrors import *
+from MinecraftAccountInfoGrabber import *
 
 
 class TestGeoffreyDatabase(TestCase):
     def setUp(self):
         self.database = GeoffreyDatabase('sqlite:///:memory:')
-        self.loc = Location('test', 1, 2, 3, 'ZeroHD', ['Green', 0])
+        self.owner = Player('ZeroHD')
+        self.loc = Location('test', 1, 2, 3, self.owner, ['Green', 0])
 
     def test_add_object(self):
         self.database.add_object(self.loc)
+        self.database.add_object(self.owner)
 
-        loc2 = self.database.query_by_filter(Location, Location.owner_uuid == 'ZeroHD')[0]
+        uuid = grab_UUID('ZeroHD')
+        expr = Player.id == uuid
+        p = self.database.query_by_filter(Player, expr)[0]
+
+        expr = Location.owner == p
+        loc2 = self.database.query_by_filter(Location, expr)[0]
 
         self.assertEqual(self.loc.id, loc2.id)
 
     def test_query_by_filter(self):
-        expr = (Location.owner_uuid == 'ZeroHD') & (Location.x == 0)
+        expr = (Location.owner_id == 'fe7e84132570458892032b69ff188bc3') & (Location.x == 0)
         loc2 = self.database.query_by_filter(Location, expr)
         self.assertEqual(len(loc2), 0)
 
     def test_delete_entry(self):
         self.database.add_object(self.loc)
-        expr = (Location.owner_uuid == 'ZeroHD') & (Location.name == 'test')
+        self.database.add_object(self.owner)
+
+        expr = (Location.owner_id == 'fe7e84132570458892032b69ff188bc3') & (Location.name == 'test')
         self.database.delete_entry(Location, expr)
 
-        expr = (Location.owner_uuid == 'ZeroHD') & (Location.x == 0)
+        expr = (Location.owner_id == 'fe7e84132570458892032b69ff188bc3') & (Location.x == 0)
         loc2 = self.database.query_by_filter(Location, expr)
 
         self.assertEqual(len(loc2), 0)
