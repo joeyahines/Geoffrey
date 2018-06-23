@@ -25,6 +25,12 @@ class GeoffreyDatabase:
 
         return base
 
+    def add_shop(self, player_name, name, x_pos, y_pos, z_pos, args):
+        owner = self.add_player(player_name)
+        shop = Shop(name, x_pos, y_pos, z_pos, owner, args)
+        self.add_object(shop)
+        return shop
+
     def add_player(self, player_name):
         expr = Player.name == player_name
         player_list = self.query_by_filter(Player, expr)
@@ -50,12 +56,12 @@ class GeoffreyDatabase:
             self.session.add(obj)
             self.session.commit()
 
-    def find_base_by_owner(self, owner_name):
+    def find_location_by_owner(self, owner_name):
         player = self.add_player(owner_name)
         expr = Location.owner == player
         return self.query_by_filter(Location, expr)
 
-    def find_base_around(self, x_pos, z_pos, radius):
+    def find_location_around(self, x_pos, z_pos, radius):
         expr = (Location.x < x_pos + radius) & (Location.x > x_pos - radius) & (Location.z < z_pos + radius) & \
                (Location.z > z_pos - radius)
 
@@ -88,7 +94,6 @@ class GeoffreyDatabase:
         for obj in obj_list:
                 s = s + '\n' + obj.id
         return s
-
 
     def combine_filter(self, filter_value):
         return sqlalchemy.sql.expression.and_(filter_value[0])
@@ -141,13 +146,12 @@ class Location(SQL_Base):
     direction = Column(Enum(TunnelDirection))
     owner_id = Column(Integer, ForeignKey('Players.id'))
     owner = relationship("Player", back_populates="locations")
-    #type = Column(String)
-    '''
+    type = Column(String)
+
     __mapper_args__ = {
         'polymorphic_on': type,
         'polymorphic_identity': 'Location'
     }
-    '''
 
     def __init__(self, name, x, y, z, owner, args):
         try:
@@ -176,21 +180,21 @@ class Location(SQL_Base):
                                                                self.nether_tunnel_addr_to_str())
         else:
             return "Name: {}, Position: {}".format(self.name, self.pos_to_str())
-'''
+
 
 class Shop(Location):
     __tablename__ = 'Shops'
 
-    id = Column(Integer, ForeignKey('Locations.id'), primary_key=True)
+    shop_id = Column(Integer, ForeignKey('Locations.id'), primary_key=True)
     name = Column(String)
     inventory = relationship('ItemListing', back_populates='shop')
 
     __mapper_args__ = {
-        'polymorphic_identity': 'Shop'
+        'polymorphic_identity': 'Shop',
     }
 
     def __init__(self, name, x, y, z, owner, args):
-        Location.__init__(name, x, y, z, owner, args)
+        Location.__init__(self, name, x, y, z, owner, args)
 
 
 class ItemListing(SQL_Base):
@@ -200,7 +204,7 @@ class ItemListing(SQL_Base):
     name = Column(String)
     price = Column(Integer)
 
-    shop_id = Column(Integer, ForeignKey('Shops.id'))
+    shop_id = Column(Integer, ForeignKey('Locations.id'))
 
     shop = relationship('Shop', back_populates='inventory')
 
@@ -210,4 +214,3 @@ class ItemListing(SQL_Base):
 
     def __str__(self):
         return "Item: {}, Price: {}".format(self.name, self.price)
-'''

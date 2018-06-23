@@ -1,6 +1,5 @@
 from unittest import TestCase
-from DatabaseModels import GeoffreyDatabase
-from DatabaseModels import Location, Player
+from DatabaseModels import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 
@@ -10,6 +9,12 @@ class TestGeoffreyDatabase(TestCase):
         self.database = GeoffreyDatabase('sqlite:///:memory:')
         self.owner = Player('ZeroHD')
         self.loc = Location('test', 1, 2, 3, self.owner, ['Green', 0])
+        #self.shop = Location('test', 1, 2, 3, self.owner, ['Green', 0])
+
+    def test_add_shop(self):
+        shop = self.database.add_shop('ZeroHD', 'test', 1, 2, 3, ['Green', 0])
+
+        self.assertEqual(type(shop), Shop)
 
     def test_add_object(self):
         self.database.add_object(self.loc)

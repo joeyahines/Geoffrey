@@ -72,15 +72,33 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     await bot.say('{}, your base named {} located at {} has been added'
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
+@bot.command(pass_context=True)
+async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
+    '''
+    Add your base to the database.
+     The tunnel address is optional.
+     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position]
+    '''
+
+    player_name = get_nickname(ctx.message.author)
+
+    try:
+        base = database.add_shop(player_name, name, x_pos, y_pos, z_pos, args)
+    except LocationInitError:
+        raise commands.UserInputError
+
+    await bot.say('{}, your shop named {} located at {} has been added'
+                  ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
+
 
 @bot.command(pass_context=True)
-async def findbase(ctx, name: str):
+async def find(ctx, name: str):
     '''
     Finds a base in the database.
         ?findbase [Player name]
     '''
 
-    base_list = database.find_base_by_owner(name)
+    base_list = database.find_location_by_owner(name)
 
     if len(base_list) != 0:
         base_string = base_list_string(base_list, '{} \n{}')
@@ -92,7 +110,7 @@ async def findbase(ctx, name: str):
 
 
 @bot.command(pass_context=True)
-async def deletebase(ctx, name: str):
+async def delete(ctx, name: str):
     '''
     Deletes a base from the database.
         ?deletebase [Base name]
@@ -107,7 +125,7 @@ async def deletebase(ctx, name: str):
 
 
 @bot.command(pass_context=True)
-async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
+async def findaround(ctx, x_pos: int, z_pos: int, * args):
     '''
         Finds all the base around a certain point that are registered in the database
         The Radius argument defaults to 200 blocks if no value is given
@@ -121,7 +139,7 @@ async def findbasearound(ctx, x_pos: int, z_pos: int, * args):
         except ValueError:
             raise commands.UserInputError
 
-    base_list = database.find_base_around(x_pos, z_pos, radius)
+    base_list = database.find_location_around(x_pos, z_pos, radius)
 
     if len(base_list) != 0:
         base_string = base_list_string(base_list, '{} \n{}')
