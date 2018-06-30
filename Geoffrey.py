@@ -220,9 +220,7 @@ def get_engine_arg(config):
 
     engine_args = '{}://{}:{}@{}:{}/{}'
 
-    engine_args.format(driver, username, password, host, port, database_name)
-
-    return engine_args
+    return engine_args.format(driver, username, password, host, port, database_name)
 
 
 # Bot Startup ******************************************************************
