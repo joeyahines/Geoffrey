@@ -13,7 +13,7 @@ Please respect Geoffrey, the bot is very sensitive.w
 '''
 
 bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \
-                        'headquarters are working VEWY HAWD to fix this! (Error in command {})'
+                        'headquarters are working VEWY HAWD to fix this! (Error in command {}: {})'
 
 bot = commands.Bot(command_prefix=command_prefix, description=description, case_insensitive=True)
 
@@ -40,8 +40,7 @@ async def on_command_error(error, ctx):
     elif isinstance(error.original, UsernameLookupFailed):
         error_str = error.original.__doc__
     else:
-        error_str = bad_error_message.format(ctx.invoked_with)
-        print(error)
+        error_str = bad_error_message.format(ctx.invoked_with, error)
 
     await bot.send_message(ctx.message.channel, error_str)
 
@@ -65,7 +64,7 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     player_name = get_nickname(ctx.message.author)
 
     try:
-        base = database.add_base(player_name, name, x_pos, y_pos, z_pos, args)
+        base = database.add_location(player_name, name, x_pos, y_pos, z_pos, args)
     except LocationInitError:
         raise commands.UserInputError
 
@@ -98,16 +97,14 @@ async def find(ctx, name: str):
         ?find [Player name]
     '''
 
-    base_list = database.find_location_by_owner(name)
+    try:
+        loc_list = database.find_location_by_owner(name)
+        loc_string = loc_list_to_string(loc_list, '{} \n{}')
 
-    if len(base_list) != 0:
-        base_string = loc_list_to_string(base_list, '{} \n{}')
-
-        await bot.say('{}, {} has {} base(s): \n {}'.format(ctx.message.author.mention, name, len(base_list),
-                                                            base_string))
-    else:
-        await bot.say('{}, the player {} is not in the database'.format(ctx.message.author.mention, name))
-
+        await bot.say('{}, **{}** has **{}** base(s): \n {}'.format(ctx.message.author.mention, name, len(loc_list),
+                                                                    loc_string))
+    except PlayerNotFound:
+        await bot.say('{}, the player **{}** is not in the database'.format(ctx.message.author.mention, name))
 
 @bot.command(pass_context=True)
 async def delete(ctx, name: str):
@@ -119,9 +116,9 @@ async def delete(ctx, name: str):
     player_name = get_nickname(ctx.message.author)
     try:
         database.delete_base(player_name, name)
-        await bot.say('{}, your base named "{}" has been deleted.'.format(ctx.message.author.mention, name))
-    except DeleteEntryError:
-        await bot.say('{}, you do not have a base named "{}".'.format(ctx.message.author.mention, name))
+        await bot.say('{}, your location named **{}** has been deleted.'.format(ctx.message.author.mention, name))
+    except (DeleteEntryError, PlayerNotFound):
+        await bot.say('{}, you do not have a location named **{}**.'.format(ctx.message.author.mention, name))
 
 
 @bot.command(pass_context=True)
@@ -157,11 +154,18 @@ async def additem(ctx, shop_name: str, item_name: str, diamond_price: int):
     Adds an item to a shop's inventory
         ?additem [Shop name] [Item Name] [Price]
     '''
-    player_name = get_nickname(ctx.message.author)
-    database.add_item(player_name, shop_name, item_name, diamond_price)
 
-    await bot.say('{}, {} has been added to the inventory of {}.'.format(ctx.message.author.mention,
-                                                                         item_name, shop_name))
+    try:
+        player_name = get_nickname(ctx.message.author)
+        database.add_item(player_name, shop_name, item_name, diamond_price)
+
+        await bot.say('{}, **{}** has been added to the inventory of **{}**.'.format(ctx.message.author.mention,
+                                                                                     item_name, shop_name))
+    except PlayerNotFound:
+        await bot.say('{}, you don\'t have any shops in the database.'.format(ctx.message.author.mention))
+    except LocationLookUpError:
+        await bot.say('{}, you don\'t have any shops named **{}** in the database.'.format(ctx.message.author.mention,
+                                                                                          shop_name))
 
 
 @bot.command(pass_context=True)
@@ -175,15 +179,30 @@ async def selling(ctx, item_name: str):
     shop_list_str = loc_list_to_string(shop_list)
     await bot.say('The following shops sell {}: \n {}'.format(item_name, shop_list_str))
 
+@bot.command(pass_context=True)
+async def birb(ctx):
+    '''
+    Lists all the shops selling an item
+        ?selling [item]
+    '''
+    r = redditBot()
+
+    birb_list = loc_list_to_string(r.getTopPosts())
+    await bot.say('Here some birbs: \n {}'.format(birb_list))
 
 # Helper Functions ************************************************************
 
 
 def get_nickname(discord_user) :
     if discord_user.nick is None:
-        return discord_user.display_name
+        name = discord_user.display_name
     else:
-        return discord_user.nick
+        name = discord_user.nick
+
+    if name == 'dootb.in ꙩ ⃤':
+        name = 'aeskdar'
+
+    return name
 
 
 def loc_list_to_string(loc_list, str_format='{}\n{}'):

@@ -16,3 +16,7 @@ class DeleteEntryError(DataBaseError) :
 class UsernameLookupFailed(Exception):
     '''Error in username lookup, is the player's nickname set correctly? *stares at aeskdar*'''
 
+class PlayerNotFound(DataBaseError):
+    '''Player not found in database.'''
+
+

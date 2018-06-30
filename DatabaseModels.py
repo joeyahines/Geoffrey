@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Enum
 import enum
 from sqlalchemy.ext.declarative import declarative_base
 from BotErrors import *
-from sqlalchemy import create_engine, exists
+from sqlalchemy import create_engine, exists, func
 from sqlalchemy.orm import sessionmaker, relationship
 import sqlalchemy
 from MinecraftAccountInfoGrabber import *
@@ -18,12 +18,11 @@ class GeoffreyDatabase:
         self.session = Session()
         SQL_Base.metadata.create_all(self.engine)
 
-    def add_base(self, player_name, name, x_pos, y_pos, z_pos, args):
+    def add_location(self, player_name, name, x_pos, y_pos, z_pos, args):
         owner = self.add_player(player_name)
-        base = Location(name, x_pos, y_pos, z_pos, owner, args)
-        self.add_object(base)
-
-        return base
+        location = Location(name, x_pos, y_pos, z_pos, owner, args)
+        self.add_object(location)
+        return location
 
     def add_shop(self, player_name, name, x_pos, y_pos, z_pos, args):
         owner = self.add_player(player_name)
@@ -32,29 +31,30 @@ class GeoffreyDatabase:
         return shop
 
     def add_item(self, player_name, shop_name, item_name, price):
-        shop = self.find_location_by_name_and_owner(player_name, shop_name)
+        try:
+            shop = self.find_location_by_name_and_owner(player_name, shop_name)
 
-        item = ItemListing(item_name, price, shop[0])
+            item = ItemListing(item_name, price, shop[0])
+        except IndexError:
+            raise LocationLookUpError
 
         return item
 
     def add_player(self, player_name):
-        expr = Player.name == player_name
-        player_list = self.query_by_filter(Player, expr)
 
-        if len(player_list) == 0:
-            uuid = grab_UUID(player_name)
-            expr = Player.id == uuid
-            player_list = self.query_by_filter(Player, expr)
-
-            if len(player_list) == 0:
+        try:
+            player = self.find_player(player_name)
+        except PlayerNotFound:
+            try:
+                uuid = grab_UUID(player_name)
+                player = self.find_player_by_uuid(uuid)
+            except PlayerNotFound:
                 player = Player(player_name)
                 self.add_object(player)
-            else:
-                player_list[0].name = player_name
-        else:
-            player = player_list[0]
+            finally:
+                player.name = player_name
 
+        self.session.commit()
         return player
 
     def add_object(self, obj):
@@ -64,12 +64,12 @@ class GeoffreyDatabase:
             self.session.commit()
 
     def find_location_by_owner(self, owner_name):
-        player = self.add_player(owner_name)
+        player = self.find_player(owner_name)
         expr = Location.owner == player
         return self.query_by_filter(Location, expr)
 
     def find_location_by_name_and_owner(self, owner_name, name):
-        player = self.add_player(owner_name)
+        player = self.find_player(owner_name)
         expr = (Location.owner == player) & (Location.name == name)
         return self.query_by_filter(Location, expr)
 
@@ -92,12 +92,32 @@ class GeoffreyDatabase:
 
         return shops
 
+    def find_player(self, player_name):
+        expr = func.lower(Player.name) == func.lower(player_name)
+
+        try:
+            player = self.query_by_filter(Player, expr)[0]
+        except IndexError:
+            raise PlayerNotFound
+
+        return player
+
+    def find_player_by_uuid(self, uuid):
+        expr = Player.id == uuid
+
+        try:
+            player = self.query_by_filter(Player, expr)[0]
+        except IndexError:
+            raise PlayerNotFound
+
+        return player
+
     def query_by_filter(self, obj_type, * args):
         filter_value = self.combine_filter(args)
         return self.session.query(obj_type).filter(filter_value).all()
 
     def delete_base(self, player_name, base_name):
-        player = self.add_player(player_name)
+        player = self.find_player(player_name)
         expr = (Location.owner == player) & (Location.name == base_name)
 
         self.delete_entry(Location, expr)
@@ -152,9 +172,6 @@ class Player(SQL_Base):
     locations = relationship("Location", back_populates="owner", lazy='dynamic')
 
     def __init__(self, name):
-        if name == 'dootb.in ꙩ ⃤':
-            name = 'aeskdar'
-
         self.id = grab_UUID(name)
         self.name = name
 
