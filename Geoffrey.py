@@ -2,6 +2,7 @@ from discord.ext import commands
 from DatabaseModels import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
+import configparser
 
 TOKEN = ''
 command_prefix = '?'
@@ -16,9 +17,6 @@ bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko
                         'headquarters are working VEWY HAWD to fix this! (Error in command {}: {})'
 
 bot = commands.Bot(command_prefix=command_prefix, description=description, case_insensitive=True)
-
-database = GeoffreyDatabase('sqlite:///:memory:')
-
 
 # Bot Commands ******************************************************************'
 
@@ -68,7 +66,7 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     except LocationInitError:
         raise commands.UserInputError
 
-    await bot.say('{}, your base named {} located at {} has been added'
+    await bot.say('{}, your base named **{}** located at {} has been added.'
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
 @bot.command(pass_context=True)
@@ -86,7 +84,7 @@ async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     except LocationInitError:
         raise commands.UserInputError
 
-    await bot.say('{}, your shop named {} located at {} has been added'
+    await bot.say('{}, your shop named **{}** located at {} has been added.'
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
 
@@ -179,17 +177,6 @@ async def selling(ctx, item_name: str):
     shop_list_str = loc_list_to_string(shop_list)
     await bot.say('The following shops sell {}: \n {}'.format(item_name, shop_list_str))
 
-@bot.command(pass_context=True)
-async def birb(ctx):
-    '''
-    Lists all the shops selling an item
-        ?selling [item]
-    '''
-    r = redditBot()
-
-    birb_list = loc_list_to_string(r.getTopPosts())
-    await bot.say('Here some birbs: \n {}'.format(birb_list))
-
 # Helper Functions ************************************************************
 
 
@@ -213,15 +200,49 @@ def loc_list_to_string(loc_list, str_format='{}\n{}'):
 
     return loc_string
 
+
+def create_config():
+    'sqlite:///:memory:'
+    config['Discord'] = {'Token': ''}
+    config['SQL'] = {'Dialect+Driver': 'test', 'username': '', 'password':'', 'host': '', 'port': '', 'database':''}
+
+    with open('GeoffreyConfig.ini', 'w') as configfile:
+        config.write(configfile)
+
+
+def get_engine_arg(config):
+    driver = config['SQL']['Dialect+Driver']
+    username = config['SQL']['username']
+    password = config['SQL']['password']
+    host = config['SQL']['host']
+    port = config['SQL']['port']
+    database_name = config['SQL']['database']
+
+    engine_args = '{}://{}:{}@{}:{}/{}'
+
+    engine_args.format(driver, username, password, host, port, database_name)
+
+    return engine_args
+
+
 # Bot Startup ******************************************************************
 
 
-try:
-    file = open('token.dat', 'r')
-    TOKEN = file.read()
-except FileNotFoundError:
-    print('token.dat not found.')
-except IOError:
-    print('Error reading token.dat')
+config = configparser.ConfigParser()
+config.read('GeoffreyConfig.ini')
 
-bot.run(TOKEN)
+if len(config.sections()) == 0:
+    create_config()
+    print("GeoffreyConfig.ini generated.")
+    quit(0)
+else:
+    TOKEN = config['Discord']['Token']
+
+    if config['SQL']['dialect+driver'] == 'Test':
+        engine_arg = 'sqlite:///:memory:'
+    else:
+        engine_arg = get_engine_arg(config)
+
+    database = GeoffreyDatabase(engine_arg)
+    bot.run(TOKEN)
+
