@@ -9,7 +9,6 @@ class TestGeoffreyDatabase(TestCase):
         self.database = GeoffreyDatabase('sqlite:///:memory:')
         self.owner = Player('ZeroHD')
         self.loc = Location('test', 1, 2, 3, self.owner, ['Green', 0])
-        #self.shop = Location('test', 1, 2, 3, self.owner, ['Green', 0])
 
     def test_add_object(self):
         self.database.add_object(self.loc)
@@ -97,12 +96,32 @@ class TestGeoffreyDatabase(TestCase):
 
         self.assertEqual(len(loc_list), 0)
 
+    def test_find_location_by_name(self):
+        loc = self.database.add_location('ZeroHD', 'test', 0, 0, 0, ['Green', 0])
+
+        loc_list = self.database.find_location_by_name('test')
+
+        self.assertEqual(loc_list[0].name, loc.name)
+
     def test_wrong_case(self):
         loc = self.database.add_location('ZeroHD', 'test', 0, 0, 0, ['Green', 0])
 
         loc_list = self.database.find_location_by_owner('zerohd')
 
         self.assertEqual(loc_list[0].id, loc.id)
+
+        self.database.add_shop('ZeroHD', 'testshop', 1, 2, 3, ['Green', 0])
+
+        self.database.add_item('ZeroHD', 'testshop', 'dirt', 1)
+
+        shops = self.database.find_shop_selling_item('Dirt')
+
+        self.assertEqual(shops[0].name, 'testshop')
+
+        loc_list = self.database.find_location_by_name('TEST')
+
+        self.assertEqual(loc_list[0].name, 'test')
+
 
 
 

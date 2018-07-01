@@ -32,9 +32,10 @@ class GeoffreyDatabase:
 
     def add_item(self, player_name, shop_name, item_name, price):
         try:
-            shop = self.find_location_by_name_and_owner(player_name, shop_name)
+            shop = self.find_shop_by_name_and_owner(player_name, shop_name)
 
             item = ItemListing(item_name, price, shop[0])
+            self.add_object(item)
         except IndexError:
             raise LocationLookUpError
 
@@ -63,10 +64,23 @@ class GeoffreyDatabase:
             self.session.add(obj)
             self.session.commit()
 
+    def find_location_by_name(self, name):
+        expr = Location.name.like('%{}%'.format(name))
+        return self.query_by_filter(Location, expr)
+
+    def find_shop_by_name(self, name):
+        expr = Location.name.like('%{}%'.format(name))
+        return self.query_by_filter(Shop, expr)
+
     def find_location_by_owner(self, owner_name):
         player = self.find_player(owner_name)
         expr = Location.owner == player
         return self.query_by_filter(Location, expr)
+
+    def find_shop_by_name_and_owner(self, owner_name, name):
+        player = self.find_player(owner_name)
+        expr = (Shop.owner == player) & (Shop.name == name)
+        return self.query_by_filter(Shop, expr)
 
     def find_location_by_name_and_owner(self, owner_name, name):
         player = self.find_player(owner_name)
@@ -80,7 +94,7 @@ class GeoffreyDatabase:
         return self.query_by_filter(Location, expr)
 
     def find_item(self, item_name):
-        expr = ItemListing.name == item_name
+        expr = ItemListing.name.like(item_name)
         return self.query_by_filter(ItemListing, expr)
 
     def find_shop_selling_item(self, item_name):
@@ -93,7 +107,7 @@ class GeoffreyDatabase:
         return shops
 
     def find_player(self, player_name):
-        expr = func.lower(Player.name) == func.lower(player_name)
+        expr = Player.name.like(player_name)
 
         try:
             player = self.query_by_filter(Player, expr)[0]
@@ -111,6 +125,11 @@ class GeoffreyDatabase:
             raise PlayerNotFound
 
         return player
+
+    def get_shop_inventory(self, shop):
+        expr = ItemListing.shop == shop
+
+        return self.query_by_filter(ItemListing, expr)
 
     def query_by_filter(self, obj_type, * args):
         filter_value = self.combine_filter(args)
@@ -180,7 +199,7 @@ class Location(SQL_Base):
     __tablename__ = 'Locations'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String, unique=True)
     x = Column(Integer)
     y = Column(Integer)
     z = Column(Integer)
@@ -253,4 +272,4 @@ class ItemListing(SQL_Base):
         self.shop = shop
 
     def __str__(self):
-        return "Item: {}, Price: {}".format(self.name, self.price)
+        return "Item: {}, Price: {}D".format(self.name, self.price)

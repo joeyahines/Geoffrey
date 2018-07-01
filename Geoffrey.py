@@ -3,6 +3,7 @@ from DatabaseModels import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 import configparser
+#from WebInterface import *
 
 TOKEN = ''
 command_prefix = '?'
@@ -10,7 +11,7 @@ description = '''
 Geoffrey started his life as inside joke none of you will understand.
 At some point, she was to become an airhorn bot. Now, they know where your bases/shops are.
 
-Please respect Geoffrey, the bot is very sensitive.w
+Please respect Geoffrey, the bot is very sensitive.
 '''
 
 bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \
@@ -177,10 +178,25 @@ async def selling(ctx, item_name: str):
     shop_list_str = loc_list_to_string(shop_list)
     await bot.say('The following shops sell {}: \n {}'.format(item_name, shop_list_str))
 
+
+@bot.command(pass_context=True)
+async def shopinfo(ctx, shop_name: str):
+    '''
+    Lists the information and inventory of a shop
+        ?shopinfo [Shop Name]
+    '''
+    shop = database.find_shop_by_name(shop_name)[0]
+    inv_list = database.get_shop_inventory(shop)
+
+    item_list = ''
+    for item in inv_list:
+        item_list = item_list + '{}\n'.format(item.__str__())
+
+    await bot.say('{} \n Inventory:\n {}'.format(shop.__str__(), item_list))
+
 # Helper Functions ************************************************************
 
-
-def get_nickname(discord_user) :
+def get_nickname(discord_user):
     if discord_user.nick is None:
         name = discord_user.display_name
     else:
@@ -202,7 +218,6 @@ def loc_list_to_string(loc_list, str_format='{}\n{}'):
 
 
 def create_config():
-    'sqlite:///:memory:'
     config['Discord'] = {'Token': ''}
     config['SQL'] = {'Dialect+Driver': 'test', 'username': '', 'password':'', 'host': '', 'port': '', 'database':''}
 
@@ -237,10 +252,11 @@ else:
     TOKEN = config['Discord']['Token']
 
     if config['SQL']['dialect+driver'] == 'Test':
-        engine_arg = 'sqlite:///:memory:'
+        engine_arg = 'sqlite:///temp.db'
     else:
         engine_arg = get_engine_arg(config)
 
     database = GeoffreyDatabase(engine_arg)
+    #WebInterface('127.0.0.1', 8081, database)
     bot.run(TOKEN)
 
