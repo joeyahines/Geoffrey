@@ -30,11 +30,11 @@ class GeoffreyDatabase:
         self.add_object(shop)
         return shop
 
-    def add_item(self, player_name, shop_name, item_name, price):
+    def add_item(self, player_name, shop_name, item_name, price, amount):
         try:
             shop = self.find_shop_by_name_and_owner(player_name, shop_name)
 
-            item = ItemListing(item_name, price, shop[0])
+            item = ItemListing(item_name, price, amount, shop[0])
             self.add_object(item)
         except IndexError:
             raise LocationLookUpError
@@ -65,11 +65,11 @@ class GeoffreyDatabase:
             self.session.commit()
 
     def find_location_by_name(self, name):
-        expr = Location.name.like('%{}%'.format(name))
+        expr = Location.name.ilike('%{}%'.format(name))
         return self.query_by_filter(Location, expr)
 
     def find_shop_by_name(self, name):
-        expr = Location.name.like('%{}%'.format(name))
+        expr = Location.name.ilike('%{}%'.format(name))
         return self.query_by_filter(Shop, expr)
 
     def find_location_by_owner(self, owner_name):
@@ -79,22 +79,23 @@ class GeoffreyDatabase:
 
     def find_shop_by_name_and_owner(self, owner_name, name):
         player = self.find_player(owner_name)
-        expr = (Shop.owner == player) & (Shop.name == name)
+        expr = (Shop.owner == player) & (Shop.name.ilike(name))
         return self.query_by_filter(Shop, expr)
 
     def find_location_by_name_and_owner(self, owner_name, name):
         player = self.find_player(owner_name)
-        expr = (Location.owner == player) & (Location.name == name)
+        expr = (Location.owner == player) & (Location.name.ilike(name))
         return self.query_by_filter(Location, expr)
 
     def find_location_around(self, x_pos, z_pos, radius):
+        radius = radius + 1 #gets a the correct area
         expr = (Location.x < x_pos + radius) & (Location.x > x_pos - radius) & (Location.z < z_pos + radius) & \
                (Location.z > z_pos - radius)
 
         return self.query_by_filter(Location, expr)
 
     def find_item(self, item_name):
-        expr = ItemListing.name.like(item_name)
+        expr = ItemListing.name.ilike('{}'.format(item_name))
         return self.query_by_filter(ItemListing, expr)
 
     def find_shop_selling_item(self, item_name):
@@ -103,6 +104,7 @@ class GeoffreyDatabase:
         shops = []
         for listing in listings:
             shops.append(listing.shop)
+            shops.append(listing.__str__())
 
         return shops
 
@@ -183,6 +185,38 @@ class TunnelDirection(enum.Enum):
             raise ValueError
 
 
+class TunnelSide(enum.Enum):
+    right = 'right'
+    left = 'left'
+
+    def str_to_tunnel_side(arg):
+        arg = arg.lower()
+        if arg == TunnelSide.right.value:
+            return TunnelSide.right
+        elif arg == TunnelSide.left.value:
+            return TunnelSide.left
+        else:
+            raise ValueError
+
+
+class Dimension(enum.Enum):
+    overworld = 'overworld'
+    nether = 'nether'
+    end = 'end'
+
+    def str_to_dimension(arg):
+        arg = arg.lower()
+        if arg == Dimension.overworld.value:
+            return Dimension.overworld
+        elif arg == Dimension.nether.value:
+            return Dimension.nether
+        elif arg == Dimension.end.value:
+            return Dimension.end
+        else:
+            raise ValueError
+
+
+
 class Player(SQL_Base):
     __tablename__ = 'Players'
 
@@ -205,6 +239,9 @@ class Location(SQL_Base):
     z = Column(Integer)
     tunnelNumber = Column(Integer)
     direction = Column(Enum(TunnelDirection))
+    tunnel_side = Column(Enum(TunnelSide))
+    dimension = Column(Enum(Dimension))
+
     owner_id = Column(Integer, ForeignKey('Players.id'))
     owner = relationship("Player", back_populates="locations")
     type = Column(String)
@@ -225,15 +262,21 @@ class Location(SQL_Base):
             if len(args) > 0:
                 self.direction = TunnelDirection.str_to_tunnel_dir(args[0])
                 self.tunnelNumber = int(args[1])
+                self.tunnel_side = TunnelSide.str_to_tunnel_side(args[2])
+
+                if len(args) > 3:
+                    self.dimension = Dimension.str_to_dimension(args[3])
+                else:
+                    self.dimension = Dimension.str_to_dimension("overworld")
 
         except (ValueError, IndexError):
             raise LocationInitError
 
     def pos_to_str(self):
-        return '(x= {}, y= {}, z= {})'.format(self.x, self.y, self.z)
+        return '(x= {}, y= {}, z= {}) in the {}'.format(self.x, self.y, self.z, self.dimension.value.title())
 
     def nether_tunnel_addr_to_str(self):
-        return '{} {}'.format(self.direction.value.title(), self.tunnelNumber)
+        return '{} {} {}'.format(self.direction.value.title(), self.tunnelNumber, self.tunnel_side.value.title())
 
     def __str__(self):
         if self.direction is not None:
@@ -262,14 +305,16 @@ class ItemListing(SQL_Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
     price = Column(Integer)
+    amount = Column(Integer)
 
     shop_id = Column(Integer, ForeignKey('Shops.shop_id'))
     shop = relationship("Shop", back_populates="inventory")
 
-    def __init__(self, name, price, shop):
+    def __init__(self, name, price, amount, shop):
         self.name = name
         self.price = price
+        self.amount = amount
         self.shop = shop
 
     def __str__(self):
-        return "Item: {}, Price: {}D".format(self.name, self.price)
+        return "Item: {}, Price: {} for {}D".format(self.name, self.amount, self.price)

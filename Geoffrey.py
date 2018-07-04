@@ -3,6 +3,7 @@ from DatabaseModels import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 import configparser
+import sqlite3
 #from WebInterface import *
 
 TOKEN = ''
@@ -38,6 +39,12 @@ async def on_command_error(error, ctx):
             .format(ctx.invoked_with, ctx.invoked_with)
     elif isinstance(error.original, UsernameLookupFailed):
         error_str = error.original.__doc__
+    elif isinstance(error.original, OverflowError):
+        error_str = 'Wow buddy, that\'s a big number. Please don\'t do that.'
+        database.session.rollback()
+    elif isinstance(error.original, sqlite3.IntegrityError):
+        error_str = 'Off, the fuck did you do? Try the command again but be less of a ding dong with it.'
+        database.session.rollback()
     else:
         error_str = bad_error_message.format(ctx.invoked_with, error)
 
@@ -57,7 +64,8 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     '''
     Add your base to the database.
      The tunnel address is optional.
-     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position]
+     The default dimension is the overworld. Valid options: overworld, nether, end
+     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position] [Side] [Dimension]
     '''
 
     player_name = get_nickname(ctx.message.author)
@@ -75,7 +83,8 @@ async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     '''
     Adds a shop to the database.
      The tunnel address is optional.
-     ?addbase [Shop name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position]
+     The default dimension is the overworld. Valid options: overworld, nether, end
+     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position] [Side] {Dimension]
     '''
 
     player_name = get_nickname(ctx.message.author)
@@ -100,7 +109,7 @@ async def find(ctx, name: str):
         loc_list = database.find_location_by_owner(name)
         loc_string = loc_list_to_string(loc_list, '{} \n{}')
 
-        await bot.say('{}, **{}** has **{}** base(s): \n {}'.format(ctx.message.author.mention, name, len(loc_list),
+        await bot.say('{}, **{}** has **{}** locations(s): \n {}'.format(ctx.message.author.mention, name, len(loc_list),
                                                                     loc_string))
     except PlayerNotFound:
         await bot.say('{}, the player **{}** is not in the database'.format(ctx.message.author.mention, name))
@@ -123,7 +132,7 @@ async def delete(ctx, name: str):
 @bot.command(pass_context=True)
 async def findaround(ctx, x_pos: int, z_pos: int, * args):
     '''
-    Finds all the bases/shops around a certain point that are registered in the database
+    Finds all the locations around a certain point that are registered in the database
     The Radius argument defaults to 200 blocks if no value is given
         ?findbasearound [X Coordinate] [Z Coordinate] [Radius]
     '''
@@ -140,23 +149,23 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
     if len(base_list) != 0:
         base_string = loc_list_to_string(base_list, '{} \n{}')
 
-        await bot.say('{}, there are {} base(s) within {} blocks of that point: \n {}'.format(
+        await bot.say('{}, there are {} locations(s) within {} blocks of that point: \n {}'.format(
             ctx.message.author.mention, len(base_list), radius, base_string))
     else:
-        await bot.say('{}, there are no bases within {} blocks of that point'
+        await bot.say('{}, there are no locations within {} blocks of that point'
                       .format(ctx.message.author.mention, radius))
 
 
 @bot.command(pass_context=True)
-async def additem(ctx, shop_name: str, item_name: str, diamond_price: int):
+async def additem(ctx, shop_name: str, item_name: str, amount: int, diamond_price: int):
     '''
-    Adds an item to a shop's inventory
-        ?additem [Shop name] [Item Name] [Price]
+    Adds an item to a shop's inventory. Amount for diamond price.
+        ?additem [Shop name] [Item Name] [Amount] [Price]
     '''
 
     try:
         player_name = get_nickname(ctx.message.author)
-        database.add_item(player_name, shop_name, item_name, diamond_price)
+        database.add_item(player_name, shop_name, item_name, diamond_price, amount)
 
         await bot.say('{}, **{}** has been added to the inventory of **{}**.'.format(ctx.message.author.mention,
                                                                                      item_name, shop_name))
