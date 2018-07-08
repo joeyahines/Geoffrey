@@ -37,14 +37,18 @@ async def on_command_error(error, ctx):
     elif isinstance(error, commands.UserInputError):
         error_str = 'Invalid syntax for {} you ding dong, please read ?help {}.'\
             .format(ctx.invoked_with, ctx.invoked_with)
+        database_interface.database.session.rollback()
     elif isinstance(error.original, UsernameLookupFailed):
         error_str = error.original.__doc__
     elif isinstance(error.original, OverflowError):
         error_str = 'Wow buddy, that\'s a big number. Please don\'t do that.'
-        database.session.rollback()
+        database_interface.database.session.rollback()
+    elif isinstance(error.original, PlayerNotFound):
+        error_str = 'Make sure to use ?register first you ding dong.'
+        database_interface.database.session.rollback()
     elif isinstance(error.original, sqlite3.IntegrityError):
         error_str = 'Off, the fuck did you do? Try the command again but be less of a ding dong with it.'
-        database.session.rollback()
+        database_interface.database.session.rollback()
     else:
         error_str = bad_error_message.format(ctx.invoked_with, error)
 
@@ -58,6 +62,22 @@ async def test():
     '''
     await bot.say('I\'m here you ding dong')
 
+@bot.command(pass_context=True)
+async def register(ctx):
+    '''
+    Registers your discord and minecraft account with the the database. You must do this before adding entries to
+    the database.
+    '''
+
+    player_name = get_nickname(ctx.message.author)
+
+    try:
+        database_interface.add_player(player_name, ctx.message.author.id)
+    except LocationInitError:
+        raise commands.UserInputError
+
+    await bot.say('{}, you have been added to the database.'.format(ctx.message.author.mention))
+
 
 @bot.command(pass_context=True)
 async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
@@ -65,13 +85,14 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     Add your base to the database.
      The tunnel address is optional.
      The default dimension is the overworld. Valid options: overworld, nether, end
-     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position] [Side] [Dimension]
+     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color]
+        [Tunnel Position] [Side] [Dimension]
     '''
 
     player_name = get_nickname(ctx.message.author)
 
     try:
-        base = database.add_location(player_name, name, x_pos, y_pos, z_pos, args)
+        base = database_interface.add_location(ctx.message.author.id, name, x_pos, y_pos, z_pos, args)
     except LocationInitError:
         raise commands.UserInputError
 
@@ -84,18 +105,19 @@ async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     Adds a shop to the database.
      The tunnel address is optional.
      The default dimension is the overworld. Valid options: overworld, nether, end
-     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Tunnel Position] [Side] {Dimension]
+     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color]
+        [Tunnel Position] [Side] {Dimension]
     '''
 
     player_name = get_nickname(ctx.message.author)
 
     try:
-        base = database.add_shop(player_name, name, x_pos, y_pos, z_pos, args)
+        shop = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos, args)
     except LocationInitError:
         raise commands.UserInputError
 
     await bot.say('{}, your shop named **{}** located at {} has been added.'
-                  ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
+                  ' to the database.'.format(ctx.message.author.mention, shop.name, shop.pos_to_str()))
 
 
 @bot.command(pass_context=True)
@@ -106,7 +128,7 @@ async def find(ctx, name: str):
     '''
 
     try:
-        loc_list = database.find_location_by_owner(name)
+        loc_list = database_interface.find_location_by_owner_name(name)
         loc_string = loc_list_to_string(loc_list, '{} \n{}')
 
         await bot.say('{}, **{}** has **{}** locations(s): \n {}'.format(ctx.message.author.mention, name, len(loc_list),
@@ -123,7 +145,7 @@ async def delete(ctx, name: str):
 
     player_name = get_nickname(ctx.message.author)
     try:
-        database.delete_base(player_name, name)
+        database_interface.delete_base(player_name, name)
         await bot.say('{}, your location named **{}** has been deleted.'.format(ctx.message.author.mention, name))
     except (DeleteEntryError, PlayerNotFound):
         await bot.say('{}, you do not have a location named **{}**.'.format(ctx.message.author.mention, name))
@@ -144,7 +166,7 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
         except ValueError:
             raise commands.UserInputError
 
-    base_list = database.find_location_around(x_pos, z_pos, radius)
+    base_list = database_interface.find_location_around(x_pos, z_pos, radius)
 
     if len(base_list) != 0:
         base_string = loc_list_to_string(base_list, '{} \n{}')
@@ -165,7 +187,7 @@ async def additem(ctx, shop_name: str, item_name: str, amount: int, diamond_pric
 
     try:
         player_name = get_nickname(ctx.message.author)
-        database.add_item(player_name, shop_name, item_name, diamond_price, amount)
+        database_interface.add_item(ctx.message.author.id, shop_name, item_name, diamond_price, amount)
 
         await bot.say('{}, **{}** has been added to the inventory of **{}**.'.format(ctx.message.author.mention,
                                                                                      item_name, shop_name))
@@ -182,7 +204,7 @@ async def selling(ctx, item_name: str):
     Lists all the shops selling an item
         ?selling [item]
     '''
-    shop_list = database.find_shop_selling_item(item_name)
+    shop_list = database_interface.find_shop_selling_item(item_name)
 
     shop_list_str = loc_list_to_string(shop_list)
     await bot.say('The following shops sell {}: \n {}'.format(item_name, shop_list_str))
@@ -194,8 +216,8 @@ async def shopinfo(ctx, shop_name: str):
     Lists the information and inventory of a shop
         ?shopinfo [Shop Name]
     '''
-    shop = database.find_shop_by_name(shop_name)[0]
-    inv_list = database.get_shop_inventory(shop)
+    shop = database_interface.find_shop_by_name(shop_name)[0]
+    inv_list = database_interface.get_shop_inventory(shop)
 
     item_list = ''
     for item in inv_list:
@@ -265,7 +287,7 @@ else:
     else:
         engine_arg = get_engine_arg(config)
 
-    database = GeoffreyDatabase(engine_arg)
+    database_interface = DiscordDatabaseInterface(engine_arg)
     #WebInterface('127.0.0.1', 8081, database)
     bot.run(TOKEN)
 

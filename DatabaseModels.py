@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Enum
 import enum
 from sqlalchemy.ext.declarative import declarative_base
 from BotErrors import *
-from sqlalchemy import create_engine, exists, func
+from sqlalchemy import create_engine, exists, literal
 from sqlalchemy.orm import sessionmaker, relationship
 import sqlalchemy
 from MinecraftAccountInfoGrabber import *
@@ -10,93 +10,82 @@ from MinecraftAccountInfoGrabber import *
 SQL_Base = declarative_base()
 
 
-class GeoffreyDatabase:
+class DatabaseInterface:
 
-    def __init__(self, engine_arg):
-        self.engine = create_engine(engine_arg, echo=True)
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-        SQL_Base.metadata.create_all(self.engine)
+    def __init__(self, db_engine_arg):
+        self.database = GeoffreyDatabase(db_engine_arg)
 
-    def add_location(self, player_name, name, x_pos, y_pos, z_pos, args):
-        owner = self.add_player(player_name)
+    def add_location(self, owner, name, x_pos, y_pos, z_pos, args):
         location = Location(name, x_pos, y_pos, z_pos, owner, args)
-        self.add_object(location)
+        self.database.add_object(location)
         return location
 
-    def add_shop(self, player_name, name, x_pos, y_pos, z_pos, args):
-        owner = self.add_player(player_name)
+    def add_shop(self, owner, name, x_pos, y_pos, z_pos, args):
         shop = Shop(name, x_pos, y_pos, z_pos, owner, args)
-        self.add_object(shop)
+        self.database.add_object(shop)
         return shop
 
-    def add_item(self, player_name, shop_name, item_name, price, amount):
+    def add_item(self, owner, shop_name, item_name, price, amount):
         try:
-            shop = self.find_shop_by_name_and_owner(player_name, shop_name)
+            shop = self.find_shop_by_name_and_owner(owner, shop_name)
 
             item = ItemListing(item_name, price, amount, shop[0])
-            self.add_object(item)
+            self.database.add_object(item)
         except IndexError:
             raise LocationLookUpError
 
         return item
 
-    def add_player(self, player_name):
+    def add_player(self, player_name, discord_id):
 
         try:
             player = self.find_player(player_name)
         except PlayerNotFound:
             try:
                 uuid = grab_UUID(player_name)
-                player = self.find_player_by_uuid(uuid)
+                player = self.find_player_by_mc_uuid(uuid)
             except PlayerNotFound:
                 player = Player(player_name)
-                self.add_object(player)
+                self.database.add_object(player, discord_id)
             finally:
                 player.name = player_name
 
-        self.session.commit()
+        self.database.session.commit()
         return player
-
-    def add_object(self, obj):
-        ret = not self.session.query(exists().where(type(obj).id == obj.id))
-        if not ret:
-            self.session.add(obj)
-            self.session.commit()
 
     def find_location_by_name(self, name):
         expr = Location.name.ilike('%{}%'.format(name))
-        return self.query_by_filter(Location, expr)
+        return self.database.query_by_filter(Location, expr)
 
     def find_shop_by_name(self, name):
         expr = Location.name.ilike('%{}%'.format(name))
-        return self.query_by_filter(Shop, expr)
+        return self.database.query_by_filter(Shop, expr)
 
-    def find_location_by_owner(self, owner_name):
-        player = self.find_player(owner_name)
-        expr = Location.owner == player
-        return self.query_by_filter(Location, expr)
+    def find_location_by_owner(self, owner):
+        expr = Location.owner == owner
+        return self.database.query_by_filter(Location, expr)
 
-    def find_shop_by_name_and_owner(self, owner_name, name):
-        player = self.find_player(owner_name)
-        expr = (Shop.owner == player) & (Shop.name.ilike(name))
-        return self.query_by_filter(Shop, expr)
+    def find_location_by_owner_name(self, owner_name):
+        owner = self.find_player(owner_name)
+        return self.find_location_by_owner(owner)
 
-    def find_location_by_name_and_owner(self, owner_name, name):
-        player = self.find_player(owner_name)
-        expr = (Location.owner == player) & (Location.name.ilike(name))
-        return self.query_by_filter(Location, expr)
+    def find_shop_by_name_and_owner(self, owner, name):
+        expr = (Shop.owner == owner) & (Shop.name.ilike(name))
+        return self.database.query_by_filter(Shop, expr)
+
+    def find_location_by_name_and_owner(self, owner, name):
+        expr = (Location.owner == owner) & (Location.name.ilike(name))
+        return self.database.query_by_filter(Location, expr)
 
     def find_location_around(self, x_pos, z_pos, radius):
-        radius = radius + 1 #gets a the correct area
-        expr = (Location.x < x_pos + radius) & (Location.x > x_pos - radius) & (Location.z < z_pos + radius) & \
-               (Location.z > z_pos - radius)
+        expr = (Location.x < x_pos + radius + 1) & (Location.x > x_pos - radius - 1) & (Location.z < z_pos + radius + 1) \
+               & (Location.z > z_pos - radius - 1)
 
-        return self.query_by_filter(Location, expr)
+        return self.database.query_by_filter(Location, expr)
 
     def find_item(self, item_name):
-        expr = ItemListing.name.ilike('{}'.format(item_name))
-        return self.query_by_filter(ItemListing, expr)
+        expr = ItemListing.name.ilike('%{}%'.format(item_name))
+        return self.database.query_by_filter(ItemListing, expr)
 
     def find_shop_selling_item(self, item_name):
         listings = self.find_item(item_name)
@@ -109,20 +98,30 @@ class GeoffreyDatabase:
         return shops
 
     def find_player(self, player_name):
-        expr = Player.name.like(player_name)
+        expr = Player.name.ilike(player_name)
 
         try:
-            player = self.query_by_filter(Player, expr)[0]
+            player = self.database.query_by_filter(Player, expr)[0]
         except IndexError:
             raise PlayerNotFound
 
         return player
 
-    def find_player_by_uuid(self, uuid):
+    def find_player_by_mc_uuid(self, uuid):
         expr = Player.id == uuid
 
         try:
-            player = self.query_by_filter(Player, expr)[0]
+            player = self.database.query_by_filter(Player, expr)[0]
+        except IndexError:
+            raise PlayerNotFound
+
+        return player
+
+    def find_player_by_discord_uuid(self, uuid):
+        expr = Player.discord_uuid == uuid
+
+        try:
+            player = self.database.query_by_filter(Player, expr)[0]
         except IndexError:
             raise PlayerNotFound
 
@@ -131,17 +130,77 @@ class GeoffreyDatabase:
     def get_shop_inventory(self, shop):
         expr = ItemListing.shop == shop
 
-        return self.query_by_filter(ItemListing, expr)
+        return self.database.query_by_filter(ItemListing, expr)
+
+    def delete_location(self, owner, name):
+        expr = (Location.owner == owner) & (Location.name == name)
+
+        self.database.delete_entry(Location, expr)
+
+
+class DiscordDatabaseInterface(DatabaseInterface):
+    def add_location(self, owner_uuid, name, x_pos, y_pos, z_pos, args):
+        owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
+        return DatabaseInterface.add_location(self, owner, name, x_pos, y_pos, z_pos, args)
+
+    def add_shop(self, owner_uuid, name, x_pos, y_pos, z_pos, args):
+        owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
+        return DatabaseInterface.add_shop(self, owner, name, x_pos, y_pos, z_pos, args)
+
+    def add_item(self, owner_uuid, shop_name, item_name, price, amount):
+        owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
+        return DatabaseInterface.add_item(self, owner, shop_name, item_name, price, amount)
+
+    def add_player(self, player_name, discord_id):
+        try:
+            player = self.find_player(player_name)
+        except PlayerNotFound:
+            try:
+                uuid = grab_UUID(player_name)
+                player = self.find_player_by_mc_uuid(uuid)
+            except PlayerNotFound:
+                player = Player(player_name, discord_id)
+                self.database.add_object(player)
+            finally:
+                player.name = player_name
+
+        self.database.session.commit()
+        return player
+
+    def find_location_by_owner_uuid(self, owner_uuid):
+        owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
+        return DatabaseInterface.find_location_by_owner(self, owner)
+
+    def find_shop_by_name_and_owner_uuid(self, owner_uuid, name):
+        owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
+        return DatabaseInterface.find_shop_by_name_and_owner(self, owner, name)
+
+    def find_location_by_name_and_owner_uuid(self, owner_uuid, name):
+        owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
+        return DatabaseInterface.find_location_by_name_and_owner(self, owner, name)
+
+    def delete_location(self, owner_uuid, name):
+        owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
+        return DatabaseInterface.delete_location(self, owner, name)
+
+
+class GeoffreyDatabase:
+
+    def __init__(self, engine_arg):
+        self.engine = create_engine(engine_arg, echo=True)
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+        SQL_Base.metadata.create_all(self.engine)
+
+    def add_object(self, obj):
+        ret = not self.session.query(exists().where(type(obj).id == obj.id))
+        if not ret:
+            self.session.add(obj)
+            self.session.commit()
 
     def query_by_filter(self, obj_type, * args):
         filter_value = self.combine_filter(args)
         return self.session.query(obj_type).filter(filter_value).all()
-
-    def delete_base(self, player_name, base_name):
-        player = self.find_player(player_name)
-        expr = (Location.owner == player) & (Location.name == base_name)
-
-        self.delete_entry(Location, expr)
 
     def delete_entry(self, obj_type, * args):
         filter_value = self.combine_filter(args)
@@ -216,16 +275,17 @@ class Dimension(enum.Enum):
             raise ValueError
 
 
-
 class Player(SQL_Base):
     __tablename__ = 'Players'
-
-    id = Column(String, primary_key=True, autoincrement=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    mc_uuid = Column(String)
+    discord_uuid = Column(String)
     name = Column(String)
     locations = relationship("Location", back_populates="owner", lazy='dynamic')
 
-    def __init__(self, name):
-        self.id = grab_UUID(name)
+    def __init__(self, name, discord_id=None):
+        self.mc_uuid = grab_UUID(name)
+        self.discord_uuid = discord_id
         self.name = name
 
 
@@ -266,8 +326,9 @@ class Location(SQL_Base):
 
                 if len(args) > 3:
                     self.dimension = Dimension.str_to_dimension(args[3])
-                else:
-                    self.dimension = Dimension.str_to_dimension("overworld")
+
+            if self.dimension is None:
+                self.dimension = Dimension.overworld
 
         except (ValueError, IndexError):
             raise LocationInitError
