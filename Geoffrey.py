@@ -13,6 +13,8 @@ Geoffrey started his life as inside joke none of you will understand.
 At some point, she was to become an airhorn bot. Now, they know where your bases/shops are.
 
 Please respect Geoffrey, the bot is very sensitive.
+
+*You must use ?register before adding entries into Geoffrey*
 '''
 
 bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \
@@ -46,8 +48,11 @@ async def on_command_error(error, ctx):
     elif isinstance(error.original, PlayerNotFound):
         error_str = 'Make sure to use ?register first you ding dong.'
         database_interface.database.session.rollback()
+    elif isinstance(error.original.orig, sqlite3.IntegrityError):
+        error_str = 'An entry in the database already has that name ding dong.'
+        database_interface.database.session.rollback()
     elif isinstance(error.original, sqlite3.IntegrityError):
-        error_str = 'Off, the fuck did you do? Try the command again but be less of a ding dong with it.'
+        error_str = 'Oof, the fuck did you do? Try the command again but be less of a ding dong with it.'
         database_interface.database.session.rollback()
     else:
         error_str = bad_error_message.format(ctx.invoked_with, error)
@@ -96,7 +101,7 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     except LocationInitError:
         raise commands.UserInputError
 
-    await bot.say('{}, your base named **{}** located at {} has been added.'
+    await bot.say('{}, your base named **{}** located at {} has been added'
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
 @bot.command(pass_context=True)
@@ -116,7 +121,7 @@ async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     except LocationInitError:
         raise commands.UserInputError
 
-    await bot.say('{}, your shop named **{}** located at {} has been added.'
+    await bot.say('{}, your shop named **{}** located at {} has been added'
                   ' to the database.'.format(ctx.message.author.mention, shop.name, shop.pos_to_str()))
 
 
