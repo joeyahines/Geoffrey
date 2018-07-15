@@ -3,7 +3,7 @@ from DatabaseModels import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 import configparser
-import sqlite3
+import shlex
 #from WebInterface import *
 
 TOKEN = ''
@@ -48,11 +48,8 @@ async def on_command_error(error, ctx):
     elif isinstance(error.original, PlayerNotFound):
         error_str = 'Make sure to use ?register first you ding dong.'
         database_interface.database.session.rollback()
-    elif isinstance(error.original.orig, sqlite3.IntegrityError):
+    elif isinstance(error.original, LocationNameNotUniqueError):
         error_str = 'An entry in the database already has that name ding dong.'
-        database_interface.database.session.rollback()
-    elif isinstance(error.original, sqlite3.IntegrityError):
-        error_str = 'Oof, the fuck did you do? Try the command again but be less of a ding dong with it.'
         database_interface.database.session.rollback()
     else:
         error_str = bad_error_message.format(ctx.invoked_with, error)
@@ -165,6 +162,7 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
     '''
 
     radius = 200
+
     if len(args) > 0:
         try:
             radius = int(args[0])
@@ -260,7 +258,6 @@ def create_config():
     with open('GeoffreyConfig.ini', 'w') as configfile:
         config.write(configfile)
 
-
 def get_engine_arg(config):
     driver = config['SQL']['Dialect+Driver']
     username = config['SQL']['username']
@@ -294,5 +291,6 @@ else:
 
     database_interface = DiscordDatabaseInterface(engine_arg)
     #WebInterface('127.0.0.1', 8081, database)
+
     bot.run(TOKEN)
 

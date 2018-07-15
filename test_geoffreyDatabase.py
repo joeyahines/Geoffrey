@@ -99,27 +99,29 @@ class TestGeoffreyDatabase(TestCase):
         owner = self.interface.add_player('ZeroHD', '143072699567177728')
         loc = self.interface.add_location('143072699567177728', 'test', 0, 0, 0, ['Green', 0, "Right"])
 
-        loc_list = self.interface.find_location_around(100, 100, 100)
+        dim = Dimension.str_to_dimension("O")
+
+        loc_list = self.interface.find_location_around(100, 100, 100, dim)
 
         self.assertEqual(loc_list[0].name, loc.name)
 
-        loc_list = self.interface.find_location_around(200, 200, 100)
+        loc_list = self.interface.find_location_around(200, 200, 100, dim)
 
         self.assertEqual(len(loc_list), 0)
 
-        loc_list = self.interface.find_location_around(-100, -100, 100)
+        loc_list = self.interface.find_location_around(-100, -100, 100, dim)
 
         self.assertEqual(loc_list[0].name, loc.name)
 
-        loc_list = self.interface.find_location_around(100, -100, 100)
+        loc_list = self.interface.find_location_around(100, -100, 100, dim)
 
         self.assertEqual(loc_list[0].name, loc.name)
 
-        loc_list = self.interface.find_location_around(-100, 100, 100)
+        loc_list = self.interface.find_location_around(-100, 100, 100, dim)
 
         self.assertEqual(loc_list[0].name, loc.name)
 
-        loc_list = self.interface.find_location_around(50, -50, 100)
+        loc_list = self.interface.find_location_around(50, -50, 100, dim)
 
         self.assertEqual(loc_list[0].name, loc.name)
 
@@ -164,6 +166,12 @@ class TestGeoffreyDatabase(TestCase):
 
         self.assertEqual(loc_list[0].id, loc.id)
 
+    def test_duplicate_name(self):
+        self.interface.add_player('ZeroHD', '143072699567177728')
+        self.interface.add_location('143072699567177728', 'test', 0, 0, 0, ['Green', 0, "right"])
+
+        self.assertRaises(LocationNameNotUniqueError, self.interface.add_location,
+                          '143072699567177728', 'test', 0, 0, 0, ['Green', 0, "right"])
 
 
 

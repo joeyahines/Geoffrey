@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from BotErrors import *
 from sqlalchemy import create_engine, exists, literal
 from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.exc import IntegrityError
 import sqlalchemy
 from MinecraftAccountInfoGrabber import *
 
@@ -77,9 +78,9 @@ class DatabaseInterface:
         expr = (Location.owner == owner) & (Location.name.ilike(name))
         return self.database.query_by_filter(Location, expr)
 
-    def find_location_around(self, x_pos, z_pos, radius):
+    def find_location_around(self, x_pos, z_pos, radius, dimension):
         expr = (Location.x < x_pos + radius + 1) & (Location.x > x_pos - radius - 1) & (Location.z < z_pos + radius + 1) \
-               & (Location.z > z_pos - radius - 1)
+               & (Location.z > z_pos - radius - 1) & (Location.dimension == dimension)
 
         return self.database.query_by_filter(Location, expr)
 
@@ -193,10 +194,13 @@ class GeoffreyDatabase:
         SQL_Base.metadata.create_all(self.engine)
 
     def add_object(self, obj):
-        ret = not self.session.query(exists().where(type(obj).id == obj.id))
-        if not ret:
-            self.session.add(obj)
-            self.session.commit()
+        try:
+            ret = not self.session.query(exists().where(type(obj).id == obj.id))
+            if not ret:
+                self.session.add(obj)
+                self.session.commit()
+        except IntegrityError:
+            raise LocationNameNotUniqueError
 
     def query_by_filter(self, obj_type, * args):
         filter_value = self.combine_filter(args)
@@ -232,13 +236,13 @@ class TunnelDirection(enum.Enum):
 
     def str_to_tunnel_dir(arg):
         arg = arg.lower()
-        if arg == TunnelDirection.North.value:
+        if arg in TunnelDirection.North.value:
             return TunnelDirection.North
-        elif arg == TunnelDirection.East.value:
+        elif arg in TunnelDirection.East.value:
             return TunnelDirection.East
-        elif arg == TunnelDirection.South.value:
+        elif arg in TunnelDirection.South.value:
             return TunnelDirection.South
-        elif arg == TunnelDirection.West.value:
+        elif arg in TunnelDirection.West.value:
             return TunnelDirection.West
         else:
             raise ValueError
@@ -250,9 +254,9 @@ class TunnelSide(enum.Enum):
 
     def str_to_tunnel_side(arg):
         arg = arg.lower()
-        if arg == TunnelSide.right.value:
+        if arg in TunnelSide.right.value:
             return TunnelSide.right
-        elif arg == TunnelSide.left.value:
+        elif arg in TunnelSide.left.value:
             return TunnelSide.left
         else:
             raise ValueError
@@ -265,11 +269,11 @@ class Dimension(enum.Enum):
 
     def str_to_dimension(arg):
         arg = arg.lower()
-        if arg == Dimension.overworld.value:
+        if arg in Dimension.overworld.value:
             return Dimension.overworld
-        elif arg == Dimension.nether.value:
+        elif arg in Dimension.nether.value:
             return Dimension.nether
-        elif arg == Dimension.end.value:
+        elif arg in Dimension.end.value:
             return Dimension.end
         else:
             raise ValueError
