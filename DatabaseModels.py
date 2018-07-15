@@ -7,22 +7,30 @@ from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.exc import IntegrityError
 import sqlalchemy
 from MinecraftAccountInfoGrabber import *
+from difflib import SequenceMatcher
 
 SQL_Base = declarative_base()
 
+def check_similarity(a, b):
+    ratio = SequenceMatcher(None, a, b).ratio()
+
+    if (ratio > 0.6) or (a[0] == b[0]):
+        return True
+    else:
+        return False
 
 class DatabaseInterface:
 
     def __init__(self, db_engine_arg):
         self.database = GeoffreyDatabase(db_engine_arg)
 
-    def add_location(self, owner, name, x_pos, y_pos, z_pos, args):
-        location = Location(name, x_pos, y_pos, z_pos, owner, args)
+    def add_location(self, owner, name, x_pos, y_pos, z_pos, tunnel=None, dimension=None):
+        location = Location(name, x_pos, y_pos, z_pos, owner, tunnel, dimension)
         self.database.add_object(location)
         return location
 
-    def add_shop(self, owner, name, x_pos, y_pos, z_pos, args):
-        shop = Shop(name, x_pos, y_pos, z_pos, owner, args)
+    def add_shop(self, owner, name, x_pos, y_pos, z_pos, tunnel=None, dimension=None):
+        shop = Shop(name, x_pos, y_pos, z_pos, owner, tunnel, dimension)
         self.database.add_object(shop)
         return shop
 
@@ -79,8 +87,9 @@ class DatabaseInterface:
         return self.database.query_by_filter(Location, expr)
 
     def find_location_around(self, x_pos, z_pos, radius, dimension):
+        dimension_obj = Dimension.str_to_dimension(dimension)
         expr = (Location.x < x_pos + radius + 1) & (Location.x > x_pos - radius - 1) & (Location.z < z_pos + radius + 1) \
-               & (Location.z > z_pos - radius - 1) & (Location.dimension == dimension)
+               & (Location.z > z_pos - radius - 1) & (Location.dimension == dimension_obj)
 
         return self.database.query_by_filter(Location, expr)
 
@@ -140,13 +149,13 @@ class DatabaseInterface:
 
 
 class DiscordDatabaseInterface(DatabaseInterface):
-    def add_location(self, owner_uuid, name, x_pos, y_pos, z_pos, args):
+    def add_location(self, owner_uuid, name, x_pos, y_pos, z_pos, tunnel=None, dimension=None):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
-        return DatabaseInterface.add_location(self, owner, name, x_pos, y_pos, z_pos, args)
+        return DatabaseInterface.add_location(self, owner, name, x_pos, y_pos, z_pos, tunnel, dimension)
 
-    def add_shop(self, owner_uuid, name, x_pos, y_pos, z_pos, args):
+    def add_shop(self, owner_uuid, name, x_pos, y_pos, z_pos, tunnel=None, dimension=None):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
-        return DatabaseInterface.add_shop(self, owner, name, x_pos, y_pos, z_pos, args)
+        return DatabaseInterface.add_shop(self, owner, name, x_pos, y_pos, z_pos, tunnel, dimension)
 
     def add_item(self, owner_uuid, shop_name, item_name, price, amount):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
@@ -236,13 +245,14 @@ class TunnelDirection(enum.Enum):
 
     def str_to_tunnel_dir(arg):
         arg = arg.lower()
-        if arg in TunnelDirection.North.value:
+
+        if check_similarity(TunnelDirection.North.value, arg):
             return TunnelDirection.North
-        elif arg in TunnelDirection.East.value:
+        elif check_similarity(TunnelDirection.East.value, arg):
             return TunnelDirection.East
-        elif arg in TunnelDirection.South.value:
+        elif check_similarity(TunnelDirection.South.value, arg):
             return TunnelDirection.South
-        elif arg in TunnelDirection.West.value:
+        elif check_similarity(TunnelDirection.West.value, arg):
             return TunnelDirection.West
         else:
             raise ValueError
@@ -254,9 +264,9 @@ class TunnelSide(enum.Enum):
 
     def str_to_tunnel_side(arg):
         arg = arg.lower()
-        if arg in TunnelSide.right.value:
+        if check_similarity(TunnelSide.right.value, arg):
             return TunnelSide.right
-        elif arg in TunnelSide.left.value:
+        elif check_similarity(TunnelSide.left.value, arg):
             return TunnelSide.left
         else:
             raise ValueError
@@ -269,11 +279,11 @@ class Dimension(enum.Enum):
 
     def str_to_dimension(arg):
         arg = arg.lower()
-        if arg in Dimension.overworld.value:
+        if check_similarity(Dimension.overworld.value, arg):
             return Dimension.overworld
-        elif arg in Dimension.nether.value:
+        elif check_similarity(Dimension.nether.value, arg):
             return Dimension.nether
-        elif arg in Dimension.end.value:
+        elif check_similarity(Dimension.end.value, arg):
             return Dimension.end
         else:
             raise ValueError
@@ -301,8 +311,8 @@ class Location(SQL_Base):
     x = Column(Integer)
     y = Column(Integer)
     z = Column(Integer)
-    tunnelNumber = Column(Integer)
-    direction = Column(Enum(TunnelDirection))
+    tunnel_number = Column(Integer)
+    tunnel_direction = Column(Enum(TunnelDirection))
     tunnel_side = Column(Enum(TunnelSide))
     dimension = Column(Enum(Dimension))
 
@@ -315,7 +325,7 @@ class Location(SQL_Base):
         'polymorphic_identity': 'Location'
     }
 
-    def __init__(self, name, x, y, z, owner, args):
+    def __init__(self, name, x, y, z, owner, tunnel, dimension):
         try:
             self.name = name
             self.x = x
@@ -323,15 +333,15 @@ class Location(SQL_Base):
             self.z = z
             self.owner = owner
 
-            if len(args) > 0:
-                self.direction = TunnelDirection.str_to_tunnel_dir(args[0])
-                self.tunnelNumber = int(args[1])
-                self.tunnel_side = TunnelSide.str_to_tunnel_side(args[2])
+            if tunnel is not None:
+                tunnel_info_list = tunnel.split(',')
+                self.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_info_list[0])
+                self.tunnel_number = int(tunnel_info_list[1])
+                self.tunnel_side = TunnelSide.str_to_tunnel_side(tunnel_info_list[2])
 
-                if len(args) > 3:
-                    self.dimension = Dimension.str_to_dimension(args[3])
-
-            if self.dimension is None:
+            if self.dimension is not None:
+                self.dimension = self.dimension = Dimension.str_to_dimension(dimension)
+            else:
                 self.dimension = Dimension.overworld
 
         except (ValueError, IndexError):
@@ -341,10 +351,10 @@ class Location(SQL_Base):
         return '(x= {}, y= {}, z= {}) in the {}'.format(self.x, self.y, self.z, self.dimension.value.title())
 
     def nether_tunnel_addr_to_str(self):
-        return '{} {} {}'.format(self.direction.value.title(), self.tunnelNumber, self.tunnel_side.value.title())
+        return '{} {} {}'.format(self.tunnel_direction.value.title(), self.tunnel_number, self.tunnel_side.value.title())
 
     def __str__(self):
-        if self.direction is not None:
+        if self.tunnel_direction is not None:
             return "Name: {}, Position: {}, Tunnel: {}".format(self.name, self.pos_to_str(),
                                                                self.nether_tunnel_addr_to_str())
         else:
@@ -360,8 +370,8 @@ class Shop(Location):
         'polymorphic_identity': 'Shop',
     }
 
-    def __init__(self, name, x, y, z, owner, args):
-        Location.__init__(self, name, x, y, z, owner, args)
+    def __init__(self, name, x, y, z, owner, tunnel, dimension):
+        Location.__init__(self, name, x, y, z, owner, tunnel, dimension)
 
 
 class ItemListing(SQL_Base):

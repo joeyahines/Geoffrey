@@ -2,6 +2,7 @@ from discord.ext import commands
 from DatabaseModels import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
+from itertools import zip_longest
 import configparser
 import shlex
 #from WebInterface import *
@@ -67,7 +68,7 @@ async def test():
 @bot.command(pass_context=True)
 async def register(ctx):
     '''
-    Registers your discord and minecraft account with the the database. You must do this before adding entries to
+    Registers your Discord and Minecraft account with the the database. You must do this before adding entries to
     the database.
     '''
 
@@ -85,16 +86,31 @@ async def register(ctx):
 async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
     '''
     Add your base to the database.
-     The tunnel address is optional.
-     The default dimension is the overworld. Valid options: overworld, nether, end
-     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color]
-        [Tunnel Position] [Side] [Dimension]
+    The tunnel address is optional.
+    The default dimension is the overworld. Valid options: overworld, nether, end
+
+    ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Optional Flags]
+
+    Optional Flags:
+    -t [Tunnel Color],[Tunnel Position],[Side]
+    -d [dimension]
     '''
 
-    player_name = get_nickname(ctx.message.author)
+    flags = get_args_dict(args)
+    tunnel = None
+    dimension = None
 
+    if len(flags) > 0:
+        if '-t' in flags:
+            tunnel = flags['-t']
+
+        if '-d' in flags:
+            dimension = flags['-d']
+
+
+    await bot.say('Test ' + tunnel)
     try:
-        base = database_interface.add_location(ctx.message.author.id, name, x_pos, y_pos, z_pos, args)
+        shop = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos, tunnel, dimension)
     except LocationInitError:
         raise commands.UserInputError
 
@@ -102,19 +118,32 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
 @bot.command(pass_context=True)
-async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
+async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, *args):
     '''
     Adds a shop to the database.
-     The tunnel address is optional.
-     The default dimension is the overworld. Valid options: overworld, nether, end
-     ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color]
-        [Tunnel Position] [Side] {Dimension]
+    The tunnel address is optional.
+    The default dimension is the overworld. Valid options: overworld, nether, end
+
+    ?addbase [Shop Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Optional Flags]
+
+    Optional Flags:
+    -t [Tunnel Color],[Tunnel Position],[Side]
+    -d [dimension]
     '''
 
-    player_name = get_nickname(ctx.message.author)
+    flags = get_args_dict(args)
+    tunnel = None
+    dimension = None
+
+    if len(flags) > 0:
+        if '-t' in flags:
+            tunnel = flags['-t']
+
+        if '-d' in flags:
+            dimension = flags['-d']
 
     try:
-        shop = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos, args)
+        shop = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos, tunnel, dimension)
     except LocationInitError:
         raise commands.UserInputError
 
@@ -157,19 +186,29 @@ async def delete(ctx, name: str):
 async def findaround(ctx, x_pos: int, z_pos: int, * args):
     '''
     Finds all the locations around a certain point that are registered in the database
-    The Radius argument defaults to 200 blocks if no value is given
-        ?findbasearound [X Coordinate] [Z Coordinate] [Radius]
+    The radius defaults to 200 blocks if no value is given
+    Default dimension is overworld
+
+    ?findaround [X Coordinate] [Z Coordinate] [Optional Flags]
+
+    Optional Flags:
+    -r [radius]
+    -d [dimension]
     '''
 
     radius = 200
+    dimension = 'Overworld'
 
-    if len(args) > 0:
-        try:
-            radius = int(args[0])
-        except ValueError:
-            raise commands.UserInputError
+    flags = get_args_dict(args)
 
-    base_list = database_interface.find_location_around(x_pos, z_pos, radius)
+    if len(flags) > 0:
+        if '-r' in flags:
+            radius = int(flags['-r'])
+
+        if '-d' in flags:
+            dimension = flags['-d']
+
+    base_list = database_interface.find_location_around(x_pos, z_pos, radius, dimension)
 
     if len(base_list) != 0:
         base_string = loc_list_to_string(base_list, '{} \n{}')
@@ -185,7 +224,8 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
 async def additem(ctx, shop_name: str, item_name: str, amount: int, diamond_price: int):
     '''
     Adds an item to a shop's inventory. Amount for diamond price.
-        ?additem [Shop name] [Item Name] [Amount] [Price]
+
+    ?additem [Shop name] [Item Name] [Amount] [Price]
     '''
 
     try:
@@ -205,7 +245,8 @@ async def additem(ctx, shop_name: str, item_name: str, amount: int, diamond_pric
 async def selling(ctx, item_name: str):
     '''
     Lists all the shops selling an item
-        ?selling [item]
+
+    ?selling [item]
     '''
     shop_list = database_interface.find_shop_selling_item(item_name)
 
@@ -217,7 +258,8 @@ async def selling(ctx, item_name: str):
 async def shopinfo(ctx, shop_name: str):
     '''
     Lists the information and inventory of a shop
-        ?shopinfo [Shop Name]
+
+    ?shopinfo [Shop Name]
     '''
     shop = database_interface.find_shop_by_name(shop_name)[0]
     inv_list = database_interface.get_shop_inventory(shop)
@@ -249,6 +291,13 @@ def loc_list_to_string(loc_list, str_format='{}\n{}'):
         loc_string = str_format.format(loc_string, loc)
 
     return loc_string
+
+
+def get_args_dict(args):
+    if len(args) != 0:
+        return dict(zip_longest(*[iter(args)] * 2, fillvalue=""))
+    else:
+        return {}
 
 
 def create_config():
