@@ -107,10 +107,8 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
         if '-d' in flags:
             dimension = flags['-d']
 
-
-    await bot.say('Test ' + tunnel)
     try:
-        shop = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos, tunnel, dimension)
+        base = database_interface.add_base(ctx.message.author.id, name, x_pos, y_pos, z_pos, tunnel, dimension)
     except LocationInitError:
         raise commands.UserInputError
 
