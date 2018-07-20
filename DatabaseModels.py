@@ -24,13 +24,13 @@ class DatabaseInterface:
     def __init__(self, db_engine_arg):
         self.database = GeoffreyDatabase(db_engine_arg)
 
-    def add_location(self, owner, name, x_pos, y_pos, z_pos, tunnel=None, dimension=None):
-        location = Location(name, x_pos, y_pos, z_pos, owner, tunnel, dimension)
+    def add_location(self, owner, name, x_pos, y_pos, z_pos, dimension=None):
+        location = Location(name, x_pos, y_pos, z_pos, owner, dimension)
         self.database.add_object(location)
         return location
 
-    def add_shop(self, owner, name, x_pos, y_pos, z_pos, tunnel=None, dimension=None):
-        shop = Shop(name, x_pos, y_pos, z_pos, owner, tunnel, dimension)
+    def add_shop(self, owner, name, x_pos, y_pos, z_pos, dimension=None):
+        shop = Shop(name, x_pos, y_pos, z_pos, owner, dimension)
         self.database.add_object(shop)
         return shop
 
@@ -149,13 +149,13 @@ class DatabaseInterface:
 
 
 class DiscordDatabaseInterface(DatabaseInterface):
-    def add_location(self, owner_uuid, name, x_pos, y_pos, z_pos, tunnel=None, dimension=None):
+    def add_location(self, owner_uuid, name, x_pos, y_pos, z_pos, dimension=None):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
-        return DatabaseInterface.add_location(self, owner, name, x_pos, y_pos, z_pos, tunnel, dimension)
+        return DatabaseInterface.add_location(self, owner, name, x_pos, y_pos, z_pos, dimension)
 
-    def add_shop(self, owner_uuid, name, x_pos, y_pos, z_pos, tunnel=None, dimension=None):
+    def add_shop(self, owner_uuid, name, x_pos, y_pos, z_pos, dimension=None):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
-        return DatabaseInterface.add_shop(self, owner, name, x_pos, y_pos, z_pos, tunnel, dimension)
+        return DatabaseInterface.add_shop(self, owner, name, x_pos, y_pos, z_pos, dimension)
 
     def add_item(self, owner_uuid, shop_name, item_name, price, amount):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
@@ -257,21 +257,6 @@ class TunnelDirection(enum.Enum):
         else:
             raise ValueError
 
-
-class TunnelSide(enum.Enum):
-    right = 'right'
-    left = 'left'
-
-    def str_to_tunnel_side(arg):
-        arg = arg.lower()
-        if check_similarity(TunnelSide.right.value, arg):
-            return TunnelSide.right
-        elif check_similarity(TunnelSide.left.value, arg):
-            return TunnelSide.left
-        else:
-            raise ValueError
-
-
 class Dimension(enum.Enum):
     overworld = 'overworld'
     nether = 'nether'
@@ -296,12 +281,35 @@ class Player(SQL_Base):
     discord_uuid = Column(String)
     name = Column(String)
     locations = relationship("Location", back_populates="owner", lazy='dynamic')
+    tunnels = relationship("Tunnel", back_populates="owner", lazy='dynamic')
 
     def __init__(self, name, discord_id=None):
         self.mc_uuid = grab_UUID(name)
         self.discord_uuid = discord_id
         self.name = name
 
+
+class Tunnel(SQL_Base):
+    __tablename__ = 'Tunnels'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    tunnel_number = Column(Integer)
+    tunnel_direction = Column(Enum(TunnelDirection))
+    owner_id = Column(Integer, ForeignKey('Players.id'))
+    owner = relationship("Player", back_populates="tunnels")
+    location_id = Column(Integer, ForeignKey('Locations.id'))
+    location = relationship("Location", back_populates="tunnel")
+
+    def __init__(self, owner, tunnel_color, tunnel_number, location=None):
+        try:
+            self.owner = owner
+            self.location = location
+            self.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_color)
+            self.tunnel_number = tunnel_number
+        except (ValueError, IndexError):
+            raise TunnelInitError
+
+    def __str__(self):
+        return '{} {} {}'.format(self.tunnel_direction.value.title(), self.tunnel_number)
 
 class Location(SQL_Base):
     __tablename__ = 'Locations'
@@ -311,9 +319,8 @@ class Location(SQL_Base):
     x = Column(Integer)
     y = Column(Integer)
     z = Column(Integer)
-    tunnel_number = Column(Integer)
-    tunnel_direction = Column(Enum(TunnelDirection))
-    tunnel_side = Column(Enum(TunnelSide))
+
+    tunnel = relationship("Tunnel", back_populates="location")
     dimension = Column(Enum(Dimension))
 
     owner_id = Column(Integer, ForeignKey('Players.id'))
@@ -325,19 +332,13 @@ class Location(SQL_Base):
         'polymorphic_identity': 'Location'
     }
 
-    def __init__(self, name, x, y, z, owner, tunnel, dimension):
+    def __init__(self, name, x, y, z, owner, dimension):
         try:
             self.name = name
             self.x = x
             self.y = y
             self.z = z
             self.owner = owner
-
-            if tunnel is not None:
-                tunnel_info_list = tunnel.split(',')
-                self.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_info_list[0])
-                self.tunnel_number = int(tunnel_info_list[1])
-                self.tunnel_side = TunnelSide.str_to_tunnel_side(tunnel_info_list[2])
 
             if self.dimension is not None:
                 self.dimension = self.dimension = Dimension.str_to_dimension(dimension)
@@ -350,15 +351,13 @@ class Location(SQL_Base):
     def pos_to_str(self):
         return '(x= {}, y= {}, z= {}) in the {}'.format(self.x, self.y, self.z, self.dimension.value.title())
 
-    def nether_tunnel_addr_to_str(self):
-        return '{} {} {}'.format(self.tunnel_direction.value.title(), self.tunnel_number, self.tunnel_side.value.title())
-
     def __str__(self):
-        if self.tunnel_direction is not None:
+        if self.tunnel is not None:
             return "Name: {}, Position: {}, Tunnel: {}".format(self.name, self.pos_to_str(),
-                                                               self.nether_tunnel_addr_to_str())
+                                                               self.tunnel)
         else:
             return "Name: {}, Position: {}".format(self.name, self.pos_to_str())
+
 
 
 class Shop(Location):
@@ -370,8 +369,8 @@ class Shop(Location):
         'polymorphic_identity': 'Shop',
     }
 
-    def __init__(self, name, x, y, z, owner, tunnel, dimension):
-        Location.__init__(self, name, x, y, z, owner, tunnel, dimension)
+    def __init__(self, name, x, y, z, owner, dimension=None):
+        Location.__init__(self, name, x, y, z, owner, dimension)
 
 
 class ItemListing(SQL_Base):

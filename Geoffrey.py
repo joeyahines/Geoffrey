@@ -83,34 +83,24 @@ async def register(ctx):
 
 
 @bot.command(pass_context=True)
-async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
+async def addbase(ctx, x_pos: int, y_pos: int, z_pos: int, * args):
     '''
-    Add your base to the database.
-    The tunnel address is optional.
-    The default dimension is the overworld. Valid options: overworld, nether, end
-
-    ?addbase [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Tunnel Color] [Optional Flags]
-
-    Optional Flags:
-    -t [Tunnel Color],[Tunnel Position],[Side]
-    -d [dimension]
+    Adds your base to the database. The name is optional.
+        ?addbase [Shop Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Name]
     '''
 
-    flags = get_args_dict(args)
-    tunnel = None
-    dimension = None
-
-    if len(flags) > 0:
-        if '-t' in flags:
-            tunnel = flags['-t']
-
-        if '-d' in flags:
-            dimension = flags['-d']
-
+    if len(args) > 0:
+        name = args[0]
+    else:
+        name = '{}\'s Base'.format(database_interface.find_player_by_discord_uuid(ctx.message.author.id).name)
     try:
-        base = database_interface.add_base(ctx.message.author.id, name, x_pos, y_pos, z_pos, tunnel, dimension)
+        base = database_interface.add_location(ctx.message.author.id, name, x_pos, y_pos, z_pos)
     except LocationInitError:
         raise commands.UserInputError
+    except LocationNameNotUniqueError:
+        await bot.say('{}, you already have a based called {}. You need to specify a different name.'.format(
+            ctx.message.author.mention, name))
+        return
 
     await bot.say('{}, your base named **{}** located at {} has been added'
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
@@ -118,35 +108,26 @@ async def addbase(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, * args):
 @bot.command(pass_context=True)
 async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, *args):
     '''
-    Adds a shop to the database.
-    The tunnel address is optional.
-    The default dimension is the overworld. Valid options: overworld, nether, end
-
-    ?addbase [Shop Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Optional Flags]
-
-    Optional Flags:
-    -t [Tunnel Color],[Tunnel Position],[Side]
-    -d [dimension]
+    Adds your shop to the database. The name is optional.
+        ?addshop [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Name]
     '''
 
-    flags = get_args_dict(args)
-    tunnel = None
-    dimension = None
-
-    if len(flags) > 0:
-        if '-t' in flags:
-            tunnel = flags['-t']
-
-        if '-d' in flags:
-            dimension = flags['-d']
+    if len(args) > 0:
+        name = args[0]
+    else:
+        name = '{}\'s Shop'.database_interface.find_player_by_discord_uuid(ctx.message.author.id)
 
     try:
-        shop = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos, tunnel, dimension)
+        base = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos)
     except LocationInitError:
         raise commands.UserInputError
+    except LocationNameNotUniqueError:
+        await bot.say('{}, you already have a shop called {}. You need to specify a different name.'.format(
+            ctx.message.author.mention, name))
+        return
 
     await bot.say('{}, your shop named **{}** located at {} has been added'
-                  ' to the database.'.format(ctx.message.author.mention, shop.name, shop.pos_to_str()))
+                  ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
 
 @bot.command(pass_context=True)
@@ -172,9 +153,8 @@ async def delete(ctx, name: str):
         ?delete [Location name]
     '''
 
-    player_name = get_nickname(ctx.message.author)
     try:
-        database_interface.delete_base(player_name, name)
+        database_interface.delete_location(ctx.message.author.id, name)
         await bot.say('{}, your location named **{}** has been deleted.'.format(ctx.message.author.mention, name))
     except (DeleteEntryError, PlayerNotFound):
         await bot.say('{}, you do not have a location named **{}**.'.format(ctx.message.author.mention, name))
@@ -197,12 +177,12 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
     radius = 200
     dimension = 'Overworld'
 
+    if len(args) == 1:
+        radius = args[0]
+
     flags = get_args_dict(args)
 
     if len(flags) > 0:
-        if '-r' in flags:
-            radius = int(flags['-r'])
-
         if '-d' in flags:
             dimension = flags['-d']
 
@@ -227,7 +207,6 @@ async def additem(ctx, shop_name: str, item_name: str, amount: int, diamond_pric
     '''
 
     try:
-        player_name = get_nickname(ctx.message.author)
         database_interface.add_item(ctx.message.author.id, shop_name, item_name, diamond_price, amount)
 
         await bot.say('{}, **{}** has been added to the inventory of **{}**.'.format(ctx.message.author.mention,

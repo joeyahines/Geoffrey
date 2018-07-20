@@ -5,6 +5,9 @@ class DataBaseError(Exception):
 class LocationInitError(DataBaseError):
     '''Error in initializing Location'''
 
+class TunnelInitError(DataBaseError):
+    '''Error in initializing Tunnel'''
+
 
 class LocationLookUpError(DataBaseError):
     '''Error in finding location in database'''
