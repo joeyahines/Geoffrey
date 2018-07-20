@@ -109,16 +109,16 @@ async def addbase(ctx, x_pos: int, y_pos: int, z_pos: int, * args):
 async def addshop(ctx, x_pos: int, y_pos: int, z_pos: int, *args):
     '''
     Adds your shop to the database. The name is optional.
-        ?addshop [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Name]
+        ?addshop [Shop Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Name]
     '''
 
     if len(args) > 0:
         name = args[0]
     else:
-        name = '{}\'s Shop'.database_interface.find_player_by_discord_uuid(ctx.message.author.id)
+        name = '{}\'s Shop'.format(database_interface.find_player_by_discord_uuid(ctx.message.author.id).name)
 
     try:
-        base = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos)
+        shop = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos)
     except LocationInitError:
         raise commands.UserInputError
     except LocationNameNotUniqueError:
@@ -127,7 +127,7 @@ async def addshop(ctx, x_pos: int, y_pos: int, z_pos: int, *args):
         return
 
     await bot.say('{}, your shop named **{}** located at {} has been added'
-                  ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
+                  ' to the database.'.format(ctx.message.author.mention, shop.name, shop.pos_to_str()))
 
 
 @bot.command(pass_context=True)
