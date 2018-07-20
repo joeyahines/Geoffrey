@@ -106,7 +106,7 @@ async def addbase(ctx, x_pos: int, y_pos: int, z_pos: int, * args):
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
 @bot.command(pass_context=True)
-async def addshop(ctx, name: str, x_pos: int, y_pos: int, z_pos: int, *args):
+async def addshop(ctx, x_pos: int, y_pos: int, z_pos: int, *args):
     '''
     Adds your shop to the database. The name is optional.
         ?addshop [Base Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Name]
