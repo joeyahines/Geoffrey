@@ -279,7 +279,7 @@ async def info(ctx, name: str):
     try:
         loc = database_interface.find_location_by_name(name)[0]
     except IndexError:
-        await bot.say('{}, no location in the database matches {}.'.format(ctx.message.author.mentionm, name))
+        await bot.say('{}, no locations in the database match {}.'.format(ctx.message.author.mention, name))
         return
 
     await bot.say('{}'.format(loc))
