@@ -287,7 +287,7 @@ async def selling(ctx, item_name: str):
 
 
 @bot.command(pass_context=True)
-async def info(ctx, name: str):
+async def info(ctx, * args):
     '''
     Displays info about a location.
 
@@ -296,6 +296,7 @@ async def info(ctx, name: str):
     ?info [Location Name]
     '''
     try:
+        name = ' '.join(args)
         loc = database_interface.find_location_by_name(name)[0]
     except IndexError:
         await bot.say('{}, no locations in the database match {}.'.format(ctx.message.author.mention, name))
