@@ -71,6 +71,14 @@ class TestGeoffreyDatabase(TestCase):
 
         self.assertEqual(loc_list[1].id, shop2.id)
 
+    def test_add_tunnel(self):
+        self.add_player()
+        args=[]
+        tunnel1 = self.interface.add_tunnel('143072699567177728', 'green', 155, None)
+
+        tunnel2 = self.interface.find_tunnel_by_owner_name('ZeroHD')[0]
+        self.assertEqual(tunnel1, tunnel2)
+
     def test_add_item(self):
         owner = self.add_player()
         self.add_shop()
@@ -180,7 +188,7 @@ class TestGeoffreyDatabase(TestCase):
         self.add_player()
         self.add_loc()
 
-        self.assertRaises(LocationNameNotUniqueError, self.interface.add_location,
+        self.assertRaises(EntryNameNotUniqueError, self.interface.add_location,
                           '143072699567177728', 'test', 0, 0, 0)
 
 

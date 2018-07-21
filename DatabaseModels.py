@@ -11,6 +11,7 @@ from difflib import SequenceMatcher
 
 SQL_Base = declarative_base()
 
+
 def check_similarity(a, b):
     ratio = SequenceMatcher(None, a, b).ratio()
 
@@ -18,6 +19,7 @@ def check_similarity(a, b):
         return True
     else:
         return False
+
 
 class DatabaseInterface:
 
@@ -33,6 +35,23 @@ class DatabaseInterface:
         shop = Shop(name, x_pos, y_pos, z_pos, owner, dimension)
         self.database.add_object(shop)
         return shop
+
+    def add_tunnel(self, owner, color, number, location_name):
+        if location_name is None:
+            if len(self.find_tunnel_by_owner(owner)):
+                raise EntryNameNotUniqueError
+            else:
+                location = None
+        else:
+            try:
+                location = self.find_location_by_name_and_owner(owner, location_name)[0]
+            except IndexError:
+                raise LocationLookUpError
+
+        tunnel = Tunnel(owner, color, number, location)
+
+        self.database.add_object(tunnel)
+        return tunnel
 
     def add_item(self, owner, shop_name, item_name, price, amount):
         try:
@@ -75,8 +94,8 @@ class DatabaseInterface:
         return self.database.query_by_filter(Location, expr)
 
     def find_location_by_owner_name(self, owner_name):
-        owner = self.find_player(owner_name)
-        return self.find_location_by_owner(owner)
+        expr = Location.owner.has(Player.name.ilike(owner_name))
+        return self.database.query_by_filter(Location, expr)
 
     def find_shop_by_name_and_owner(self, owner, name):
         expr = (Shop.owner == owner) & (Shop.name.ilike(name))
@@ -92,6 +111,15 @@ class DatabaseInterface:
                & (Location.z > z_pos - radius - 1) & (Location.dimension == dimension_obj)
 
         return self.database.query_by_filter(Location, expr)
+
+    def find_tunnel_by_owner(self, owner):
+        expr = Tunnel.owner == owner
+
+        return self.database.query_by_filter(Tunnel, expr)
+
+    def find_tunnel_by_owner_name(self, owner_name):
+        expr = Tunnel.owner.has(Player.name.ilike(owner_name))
+        return self.database.query_by_filter(Tunnel, expr)
 
     def find_item(self, item_name):
         expr = ItemListing.name.ilike('%{}%'.format(item_name))
@@ -157,6 +185,10 @@ class DiscordDatabaseInterface(DatabaseInterface):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
         return DatabaseInterface.add_shop(self, owner, name, x_pos, y_pos, z_pos, dimension)
 
+    def add_tunnel(self, owner_uuid, color, number, location_name=""):
+        owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
+        return DatabaseInterface.add_tunnel(self, owner, color, number, location_name)
+
     def add_item(self, owner_uuid, shop_name, item_name, price, amount):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
         return DatabaseInterface.add_item(self, owner, shop_name, item_name, price, amount)
@@ -209,7 +241,7 @@ class GeoffreyDatabase:
                 self.session.add(obj)
                 self.session.commit()
         except IntegrityError:
-            raise LocationNameNotUniqueError
+            raise EntryNameNotUniqueError
 
     def query_by_filter(self, obj_type, * args):
         filter_value = self.combine_filter(args)
@@ -309,7 +341,7 @@ class Tunnel(SQL_Base):
             raise TunnelInitError
 
     def __str__(self):
-        return '{} {} {}'.format(self.tunnel_direction.value.title(), self.tunnel_number)
+        return '{} {}'.format(self.tunnel_direction.value.title(), self.tunnel_number)
 
 class Location(SQL_Base):
     __tablename__ = 'Locations'
@@ -320,7 +352,7 @@ class Location(SQL_Base):
     y = Column(Integer)
     z = Column(Integer)
 
-    tunnel = relationship("Tunnel", back_populates="location")
+    tunnel = relationship("Tunnel", back_populates="location", uselist=False)
     dimension = Column(Enum(Dimension))
 
     owner_id = Column(Integer, ForeignKey('Players.id'))
@@ -368,6 +400,18 @@ class Shop(Location):
     __mapper_args__ = {
         'polymorphic_identity': 'Shop',
     }
+
+    def inv_to_str(self):
+        inv = ''
+        str_format = '{}\n\t{}'
+
+        for item in self.inventory:
+            inv = str_format.format(inv, item)
+
+        return inv
+
+    def __str__(self):
+        return Location.__str__(self) + "\n\t*Inventory*: {}".format(self.inv_to_str())
 
     def __init__(self, name, x, y, z, owner, dimension=None):
         Location.__init__(self, name, x, y, z, owner, dimension)

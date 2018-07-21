@@ -21,7 +21,7 @@ class UsernameLookupFailed(Exception):
 class PlayerNotFound(DataBaseError):
     '''Player not found in database.'''
 
-class LocationNameNotUniqueError(DataBaseError):
+class EntryNameNotUniqueError(DataBaseError):
     '''A location by that name is already in the database.'''
 
 

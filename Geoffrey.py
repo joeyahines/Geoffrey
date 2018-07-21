@@ -49,7 +49,7 @@ async def on_command_error(error, ctx):
     elif isinstance(error.original, PlayerNotFound):
         error_str = 'Make sure to use ?register first you ding dong.'
         database_interface.database.session.rollback()
-    elif isinstance(error.original, LocationNameNotUniqueError):
+    elif isinstance(error.original, EntryNameNotUniqueError):
         error_str = 'An entry in the database already has that name ding dong.'
         database_interface.database.session.rollback()
     else:
@@ -64,6 +64,7 @@ async def test():
     Checks if the bot is alive.
     '''
     await bot.say('I\'m here you ding dong')
+
 
 @bot.command(pass_context=True)
 async def register(ctx):
@@ -86,48 +87,78 @@ async def register(ctx):
 async def addbase(ctx, x_pos: int, y_pos: int, z_pos: int, * args):
     '''
     Adds your base to the database. The name is optional.
-        ?addbase [Shop Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Name]
+        ?addbase [X Coordinate] [Y Coordinate] [Z Coordinate] [Base Name]
     '''
 
     if len(args) > 0:
         name = args[0]
     else:
-        name = '{}\'s Base'.format(database_interface.find_player_by_discord_uuid(ctx.message.author.id).name)
+        name = '{}\'s_Base'.format(database_interface.find_player_by_discord_uuid(ctx.message.author.id).name)
     try:
         base = database_interface.add_location(ctx.message.author.id, name, x_pos, y_pos, z_pos)
     except LocationInitError:
         raise commands.UserInputError
-    except LocationNameNotUniqueError:
-        await bot.say('{}, you already have a based called {}. You need to specify a different name.'.format(
+    except EntryNameNotUniqueError:
+        await bot.say('{}, a based called {} already exists. You need to specify a different name.'.format(
             ctx.message.author.mention, name))
         return
 
     await bot.say('{}, your base named **{}** located at {} has been added'
                   ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
 
+
 @bot.command(pass_context=True)
 async def addshop(ctx, x_pos: int, y_pos: int, z_pos: int, *args):
     '''
     Adds your shop to the database. The name is optional.
-        ?addshop [Shop Name] [X Coordinate] [Y Coordinate] [Z Coordinate] [Name]
+        ?addshop [X Coordinate] [Y Coordinate] [Z Coordinate] [Shop Name]
     '''
 
     if len(args) > 0:
         name = args[0]
     else:
-        name = '{}\'s Shop'.format(database_interface.find_player_by_discord_uuid(ctx.message.author.id).name)
+        name = '{}\'s_Shop'.format(database_interface.find_player_by_discord_uuid(ctx.message.author.id).name)
 
     try:
         shop = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos)
     except LocationInitError:
         raise commands.UserInputError
-    except LocationNameNotUniqueError:
-        await bot.say('{}, you already have a shop called {}. You need to specify a different name.'.format(
+    except EntryNameNotUniqueError:
+        await bot.say('{}, a shop called {} already exists. You need to specify a different name.'.format(
             ctx.message.author.mention, name))
         return
 
     await bot.say('{}, your shop named **{}** located at {} has been added'
                   ' to the database.'.format(ctx.message.author.mention, shop.name, shop.pos_to_str()))
+
+
+@bot.command(pass_context=True)
+async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
+    '''
+    Adds your tunnel to the database. The location name is optional. If the location has a tunnel, it is updated.
+        ?addtunnel [Tunnel Color] [Tunnel_Number] [Location Name]
+    '''
+
+    try:
+        if len(args) == 0:
+            location_name = None
+        else:
+            location_name = args[0]
+
+        database_interface.add_tunnel(ctx.message.author.id, tunnel_color, tunnel_number, location_name)
+    except EntryNameNotUniqueError:
+        await bot.say('{}, you already have one tunnel in the database, please specify a location.'.format(
+            ctx.message.author.mention))
+        return
+    except LocationLookUpError:
+        await bot.say('{}, you do not have a location called {}.'.format(
+            ctx.message.author.mention, args[0]))
+        return
+
+    except ValueError:
+        raise commands.UserInputError
+
+    await bot.say('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
 
 
 @bot.command(pass_context=True)
@@ -145,6 +176,7 @@ async def find(ctx, name: str):
                                                                     loc_string))
     except PlayerNotFound:
         await bot.say('{}, the player **{}** is not in the database'.format(ctx.message.author.mention, name))
+
 
 @bot.command(pass_context=True)
 async def delete(ctx, name: str):
@@ -219,7 +251,7 @@ async def additem(ctx, shop_name: str, item_name: str, amount: int, diamond_pric
 
 
 @bot.command(pass_context=True)
-async def selling(ctx, item_name: str):
+async def selling(item_name: str):
     '''
     Lists all the shops selling an item
 
@@ -232,20 +264,15 @@ async def selling(ctx, item_name: str):
 
 
 @bot.command(pass_context=True)
-async def shopinfo(ctx, shop_name: str):
+async def info(name: str):
     '''
-    Lists the information and inventory of a shop
+    Displays a location's info including inventory its a shop
 
-    ?shopinfo [Shop Name]
+    ?info [Location Name]
     '''
-    shop = database_interface.find_shop_by_name(shop_name)[0]
-    inv_list = database_interface.get_shop_inventory(shop)
+    loc = database_interface.find_location_by_name(name)[0]
 
-    item_list = ''
-    for item in inv_list:
-        item_list = item_list + '{}\n'.format(item.__str__())
-
-    await bot.say('{} \n Inventory:\n {}'.format(shop.__str__(), item_list))
+    await bot.say('{}'.format(loc))
 
 # Helper Functions ************************************************************
 
