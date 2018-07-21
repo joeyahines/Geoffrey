@@ -53,6 +53,9 @@ async def on_command_error(error, ctx):
     elif isinstance(error.original, EntryNameNotUniqueError):
         error_str = 'An entry in the database already has that name ding dong.'
         database_interface.database.session.rollback()
+    elif isinstance(error.original, StringTooLong):
+        error_str = 'Use a shorter name you, dong ding.'
+        database_interface.database.session.rollback()
     else:
         error_str = bad_error_message.format(ctx.invoked_with, error)
 
@@ -201,35 +204,38 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
     The radius defaults to 200 blocks if no value is given.
     Default dimension is overworld.
 
-    ?findaround [X Coordinate] [Z Coordinate] [Optional Flags]
+    ?findaround [X Coordinate] [Z Coordinate] [Radius] [Optional Flags]
 
     Optional Flags:
-    -r [radius]
     -d [dimension]
     '''
 
     radius = 200
     dimension = 'Overworld'
 
-    if len(args) == 1:
-        radius = args[0]
+    try:
+        if len(args) > 0:
+            if args[0] == '-d':
+                dimension = args[1]
+            else:
+                radius = int(args[0])
 
-    flags = get_args_dict(args)
+                if len(args) > 1:
+                    if args[1] == '-d':
+                        dimension = args[2]
 
-    if len(flags) > 0:
-        if '-d' in flags:
-            dimension = flags['-d']
+        base_list = database_interface.find_location_around(x_pos, z_pos, radius, dimension)
 
-    base_list = database_interface.find_location_around(x_pos, z_pos, radius, dimension)
+        if len(base_list) != 0:
+            base_string = loc_list_to_string(base_list, '{} \n{}')
 
-    if len(base_list) != 0:
-        base_string = loc_list_to_string(base_list, '{} \n{}')
-
-        await bot.say('{}, there are **{}** locations(s) within **{}** blocks of that point: \n {}'.format(
-            ctx.message.author.mention, len(base_list), radius, base_string))
-    else:
-        await bot.say('{}, there are no locations within {} blocks of that point'
-                      .format(ctx.message.author.mention, radius))
+            await bot.say('{}, there are **{}** locations(s) within **{}** blocks of that point: \n {}'.format(
+                ctx.message.author.mention, len(base_list), radius, base_string))
+        else:
+            await bot.say('{}, there are no locations within {} blocks of that point'
+                          .format(ctx.message.author.mention, radius))
+    except ValueError:
+        raise commands.UserInputError
 
 
 @bot.command(pass_context=True)
