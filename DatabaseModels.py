@@ -247,7 +247,7 @@ class DiscordDatabaseInterface(DatabaseInterface):
 class GeoffreyDatabase:
 
     def __init__(self, engine_arg):
-        self.engine = create_engine(engine_arg, echo=, pool_recycle=3600)
+        self.engine = create_engine(engine_arg, echo=True, pool_recycle=3600)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
         self.meta = MetaData()
