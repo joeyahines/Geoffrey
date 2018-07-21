@@ -7,6 +7,7 @@ from difflib import SequenceMatcher
 import enum
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 SQL_Base = declarative_base()
 
@@ -248,46 +249,57 @@ class GeoffreyDatabase:
 
     def __init__(self, engine_arg):
         self.engine = create_engine(engine_arg, echo=True, pool_recycle=3600)
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-        self.meta = MetaData()
+        self.Session = scoped_session(sessionmaker(bind=self.engine))
+        self.Session()
         SQL_Base.metadata.create_all(self.engine)
 
     def add_object(self, obj):
         try:
-            ret = not self.session.query(exists().where(type(obj).id == obj.id))
+            session = self.Session()
+            ret = not session.query(exists().where(type(obj).id == obj.id))
             if not ret:
-                self.session.add(obj)
-                self.session.commit()
+                session.add(obj)
+                session.commit()
+                session.close()
         except IntegrityError:
-            self.session.rollback()
+            session.rollback()
             raise EntryNameNotUniqueError
         except DataError:
-            self.session.rollback()
+            session.rollback()
             raise StringTooLong
 
 
+
     def query_by_filter(self, obj_type, * args):
+        session = self.Session()
         filter_value = self.combine_filter(args)
-        return self.session.query(obj_type).filter(filter_value).all()
+        return session.query(obj_type).filter(filter_value).all()
+
+        session.close()
 
     def delete_entry(self, obj_type, * args):
+        session = self.Session()
         filter_value = self.combine_filter(args)
-        entry = self.session.query(obj_type).filter(filter_value)
+        entry = session.query(obj_type).filter(filter_value)
 
         if entry.first() is not None:
             entry.delete()
-            self.session.commit()
+            session.commit()
         else:
             raise DeleteEntryError
 
+        session.close()
+
     def print_database(self, obj_type):
-        obj_list = self.session.query(obj_type).all()
+        session = self.Session()
+        obj_list = session.query(obj_type).all()
 
         s = ''
 
         for obj in obj_list:
                 s = s + '\n' + obj.id
+
+        session.close()
         return s
 
     def combine_filter(self, filter_value):
@@ -358,7 +370,7 @@ class Tunnel(SQL_Base):
     owner_id = Column(Integer, ForeignKey('Players.id'))
     owner = relationship("Player", back_populates="tunnels", cascade="save-update, merge, delete")
     location_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'))
-    location = relationship("Location", back_populates="tunnel")
+    location = relationship("Location", back_populates="tunnel",)
 
     def __init__(self, owner, tunnel_color, tunnel_number, location=None):
         try:
@@ -408,6 +420,10 @@ class Location(SQL_Base):
         except (ValueError, IndexError):
             raise LocationInitError
 
+    def dynmap_link(self):
+        return 'http://24carrotcraft.com:8123/?worldname=season3&mapname=surface&zoom=4&x={}&y=65&z=-{}'.\
+            format(self.x, self.z)
+
     def pos_to_str(self):
         return '(x= {}, z= {}) in the {}'.format(self.x, self.z, self.dimension.value.title())
 
@@ -415,7 +431,7 @@ class Location(SQL_Base):
         return "Name: **{}**, Type: **{}** Position: **{}**".format(self.name, self.type, self.pos_to_str())
 
     def full_str(self):
-        return self.__str__()
+        return self.__str__() + '\n' + self.dynmap_link()
 
     def __str__(self):
         if self.tunnel is not None:
@@ -428,7 +444,7 @@ class Shop(Location):
     __tablename__ = 'Shops'
     shop_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'), primary_key=True)
     name = column_property(Column(String(128)), Location.name)
-    inventory = relationship('ItemListing', back_populates='shop', cascade='all, delete-orphan')
+    inventory = relationship('ItemListing', back_populates='shop', cascade='all, delete-orphan', lazy='dynamic')
     __mapper_args__ = {
         'polymorphic_identity': 'Shop',
     }
