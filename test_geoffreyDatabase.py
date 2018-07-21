@@ -198,6 +198,19 @@ class TestGeoffreyDatabase(TestCase):
         self.assertRaises(EntryNameNotUniqueError, self.interface.add_location,
                           '143072699567177728', 'test', 0, 0, 0)
 
+    def test_delete_parent(self):
+        owner = self.add_player()
+        loc = self.add_shop()
+
+        self.interface.add_item('143072699567177728', 'test', 'dirt', 1, 15)
+
+        self.interface.delete_location('143072699567177728', 'test')
+
+        shops = self.interface.find_shop_selling_item('dirt')
+        self.assertGreater(len(shops), 0)
+
+
+
 
 
 

@@ -165,21 +165,26 @@ class DatabaseInterface:
 
     def search_all_fields(self, search):
         loc_string = ''
+        count = 0
 
         expr = Location.owner.has(Player.name.ilike('%{}%'.format(search))) | Location.name.ilike('%{}%'.format(search))
         for loc in self.database.query_by_filter(Location, expr):
-            loc_string = "{}\n\t{}".format(loc_string, loc)
+            loc_string = "{}\n{}".format(loc_string, loc)
+            count += 1
 
         expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location is None
         for loc in self.database.query_by_filter(Tunnel, expr):
-            loc_string = "{}\n\t{}".format(loc_string, loc)
+            loc_string = "{}\n{}".format(loc_string, loc)
+            count += 1
 
-        return loc_string
+        if count == 0:
+            raise LocationLookUpError
+        else:
+            return loc_string
 
     def delete_location(self, owner, name):
         expr = (Location.owner == owner) & (Location.name == name)
-
-        self.database.delete_entry(Location, expr)
+        self.database.delete_entry(Shop, expr)
 
 
 class DiscordDatabaseInterface(DatabaseInterface):
@@ -319,8 +324,10 @@ class Player(SQL_Base):
     mc_uuid = Column(String)
     discord_uuid = Column(String)
     name = Column(String)
-    locations = relationship("Location", back_populates="owner", lazy='dynamic')
-    tunnels = relationship("Tunnel", back_populates="owner", lazy='dynamic')
+    locations = relationship("Location", back_populates="owner", lazy='dynamic',
+                             cascade="save-update, merge, delete, delete-orphan")
+    tunnels = relationship("Tunnel", back_populates="owner", lazy='dynamic',
+                           cascade="save-update, merge, delete, delete-orphan")
 
     def __init__(self, name, discord_id=None):
         self.mc_uuid = grab_UUID(name)
@@ -334,9 +341,9 @@ class Tunnel(SQL_Base):
     tunnel_number = Column(Integer)
     tunnel_direction = Column(Enum(TunnelDirection))
     owner_id = Column(Integer, ForeignKey('Players.id'))
-    owner = relationship("Player", back_populates="tunnels")
+    owner = relationship("Player", back_populates="tunnels", cascade="save-update, merge, delete")
     location_id = Column(Integer, ForeignKey('Locations.id'))
-    location = relationship("Location", back_populates="tunnel")
+    location = relationship("Location", back_populates="tunnel", cascade="save-update, merge, delete")
 
     def __init__(self, owner, tunnel_color, tunnel_number, location=None):
         try:
@@ -360,11 +367,12 @@ class Location(SQL_Base):
     y = Column(Integer)
     z = Column(Integer)
 
-    tunnel = relationship("Tunnel", back_populates="location", uselist=False)
+    tunnel = relationship("Tunnel", back_populates="location", uselist=False,
+                          cascade="save-update, merge, delete, delete-orphan")
     dimension = Column(Enum(Dimension))
 
     owner_id = Column(Integer, ForeignKey('Players.id'))
-    owner = relationship("Player", back_populates="locations")
+    owner = relationship("Player", back_populates="locations", cascade="save-update, merge, delete")
     type = Column(String)
 
     __mapper_args__ = {
@@ -403,12 +411,11 @@ class Location(SQL_Base):
             return self.info_str()
 
 
-
 class Shop(Location):
     __tablename__ = 'Shops'
     shop_id = Column(Integer, ForeignKey('Locations.id'), primary_key=True)
     name = column_property(Column(String), Location.name)
-    inventory = relationship('ItemListing', back_populates='shop', lazy='dynamic')
+    inventory = relationship('ItemListing', back_populates='shop', cascade='all, delete-orphan')
     __mapper_args__ = {
         'polymorphic_identity': 'Shop',
     }

@@ -122,7 +122,7 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
         name = '{}\'s_Shop'.format(database_interface.find_player_by_discord_uuid(ctx.message.author.id).name)
 
     try:
-        shop = database_interface.add_shop(ctx.message.author.id, name, x_pos, y_pos, z_pos)
+        shop = database_interface.add_shop(ctx.message.author.id, name, x_pos, z_pos)
     except LocationInitError:
         raise commands.UserInputError
     except EntryNameNotUniqueError:
@@ -174,9 +174,9 @@ async def find(ctx, search: str):
     try:
         result = database_interface.search_all_fields(search)
 
-        await bot.say('{}, The following entires match **{}**: {}'.format(ctx.message.author.mention, search, result))
-    except PlayerNotFound:
-        await bot.say('{}, no matches **{}** were found in the database'.format(ctx.message.author.mention, name))
+        await bot.say('{}, The following entries match **{}**:\n{}'.format(ctx.message.author.mention, search, result))
+    except LocationLookUpError:
+        await bot.say('{}, no matches **{}** were found in the database'.format(ctx.message.author.mention, search))
 
 
 @bot.command(pass_context=True)
@@ -315,7 +315,7 @@ def get_args_dict(args):
 
 def create_config():
     config['Discord'] = {'Token': ''}
-    config['SQL'] = {'Dialect+Driver': 'test', 'username': '', 'password':'', 'host': '', 'port': '', 'database':''}
+    config['SQL'] = {'Dialect+Driver': 'Test', 'username': '', 'password':'', 'host': '', 'port': '', 'database':''}
 
     with open('GeoffreyConfig.ini', 'w') as configfile:
         config.write(configfile)
