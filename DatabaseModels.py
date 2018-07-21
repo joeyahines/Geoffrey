@@ -92,6 +92,10 @@ class DatabaseInterface:
         expr = Location.owner == owner
         return self.database.query_by_filter(Location, expr)
 
+    def find_shop_by_owner(self, owner):
+        expr = Shop.owner == owner
+        return self.database.query_by_filter(Shop, expr)
+
     def find_location_by_owner_name(self, owner_name):
         expr = Location.owner.has(Player.name.ilike(owner_name))
         return self.database.query_by_filter(Location, expr)
@@ -222,6 +226,10 @@ class DiscordDatabaseInterface(DatabaseInterface):
     def find_location_by_owner_uuid(self, owner_uuid):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
         return DatabaseInterface.find_location_by_owner(self, owner)
+
+    def find_shop_by_owner_uuid(self, owner_uuid):
+        owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
+        return DatabaseInterface.find_shop_by_owner(self, owner)
 
     def find_shop_by_name_and_owner_uuid(self, owner_uuid, name):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)

@@ -97,7 +97,7 @@ async def addbase(ctx, x_pos: int, z_pos: int, * args):
     '''
 
     if len(args) > 0:
-        name = args[0]
+        name = ' '.join(args)
     else:
         name = '{}\'s_Base'.format(database_interface.find_player_by_discord_uuid(ctx.message.author.id).name)
     try:
@@ -121,7 +121,7 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
     '''
 
     if len(args) > 0:
-        name = args[0]
+        name = ' '.join(args)
     else:
         name = '{}\'s_Shop'.format(database_interface.find_player_by_discord_uuid(ctx.message.author.id).name)
 
@@ -150,7 +150,7 @@ async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
         if len(args) == 0:
             location_name = None
         else:
-            location_name = args[0]
+            location_name = name = ' '.join(args)
 
         database_interface.add_tunnel(ctx.message.author.id, tunnel_color, tunnel_number, location_name)
     except EntryNameNotUniqueError:
@@ -184,13 +184,14 @@ async def find(ctx, search: str):
 
 
 @bot.command(pass_context=True)
-async def delete(ctx, name: str):
+async def delete(ctx, * args):
     '''
     Deletes a location from the database.
         ?delete [Location name]
     '''
 
     try:
+        name = ' '.join(args)
         database_interface.delete_location(ctx.message.author.id, name)
         await bot.say('{}, your location named **{}** has been deleted.'.format(ctx.message.author.mention, name))
     except (DeleteEntryError, PlayerNotFound):
@@ -239,21 +240,33 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
 
 
 @bot.command(pass_context=True)
-async def additem(ctx, shop_name: str, item_name: str, quantity: int, diamond_price: int):
+async def additem(ctx, item_name: str, quantity: int, diamond_price: int, * args):
     '''
     Adds an item to a shop's inventory.
-    Amount for diamond price.
+    Quantity for Diamond Price.
 
-    ?additem [Shop name] [Item Name] [Quantity] [Price]
+    ?additem [Item Name] [Quantity] [Price] [Shop name]
     '''
 
     try:
-        database_interface.add_item(ctx.message.author.id, shop_name, item_name, diamond_price, quantity)
+        shop_list = database_interface.find_shop_by_owner_uuid(ctx.message.author.id)
 
+        if len(shop_list) == 1:
+            shop_name = shop_list[0].name
+        else:
+            if len(args) == 0:
+                raise LocationInitError
+            else:
+                shop_name = ' '.join(args)
+
+            database_interface.add_item(ctx.message.author.id, shop_name, item_name, diamond_price, quantity)
         await bot.say('{}, **{}** has been added to the inventory of **{}**.'.format(ctx.message.author.mention,
                                                                                      item_name, shop_name))
     except PlayerNotFound:
         await bot.say('{}, you don\'t have any shops in the database.'.format(ctx.message.author.mention))
+    except LocationInitError:
+        await bot.say('{}, you have more than one shop in the database, please specify a shop name.'
+                      .format(ctx.message.author.mention))
     except LocationLookUpError:
         await bot.say('{}, you don\'t have any shops named **{}** in the database.'.format(ctx.message.author.mention,
                                                                                           shop_name))
