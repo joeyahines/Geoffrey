@@ -86,7 +86,7 @@ async def register(ctx):
 
 
 @bot.command(pass_context=True)
-async def addbase(ctx, x_pos: int, y_pos: int, z_pos: int, * args):
+async def addbase(ctx, x_pos: int, z_pos: int, * args):
     '''
     Adds your base to the database. The name is optional.
         ?addbase [X Coordinate] [Y Coordinate] [Z Coordinate] [Base Name]
@@ -97,7 +97,7 @@ async def addbase(ctx, x_pos: int, y_pos: int, z_pos: int, * args):
     else:
         name = '{}\'s_Base'.format(database_interface.find_player_by_discord_uuid(ctx.message.author.id).name)
     try:
-        base = database_interface.add_location(ctx.message.author.id, name, x_pos, y_pos, z_pos)
+        base = database_interface.add_location(ctx.message.author.id, name, x_pos, z_pos)
     except LocationInitError:
         raise commands.UserInputError
     except EntryNameNotUniqueError:
@@ -110,7 +110,7 @@ async def addbase(ctx, x_pos: int, y_pos: int, z_pos: int, * args):
 
 
 @bot.command(pass_context=True)
-async def addshop(ctx, x_pos: int, y_pos: int, z_pos: int, *args):
+async def addshop(ctx, x_pos: int, z_pos: int, *args):
     '''
     Adds your shop to the database. The name is optional.
         ?addshop [X Coordinate] [Y Coordinate] [Z Coordinate] [Shop Name]

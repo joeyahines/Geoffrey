@@ -3,7 +3,7 @@ import enum
 from sqlalchemy.ext.declarative import declarative_base
 from BotErrors import *
 from sqlalchemy import create_engine, exists, literal
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, column_property
 from sqlalchemy.exc import IntegrityError
 import sqlalchemy
 from MinecraftAccountInfoGrabber import *
@@ -26,13 +26,13 @@ class DatabaseInterface:
     def __init__(self, db_engine_arg):
         self.database = GeoffreyDatabase(db_engine_arg)
 
-    def add_location(self, owner, name, x_pos, y_pos, z_pos, dimension=None):
-        location = Location(name, x_pos, y_pos, z_pos, owner, dimension)
+    def add_location(self, owner, name, x_pos, z_pos, dimension=None):
+        location = Location(name, x_pos, z_pos, owner, dimension)
         self.database.add_object(location)
         return location
 
-    def add_shop(self, owner, name, x_pos, y_pos, z_pos, dimension=None):
-        shop = Shop(name, x_pos, y_pos, z_pos, owner, dimension)
+    def add_shop(self, owner, name, x_pos, z_pos, dimension=None):
+        shop = Shop(name, x_pos, z_pos, owner, dimension)
         self.database.add_object(shop)
         return shop
 
@@ -183,13 +183,13 @@ class DatabaseInterface:
 
 
 class DiscordDatabaseInterface(DatabaseInterface):
-    def add_location(self, owner_uuid, name, x_pos, y_pos, z_pos, dimension=None):
+    def add_location(self, owner_uuid, name, x_pos, z_pos, dimension=None):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
-        return DatabaseInterface.add_location(self, owner, name, x_pos, y_pos, z_pos, dimension)
+        return DatabaseInterface.add_location(self, owner, name, x_pos, z_pos, dimension)
 
-    def add_shop(self, owner_uuid, name, x_pos, y_pos, z_pos, dimension=None):
+    def add_shop(self, owner_uuid, name, x_pos, z_pos, dimension=None):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
-        return DatabaseInterface.add_shop(self, owner, name, x_pos, y_pos, z_pos, dimension)
+        return DatabaseInterface.add_shop(self, owner, name, x_pos, z_pos, dimension)
 
     def add_tunnel(self, owner_uuid, color, number, location_name=""):
         owner = DatabaseInterface.find_player_by_discord_uuid(self, owner_uuid)
@@ -372,11 +372,10 @@ class Location(SQL_Base):
         'polymorphic_identity': 'Location'
     }
 
-    def __init__(self, name, x, y, z, owner, dimension):
+    def __init__(self, name, x, z, owner, dimension):
         try:
             self.name = name
             self.x = x
-            self.y = y
             self.z = z
             self.owner = owner
 
@@ -389,7 +388,7 @@ class Location(SQL_Base):
             raise LocationInitError
 
     def pos_to_str(self):
-        return '(x= {}, y= {}, z= {}) in the {}'.format(self.x, self.y, self.z, self.dimension.value.title())
+        return '(x= {}, z= {}) in the {}'.format(self.x, self.z, self.dimension.value.title())
 
     def info_str(self):
         return "Name: **{}**, Type: **{}** Position: **{}**".format(self.name, self.type, self.pos_to_str())
@@ -401,18 +400,20 @@ class Location(SQL_Base):
         if self.tunnel is not None:
             return "{}, Tunnel: **{}**".format(self.info_str(), self.tunnel)
         else:
-            return self.info_str(self)
+            return self.info_str()
 
 
 
 class Shop(Location):
     __tablename__ = 'Shops'
     shop_id = Column(Integer, ForeignKey('Locations.id'), primary_key=True)
-    name = Column(String)
+    name = column_property(Column(String), Location.name)
     inventory = relationship('ItemListing', back_populates='shop', lazy='dynamic')
     __mapper_args__ = {
         'polymorphic_identity': 'Shop',
     }
+
+    column_property()
 
     def inv_to_str(self):
 
@@ -433,8 +434,8 @@ class Shop(Location):
     def __str__(self):
         return Location.__str__(self)
 
-    def __init__(self, name, x, y, z, owner, dimension=None):
-        Location.__init__(self, name, x, y, z, owner, dimension)
+    def __init__(self, name, x, z, owner, dimension=None):
+        Location.__init__(self, name, x, z, owner, dimension)
 
 
 class ItemListing(SQL_Base):

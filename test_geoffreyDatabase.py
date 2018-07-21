@@ -7,7 +7,7 @@ class TestGeoffreyDatabase(TestCase):
     def setUp(self):
         self.interface = DiscordDatabaseInterface('sqlite:///:memory:')
         self.owner = Player('ZeroHD', '143072699567177728')
-        self.loc = Location('test', 1, 2, 3, self.owner, dimension='Nether')
+        self.loc = Location('test', 1, 3, self.owner, dimension='Nether')
         self.tunnel = Tunnel(self.owner, 'Green', 105, self.loc)
 
     def test_add_object(self):
@@ -54,18 +54,18 @@ class TestGeoffreyDatabase(TestCase):
         self.assertEqual(shop_list[0].dimension, shop.dimension)
 
     def add_shop(self):
-        return self.interface.add_shop('143072699567177728', 'test', 1, 2, 3, "nether")
+        return self.interface.add_shop('143072699567177728', 'test', 1, 3, "nether")
 
     def add_player(self):
         return self.interface.add_player('ZeroHD', '143072699567177728')
 
     def add_loc(self):
-        return self.interface.add_location('143072699567177728', 'test', 0, 0, 0)
+        return self.interface.add_location('143072699567177728', 'test', 0, 0)
 
     def test_add_two_shops(self):
         owner = self.add_player()
         shop1 = self.add_shop()
-        shop2 = self.interface.add_shop('143072699567177728', 'no u', 1, 2, 3)
+        shop2 = self.interface.add_shop('143072699567177728', 'no u', 1, 3)
 
         loc_list = self.interface.find_location_by_owner_uuid('143072699567177728')
 
@@ -73,7 +73,6 @@ class TestGeoffreyDatabase(TestCase):
 
     def test_add_tunnel(self):
         self.add_player()
-        args=[]
         tunnel1 = self.interface.add_tunnel('143072699567177728', 'green', 155, None)
 
         tunnel2 = self.interface.find_tunnel_by_owner_name('ZeroHD')[0]
@@ -85,7 +84,7 @@ class TestGeoffreyDatabase(TestCase):
         self.interface.add_item('143072699567177728', 'test', 'dirt', 1, 15)
 
         shops = self.interface.find_shop_selling_item('dirt')
-        self.assertEqual(shops[0].name, 'test')
+        self.assertGreater(len(shops), 0)
 
     def test_find_location_by_owner(self):
         owner = self.add_player()
@@ -167,13 +166,13 @@ class TestGeoffreyDatabase(TestCase):
 
         self.assertEqual(loc_list[0].id, loc.id)
 
-        self.interface.add_shop('143072699567177728', 'testshop', 1, 2, 3, 'neThEr')
+        self.interface.add_shop('143072699567177728', 'testshop', 1, 3, 'neThEr')
 
         self.interface.add_item('143072699567177728', 'testshop', 'dirts', 1, 15)
 
-        shops = self.interface.find_shop_selling_item('Dirt')
+        shops = self.interface.find_shop_selling_item('diRt')
 
-        self.assertEqual(shops[0].name, 'testshop')
+        self.assertGreater(len(shops), 0)
 
         #shops = self.database.find_shop_selling_item('sDirt')
 
