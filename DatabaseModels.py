@@ -419,7 +419,7 @@ class Location(SQL_Base):
             raise LocationInitError
 
     def dynmap_link(self):
-        return 'http://24carrotcraft.com:8123/?worldname=season3&mapname=surface&zoom=4&x={}&y=65&z=-{}'.\
+        return 'http://24carrotcraft.com:8123/?worldname=season3&mapname=surface&zoom=4&x={}&y=65&z={}'.\
             format(self.x, self.z)
 
     def pos_to_str(self):
