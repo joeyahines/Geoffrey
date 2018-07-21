@@ -24,4 +24,8 @@ class PlayerNotFound(DataBaseError):
 class EntryNameNotUniqueError(DataBaseError):
     '''A location by that name is already in the database.'''
 
+class StringTooLong(DataBaseError):
+    '''Given string is too long.'''
+
+
 

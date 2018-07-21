@@ -2,13 +2,27 @@ from unittest import TestCase
 from DatabaseModels import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
+from BotConfig import *
 
 class TestGeoffreyDatabase(TestCase):
     def setUp(self):
-        self.interface = DiscordDatabaseInterface('sqlite:///:memory:')
+        config = read_config()
+
+        engine_arg = config['SQL']['test_args']
+
+        self.interface = DiscordDatabaseInterface(engine_arg)
         self.owner = Player('ZeroHD', '143072699567177728')
         self.loc = Location('test', 1, 3, self.owner, dimension='Nether')
         self.tunnel = Tunnel(self.owner, 'Green', 105, self.loc)
+
+    def tearDown(self):
+        self.interface.database.session.query(Tunnel).delete()
+        self.interface.database.session.query(ItemListing).delete()
+        self.interface.database.session.query(Shop).delete()
+        self.interface.database.session.query(Location).delete()
+        self.interface.database.session.query(Player).delete()
+
+        self.interface.database.session.commit()
 
     def test_add_object(self):
         self.interface.database.add_object(self.loc)
@@ -184,12 +198,11 @@ class TestGeoffreyDatabase(TestCase):
 
     def test_big_input(self):
         owner = self.add_player()
-        loc = self.interface.add_location('143072699567177728',
-                                         'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', 0, 0, 0)
 
-        loc_list = self.interface.find_location_by_owner(owner)
-
-        self.assertEqual(loc_list[0].id, loc.id)
+        self.assertRaises(StringTooLong, self.interface.add_location, '143072699567177728',
+                                         'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+                                         'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+                                         'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', 0, 0,)
 
     def test_duplicate_name(self):
         self.add_player()
@@ -207,7 +220,7 @@ class TestGeoffreyDatabase(TestCase):
         self.interface.delete_location('143072699567177728', 'test')
 
         shops = self.interface.find_shop_selling_item('dirt')
-        self.assertGreater(len(shops), 0)
+        self.assertEqual(len(shops), 0)
 
 
 

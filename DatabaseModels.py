@@ -1,13 +1,12 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum
-import enum
-from sqlalchemy.ext.declarative import declarative_base
-from BotErrors import *
-from sqlalchemy import create_engine, exists, literal
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, create_engine, exists, MetaData
 from sqlalchemy.orm import sessionmaker, relationship, column_property
-from sqlalchemy.exc import IntegrityError
-import sqlalchemy
-from MinecraftAccountInfoGrabber import *
+from sqlalchemy.exc import IntegrityError, DataError
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import expression
 from difflib import SequenceMatcher
+import enum
+from BotErrors import *
+from MinecraftAccountInfoGrabber import *
 
 SQL_Base = declarative_base()
 
@@ -184,7 +183,7 @@ class DatabaseInterface:
 
     def delete_location(self, owner, name):
         expr = (Location.owner == owner) & (Location.name == name)
-        self.database.delete_entry(Shop, expr)
+        self.database.delete_entry(Location, expr)
 
 
 class DiscordDatabaseInterface(DatabaseInterface):
@@ -243,6 +242,7 @@ class GeoffreyDatabase:
         self.engine = create_engine(engine_arg, echo=True)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
+        self.meta = MetaData()
         SQL_Base.metadata.create_all(self.engine)
 
     def add_object(self, obj):
@@ -252,7 +252,12 @@ class GeoffreyDatabase:
                 self.session.add(obj)
                 self.session.commit()
         except IntegrityError:
+            self.session.rollback()
             raise EntryNameNotUniqueError
+        except DataError:
+            self.session.rollback()
+            raise StringTooLong
+
 
     def query_by_filter(self, obj_type, * args):
         filter_value = self.combine_filter(args)
@@ -264,6 +269,7 @@ class GeoffreyDatabase:
 
         if entry.first() is not None:
             entry.delete()
+            self.session.commit()
         else:
             raise DeleteEntryError
 
@@ -277,7 +283,7 @@ class GeoffreyDatabase:
         return s
 
     def combine_filter(self, filter_value):
-        return sqlalchemy.sql.expression.and_(filter_value[0])
+        return expression.and_(filter_value[0])
 
 
 class TunnelDirection(enum.Enum):
@@ -321,11 +327,12 @@ class Dimension(enum.Enum):
 class Player(SQL_Base):
     __tablename__ = 'Players'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    mc_uuid = Column(String)
-    discord_uuid = Column(String)
-    name = Column(String)
+    mc_uuid = Column(String(128))
+    discord_uuid = Column(String(128))
+    name = Column(String(128))
     locations = relationship("Location", back_populates="owner", lazy='dynamic',
                              cascade="save-update, merge, delete, delete-orphan")
+
     tunnels = relationship("Tunnel", back_populates="owner", lazy='dynamic',
                            cascade="save-update, merge, delete, delete-orphan")
 
@@ -342,8 +349,8 @@ class Tunnel(SQL_Base):
     tunnel_direction = Column(Enum(TunnelDirection))
     owner_id = Column(Integer, ForeignKey('Players.id'))
     owner = relationship("Player", back_populates="tunnels", cascade="save-update, merge, delete")
-    location_id = Column(Integer, ForeignKey('Locations.id'))
-    location = relationship("Location", back_populates="tunnel", cascade="save-update, merge, delete")
+    location_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'))
+    location = relationship("Location", back_populates="tunnel")
 
     def __init__(self, owner, tunnel_color, tunnel_number, location=None):
         try:
@@ -362,18 +369,16 @@ class Location(SQL_Base):
     __tablename__ = 'Locations'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True)
+    name = Column(String(128), unique=True, )
     x = Column(Integer)
-    y = Column(Integer)
     z = Column(Integer)
 
-    tunnel = relationship("Tunnel", back_populates="location", uselist=False,
-                          cascade="save-update, merge, delete, delete-orphan")
+    tunnel = relationship("Tunnel",  uselist=False, cascade="all, delete-orphan")
     dimension = Column(Enum(Dimension))
 
-    owner_id = Column(Integer, ForeignKey('Players.id'))
-    owner = relationship("Player", back_populates="locations", cascade="save-update, merge, delete")
-    type = Column(String)
+    owner_id = Column(Integer, ForeignKey('Players.id', ondelete='CASCADE'))
+    owner = relationship("Player", back_populates="locations", cascade="all, delete-orphan", single_parent=True)
+    type = Column(String(128))
 
     __mapper_args__ = {
         'polymorphic_on': type,
@@ -413,14 +418,12 @@ class Location(SQL_Base):
 
 class Shop(Location):
     __tablename__ = 'Shops'
-    shop_id = Column(Integer, ForeignKey('Locations.id'), primary_key=True)
-    name = column_property(Column(String), Location.name)
+    shop_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'), primary_key=True)
+    name = column_property(Column(String(128)), Location.name)
     inventory = relationship('ItemListing', back_populates='shop', cascade='all, delete-orphan')
     __mapper_args__ = {
         'polymorphic_identity': 'Shop',
     }
-
-    column_property()
 
     def inv_to_str(self):
 
@@ -449,12 +452,12 @@ class ItemListing(SQL_Base):
     __tablename__ = 'Items'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
+    name = Column(String(128))
     price = Column(Integer)
     amount = Column(Integer)
 
-    shop_id = Column(Integer, ForeignKey('Shops.shop_id'))
-    shop = relationship("Shop", back_populates="inventory")
+    shop_id = Column(Integer, ForeignKey('Shops.shop_id', ondelete='CASCADE'))
+    shop = relationship("Shop", back_populates="inventory", single_parent=True)
 
     def __init__(self, name, price, amount, shop):
         self.name = name

@@ -3,7 +3,8 @@ from DatabaseModels import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 from itertools import zip_longest
-import configparser
+from BotConfig import *
+
 import shlex
 #from WebInterface import *
 
@@ -313,46 +314,15 @@ def get_args_dict(args):
         return {}
 
 
-def create_config():
-    config['Discord'] = {'Token': ''}
-    config['SQL'] = {'Dialect+Driver': 'Test', 'username': '', 'password':'', 'host': '', 'port': '', 'database':''}
-
-    with open('GeoffreyConfig.ini', 'w') as configfile:
-        config.write(configfile)
-
-def get_engine_arg(config):
-    driver = config['SQL']['Dialect+Driver']
-    username = config['SQL']['username']
-    password = config['SQL']['password']
-    host = config['SQL']['host']
-    port = config['SQL']['port']
-    database_name = config['SQL']['database']
-
-    engine_args = '{}://{}:{}@{}:{}/{}'
-
-    return engine_args.format(driver, username, password, host, port, database_name)
-
-
 # Bot Startup ******************************************************************
 
+config = read_config()
 
-config = configparser.ConfigParser()
-config.read('GeoffreyConfig.ini')
+TOKEN = config['Discord']['Token']
 
-if len(config.sections()) == 0:
-    create_config()
-    print("GeoffreyConfig.ini generated.")
-    quit(0)
-else:
-    TOKEN = config['Discord']['Token']
+engine_arg = get_engine_arg(config)
 
-    if config['SQL']['dialect+driver'] == 'Test':
-        engine_arg = 'sqlite:///temp.db'
-    else:
-        engine_arg = get_engine_arg(config)
+database_interface = DiscordDatabaseInterface(engine_arg)
 
-    database_interface = DiscordDatabaseInterface(engine_arg)
-    #WebInterface('127.0.0.1', 8081, database)
-
-    bot.run(TOKEN)
+bot.run(TOKEN)
 
