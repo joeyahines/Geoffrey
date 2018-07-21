@@ -165,20 +165,18 @@ async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
 
 
 @bot.command(pass_context=True)
-async def find(ctx, name: str):
+async def find(ctx, search: str):
     '''
-    Finds all the locations a player has in the database.
-        ?find [Player name]
+    Finds all the locations and tunnels matching the search term
+        ?find [Search]
     '''
 
     try:
-        loc_list = database_interface.find_location_by_owner_name(name)
-        loc_string = loc_list_to_string(loc_list, '{} \n{}')
+        result = database_interface.search_all_fields(search)
 
-        await bot.say('{}, **{}** has **{}** locations(s): \n {}'.format(ctx.message.author.mention, name, len(loc_list),
-                                                                    loc_string))
+        await bot.say('{}, The following entires match **{}**: {}'.format(ctx.message.author.mention, search, result))
     except PlayerNotFound:
-        await bot.say('{}, the player **{}** is not in the database'.format(ctx.message.author.mention, name))
+        await bot.say('{}, no matches **{}** were found in the database'.format(ctx.message.author.mention, name))
 
 
 @bot.command(pass_context=True)

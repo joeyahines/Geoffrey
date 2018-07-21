@@ -162,13 +162,20 @@ class DatabaseInterface:
             player = self.database.query_by_filter(Player, expr)[0]
         except IndexError:
             raise PlayerNotFound
-
         return player
 
-    def get_shop_inventory(self, shop):
-        expr = ItemListing.shop == shop
+    def search_all_fields(self, search):
+        loc_string = ''
 
-        return self.database.query_by_filter(ItemListing, expr)
+        expr = Location.owner.has(Player.name.ilike('%{}%'.format(search))) | Location.name.ilike('%{}%'.format(search))
+        for loc in self.database.query_by_filter(Location, expr):
+            loc_string = "{}\n\t{}".format(loc_string, loc)
+
+        expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location is None
+        for loc in self.database.query_by_filter(Tunnel, expr):
+            loc_string = "{}\n\t{}".format(loc_string, loc)
+
+        return loc_string
 
     def delete_location(self, owner, name):
         expr = (Location.owner == owner) & (Location.name == name)
@@ -383,12 +390,14 @@ class Location(SQL_Base):
     def pos_to_str(self):
         return '(x= {}, y= {}, z= {}) in the {}'.format(self.x, self.y, self.z, self.dimension.value.title())
 
+    def info_str(self):
+        return "Name: **{}**, Type: **{}** Position: **{}**".format(self.name, self.type, self.pos_to_str())
+
     def __str__(self):
         if self.tunnel is not None:
-            return "Name: {}, Position: {}, Tunnel: {}".format(self.name, self.pos_to_str(),
-                                                               self.tunnel)
+            return "{}, Tunnel: **{}**".format(self.info_str(), self.tunnel)
         else:
-            return "Name: {}, Position: {}".format(self.name, self.pos_to_str())
+            return self.info_str(self)
 
 
 
@@ -402,16 +411,20 @@ class Shop(Location):
     }
 
     def inv_to_str(self):
-        inv = ''
-        str_format = '{}\n\t{}'
 
-        for item in self.inventory:
-            inv = str_format.format(inv, item)
+        if len(self.inventory.all()) != 0:
+            inv = '\n\t*Inventory*'
+            str_format = '{}\n\t\t{}'
 
-        return inv
+            for item in self.inventory:
+                inv = str_format.format(inv, item)
+
+            return inv
+        else:
+            return ''
 
     def __str__(self):
-        return Location.__str__(self) + "\n\t*Inventory*: {}".format(self.inv_to_str())
+        return Location.__str__(self) + self.inv_to_str()
 
     def __init__(self, name, x, y, z, owner, dimension=None):
         Location.__init__(self, name, x, y, z, owner, dimension)

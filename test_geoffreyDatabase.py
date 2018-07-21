@@ -151,6 +151,14 @@ class TestGeoffreyDatabase(TestCase):
 
         self.assertEqual(loc_list[0].name, loc.name)
 
+    def test_search_all(self):
+        owner = self.add_player()
+        loc = self.add_loc()
+
+        loc_list = self.interface.search_all_fields('ZeroHD')
+
+        self.assertEqual(type(loc_list), str)
+
     def test_wrong_case(self):
         owner = self.add_player()
         loc = self.add_loc()
