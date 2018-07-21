@@ -73,10 +73,12 @@ async def register(ctx):
     You must do this before adding entries to the database.
     '''
 
-    player_name = get_nickname(ctx.message.author)
-
     try:
+        player_name = get_nickname(ctx.message.author)
         database_interface.add_player(player_name, ctx.message.author.id)
+    except AttributeError:
+        await bot.say('{}, run this command on 24CC whoever you are'.format(ctx.message.author.mention))
+        return
     except LocationInitError:
         raise commands.UserInputError
 
@@ -266,7 +268,7 @@ async def selling(item_name: str):
 
 
 @bot.command(pass_context=True)
-async def info(name: str):
+async def info(ctx, name: str):
     '''
     Displays info about a location.
 
@@ -274,7 +276,11 @@ async def info(name: str):
 
     ?info [Location Name]
     '''
-    loc = database_interface.find_location_by_name(name)[0]
+    try:
+        loc = database_interface.find_location_by_name(name)[0]
+    except IndexError:
+        await bot.say('{}, no location in the database matches {}.'.format(ctx.message.author.mentionm, name))
+        return
 
     await bot.say('{}'.format(loc))
 
