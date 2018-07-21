@@ -130,8 +130,7 @@ class DatabaseInterface:
 
         shops = []
         for listing in listings:
-            shops.append(listing.shop)
-            shops.append(listing.__str__())
+            shops.append(listing.selling_info())
 
         return shops
 
@@ -296,6 +295,7 @@ class TunnelDirection(enum.Enum):
         else:
             raise ValueError
 
+
 class Dimension(enum.Enum):
     overworld = 'overworld'
     nether = 'nether'
@@ -350,6 +350,7 @@ class Tunnel(SQL_Base):
     def __str__(self):
         return '{} {}'.format(self.tunnel_direction.value.title(), self.tunnel_number)
 
+
 class Location(SQL_Base):
     __tablename__ = 'Locations'
 
@@ -393,6 +394,9 @@ class Location(SQL_Base):
     def info_str(self):
         return "Name: **{}**, Type: **{}** Position: **{}**".format(self.name, self.type, self.pos_to_str())
 
+    def full_str(self):
+        return self.__str__()
+
     def __str__(self):
         if self.tunnel is not None:
             return "{}, Tunnel: **{}**".format(self.info_str(), self.tunnel)
@@ -413,7 +417,7 @@ class Shop(Location):
     def inv_to_str(self):
 
         if len(self.inventory.all()) != 0:
-            inv = '\n\t*Inventory*'
+            inv = '\n\t*Inventory:*'
             str_format = '{}\n\t\t{}'
 
             for item in self.inventory:
@@ -423,8 +427,11 @@ class Shop(Location):
         else:
             return ''
 
+    def full_str(self):
+        return Location.full_str(self) + self.inv_to_str()
+
     def __str__(self):
-        return Location.__str__(self) + self.inv_to_str()
+        return Location.__str__(self)
 
     def __init__(self, name, x, y, z, owner, dimension=None):
         Location.__init__(self, name, x, y, z, owner, dimension)
@@ -447,5 +454,8 @@ class ItemListing(SQL_Base):
         self.amount = amount
         self.shop = shop
 
+    def selling_info(self):
+        return 'Shop: **{}**, {}'.format(self.shop.name, self.__str__())
+
     def __str__(self):
-        return "Item: {}, Price: {} for {}D".format(self.name, self.amount, self.price)
+        return "Item: **{}**, Price: **{}** for **{}**D".format(self.name, self.amount, self.price)

@@ -253,7 +253,7 @@ async def additem(ctx, shop_name: str, item_name: str, quantity: int, diamond_pr
 
 
 @bot.command(pass_context=True)
-async def selling(item_name: str):
+async def selling(ctx, item_name: str):
     '''
     Lists all the shops selling an item
 
@@ -262,7 +262,8 @@ async def selling(item_name: str):
     shop_list = database_interface.find_shop_selling_item(item_name)
 
     shop_list_str = loc_list_to_string(shop_list)
-    await bot.say('The following shops sell **{}**: \n {}'.format(item_name, shop_list_str))
+    await bot.say('{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name,
+                                                                      shop_list_str))
 
 
 @bot.command(pass_context=True)
@@ -280,7 +281,7 @@ async def info(ctx, name: str):
         await bot.say('{}, no locations in the database match {}.'.format(ctx.message.author.mention, name))
         return
 
-    await bot.say('{}'.format(loc))
+    await bot.say('{}'.format(loc.full_str()))
 
 # Helper Functions ************************************************************
 
