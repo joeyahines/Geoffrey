@@ -10,7 +10,7 @@ import shlex
 TOKEN = ''
 command_prefix = '?'
 description = '''
-Geoffrey started his life as inside joke none of you will understand.
+Geoffrey started his life as an inside joke none of you will understand.
 At some point, she was to become an airhorn bot. Now, they know where your bases/shops are.
 
 Please respect Geoffrey, the bot is very sensitive.
@@ -69,8 +69,8 @@ async def test():
 @bot.command(pass_context=True)
 async def register(ctx):
     '''
-    Registers your Discord and Minecraft account with the the database. You must do this before adding entries to
-    the database.
+    Registers your Discord and Minecraft account with the the database.
+    You must do this before adding entries to the database.
     '''
 
     player_name = get_nickname(ctx.message.author)
@@ -124,7 +124,7 @@ async def addshop(ctx, x_pos: int, y_pos: int, z_pos: int, *args):
     except LocationInitError:
         raise commands.UserInputError
     except EntryNameNotUniqueError:
-        await bot.say('{}, a shop called {} already exists. You need to specify a different name.'.format(
+        await bot.say('{}, a shop called **{}** already exists. You need to specify a different name.'.format(
             ctx.message.author.mention, name))
         return
 
@@ -135,7 +135,8 @@ async def addshop(ctx, x_pos: int, y_pos: int, z_pos: int, *args):
 @bot.command(pass_context=True)
 async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     '''
-    Adds your tunnel to the database. The location name is optional. If the location has a tunnel, it is updated.
+    Adds your tunnel to the database.
+    The location name is optional. If the location has a tunnel, it is updated.
         ?addtunnel [Tunnel Color] [Tunnel_Number] [Location Name]
     '''
 
@@ -151,7 +152,7 @@ async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
             ctx.message.author.mention))
         return
     except LocationLookUpError:
-        await bot.say('{}, you do not have a location called {}.'.format(
+        await bot.say('{}, you do not have a location called **{}**.'.format(
             ctx.message.author.mention, args[0]))
         return
 
@@ -195,9 +196,9 @@ async def delete(ctx, name: str):
 @bot.command(pass_context=True)
 async def findaround(ctx, x_pos: int, z_pos: int, * args):
     '''
-    Finds all the locations around a certain point that are registered in the database
-    The radius defaults to 200 blocks if no value is given
-    Default dimension is overworld
+    Finds all the locations around a certain point.
+    The radius defaults to 200 blocks if no value is given.
+    Default dimension is overworld.
 
     ?findaround [X Coordinate] [Z Coordinate] [Optional Flags]
 
@@ -223,7 +224,7 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
     if len(base_list) != 0:
         base_string = loc_list_to_string(base_list, '{} \n{}')
 
-        await bot.say('{}, there are {} locations(s) within {} blocks of that point: \n {}'.format(
+        await bot.say('{}, there are **{}** locations(s) within **{}** blocks of that point: \n {}'.format(
             ctx.message.author.mention, len(base_list), radius, base_string))
     else:
         await bot.say('{}, there are no locations within {} blocks of that point'
@@ -231,15 +232,16 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
 
 
 @bot.command(pass_context=True)
-async def additem(ctx, shop_name: str, item_name: str, amount: int, diamond_price: int):
+async def additem(ctx, shop_name: str, item_name: str, quantity: int, diamond_price: int):
     '''
-    Adds an item to a shop's inventory. Amount for diamond price.
+    Adds an item to a shop's inventory.
+    Amount for diamond price.
 
-    ?additem [Shop name] [Item Name] [Amount] [Price]
+    ?additem [Shop name] [Item Name] [Quantity] [Price]
     '''
 
     try:
-        database_interface.add_item(ctx.message.author.id, shop_name, item_name, diamond_price, amount)
+        database_interface.add_item(ctx.message.author.id, shop_name, item_name, diamond_price, quantity)
 
         await bot.say('{}, **{}** has been added to the inventory of **{}**.'.format(ctx.message.author.mention,
                                                                                      item_name, shop_name))
@@ -260,13 +262,15 @@ async def selling(item_name: str):
     shop_list = database_interface.find_shop_selling_item(item_name)
 
     shop_list_str = loc_list_to_string(shop_list)
-    await bot.say('The following shops sell {}: \n {}'.format(item_name, shop_list_str))
+    await bot.say('The following shops sell **{}**: \n {}'.format(item_name, shop_list_str))
 
 
 @bot.command(pass_context=True)
 async def info(name: str):
     '''
-    Displays a location's info including inventory its a shop
+    Displays info about a location.
+
+    If the location is a shop, it displays the shop's inventory.
 
     ?info [Location Name]
     '''
