@@ -16,13 +16,7 @@ class TestGeoffreyDatabase(TestCase):
         self.tunnel = Tunnel(self.owner, 'Green', 105, self.loc)
 
     def tearDown(self):
-        self.interface.database.session.query(Tunnel).delete()
-        self.interface.database.session.query(ItemListing).delete()
-        self.interface.database.session.query(Shop).delete()
-        self.interface.database.session.query(Location).delete()
-        self.interface.database.session.query(Player).delete()
-
-        self.interface.database.session.commit()
+        self.interface.database.clear_all()
 
     def test_add_object(self):
         self.interface.database.add_object(self.loc)

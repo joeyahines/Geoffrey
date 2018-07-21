@@ -220,8 +220,6 @@ class DiscordDatabaseInterface(DatabaseInterface):
                 self.database.add_object(player)
             finally:
                 player.name = player_name
-
-        self.database.session.commit()
         return player
 
     def find_location_by_owner_uuid(self, owner_uuid):
@@ -248,58 +246,58 @@ class DiscordDatabaseInterface(DatabaseInterface):
 class GeoffreyDatabase:
 
     def __init__(self, engine_arg):
-        self.engine = create_engine(engine_arg, echo=True, pool_recycle=3600)
-        self.Session = scoped_session(sessionmaker(bind=self.engine))
-        self.Session()
+        self.engine = create_engine(engine_arg, echo=True, pool_recycle=3600, pool_pre_ping=True)
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+        self.meta = MetaData()
         SQL_Base.metadata.create_all(self.engine)
+
+    def clear_all(self):
+        self.session.query(Tunnel).delete()
+        self.session.query(ItemListing).delete()
+        self.session.query(Shop).delete()
+        self.session.query(Location).delete()
+        self.session.query(Player).delete()
+
+        self.session.commit()
 
     def add_object(self, obj):
         try:
-            session = self.Session()
-            ret = not session.query(exists().where(type(obj).id == obj.id))
+            ret = not self.session.query(exists().where(type(obj).id == obj.id))
             if not ret:
-                session.add(obj)
-                session.commit()
-                session.close()
+                self.session.add(obj)
+                self.session.commit()
         except IntegrityError:
-            session.rollback()
+            self.session.rollback()
             raise EntryNameNotUniqueError
         except DataError:
-            session.rollback()
+            self.session.rollback()
             raise StringTooLong
 
 
-
     def query_by_filter(self, obj_type, * args):
-        session = self.Session()
         filter_value = self.combine_filter(args)
-        return session.query(obj_type).filter(filter_value).all()
-
-        session.close()
+        return self.session.query(obj_type).filter(filter_value).all()
 
     def delete_entry(self, obj_type, * args):
-        session = self.Session()
         filter_value = self.combine_filter(args)
-        entry = session.query(obj_type).filter(filter_value)
+        entry = self.session.query(obj_type).filter(filter_value)
 
         if entry.first() is not None:
             entry.delete()
-            session.commit()
+            self.session.commit()
         else:
             raise DeleteEntryError
 
-        session.close()
+            self.session.close()
 
     def print_database(self, obj_type):
-        session = self.Session()
-        obj_list = session.query(obj_type).all()
+        obj_list = self.session.query(obj_type).all()
 
         s = ''
 
         for obj in obj_list:
                 s = s + '\n' + obj.id
-
-        session.close()
         return s
 
     def combine_filter(self, filter_value):
