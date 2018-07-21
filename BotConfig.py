@@ -29,6 +29,6 @@ def get_engine_arg(config):
     port = config['SQL']['port']
     database_name = config['SQL']['database']
 
-    engine_args = '{}://{}:{}@{}:{}/{}'
+    engine_args = '{}://{}:{}@{}:{}/{}?charset=utf8mb4&use_unicode=1'
 
     return engine_args.format(driver, username, password, host, port, database_name)
