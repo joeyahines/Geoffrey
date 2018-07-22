@@ -1,8 +1,9 @@
 from unittest import TestCase
-from DatabaseModels import *
+from DiscordDatabaseInterface import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 from BotConfig import *
+
 
 class TestGeoffreyDatabase(TestCase):
     def setUp(self):

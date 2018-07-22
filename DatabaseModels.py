@@ -1,13 +1,13 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, create_engine, exists, MetaData
-from sqlalchemy.orm import sessionmaker, relationship, column_property
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, create_engine, exists
+from sqlalchemy.orm import relationship, column_property, sessionmaker
 from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import expression
-from difflib import SequenceMatcher
 import enum
+from difflib import SequenceMatcher
+
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
-from sqlalchemy.orm import scoped_session, sessionmaker
 
 SQL_Base = declarative_base()
 
@@ -19,229 +19,6 @@ def check_similarity(a, b):
         return True
     else:
         return False
-
-
-class DatabaseInterface:
-
-    def __init__(self, db_engine_arg):
-        self.database = GeoffreyDatabase(db_engine_arg)
-
-    def add_location(self, session, owner, name, x_pos, z_pos, dimension=None):
-        location = Location(name, x_pos, z_pos, owner, dimension)
-        self.database.add_object(session, location)
-        return location
-
-    def add_shop(self, session, owner, name, x_pos, z_pos, dimension=None):
-        shop = Shop(name, x_pos, z_pos, owner, dimension)
-        self.database.add_object(session, shop)
-        return shop
-
-    def add_tunnel(self, session, owner, color, number, location_name):
-        if location_name is None:
-            if len(self.find_tunnel_by_owner(session, owner)):
-                raise EntryNameNotUniqueError
-            else:
-                location = None
-        else:
-            try:
-                location = self.find_location_by_name_and_owner(session, owner, location_name)[0]
-            except IndexError:
-                raise LocationLookUpError
-
-        tunnel = Tunnel(owner, color, number, location)
-
-        self.database.add_object(session, tunnel)
-        return tunnel
-
-    def add_item(self, session, owner, shop_name, item_name, price, amount):
-        try:
-            shop = self.find_shop_by_name_and_owner(session, owner, shop_name)
-
-            item = ItemListing(item_name, price, amount, shop[0])
-            self.database.add_object(session, item)
-        except IndexError:
-            raise LocationLookUpError
-
-        return item
-
-    def add_player(self, session, player_name, discord_id):
-
-        try:
-            player = self.find_player(session, player_name)
-        except PlayerNotFound:
-            try:
-                uuid = grab_UUID(player_name)
-                player = self.find_player_by_mc_uuid(session, uuid)
-            except PlayerNotFound:
-                player = Player(player_name)
-                self.database.add_object(session, player, discord_id)
-            finally:
-                player.name = player_name
-
-        self.database.session.commit()
-        return player
-
-    def find_location_by_name(self, session, name):
-        expr = Location.name.ilike('%{}%'.format(name))
-        return self.database.query_by_filter(session, Location, expr)
-
-    def find_shop_by_name(self, session, name):
-        expr = Location.name.ilike('%{}%'.format(name))
-        return self.database.query_by_filter(session, Shop, expr)
-
-    def find_location_by_owner(self, session, owner):
-        expr = Location.owner == owner
-        return self.database.query_by_filter(session, Location, expr)
-
-    def find_shop_by_owner(self, session, owner):
-        expr = Shop.owner == owner
-        return self.database.query_by_filter(session, Shop, expr)
-
-    def find_location_by_owner_name(self, session, owner_name):
-        expr = Location.owner.has(Player.name.ilike(owner_name))
-        return self.database.query_by_filter(session, Location, expr)
-
-    def find_shop_by_name_and_owner(self, session, owner, name):
-        expr = (Shop.owner == owner) & (Shop.name.ilike(name))
-        return self.database.query_by_filter(session, Shop, expr)
-
-    def find_location_by_name_and_owner(self, session, owner, name):
-        expr = (Location.owner == owner) & (Location.name.ilike(name))
-        return self.database.query_by_filter(session, Location, expr)
-
-    def find_location_around(self, session, x_pos, z_pos, radius, dimension):
-        dimension_obj = Dimension.str_to_dimension(dimension)
-        expr = (Location.x < x_pos + radius + 1) & (Location.x > x_pos - radius - 1) & (Location.z < z_pos + radius + 1) \
-               & (Location.z > z_pos - radius - 1) & (Location.dimension == dimension_obj)
-
-        return self.database.query_by_filter(session, Location, expr)
-
-    def find_tunnel_by_owner(self, session, owner):
-        expr = Tunnel.owner == owner
-
-        return self.database.query_by_filter(session, Tunnel, expr)
-
-    def find_tunnel_by_owner_name(self, session, owner_name):
-        expr = Tunnel.owner.has(Player.name.ilike(owner_name))
-        return self.database.query_by_filter(session, Tunnel, expr)
-
-    def find_item(self, session, item_name):
-        expr = ItemListing.name.ilike('%{}%'.format(item_name))
-        return self.database.query_by_filter(session, ItemListing, expr)
-
-    def find_shop_selling_item(self, session, item_name):
-        listings = self.find_item(session, item_name)
-
-        shops = []
-        for listing in listings:
-            shops.append(listing.selling_info())
-
-        return shops
-
-    def find_player(self, session, player_name):
-        expr = Player.name.ilike(player_name)
-
-        try:
-            player = self.database.query_by_filter(session, Player, expr)[0]
-        except IndexError:
-            raise PlayerNotFound
-
-        return player
-
-    def find_player_by_mc_uuid(self, session, uuid):
-        expr = Player.id == uuid
-
-        try:
-            player = self.database.query_by_filter(session, Player, expr)[0]
-        except IndexError:
-            raise PlayerNotFound
-
-        return player
-
-    def find_player_by_discord_uuid(self, session, uuid):
-        expr = Player.discord_uuid == uuid
-
-        try:
-            player = self.database.query_by_filter(session, Player, expr)[0]
-        except IndexError:
-            raise PlayerNotFound
-        return player
-
-    def search_all_fields(self, session, search):
-        loc_string = ''
-        count = 0
-
-        expr = Location.owner.has(Player.name.ilike('%{}%'.format(search))) | Location.name.ilike('%{}%'.format(search))
-        for loc in self.database.query_by_filter(session, Location, expr):
-            loc_string = "{}\n{}".format(loc_string, loc)
-            count += 1
-
-        expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location is None
-        for loc in self.database.query_by_filter(session, Tunnel, expr):
-            loc_string = "{}\n{}".format(loc_string, loc)
-            count += 1
-
-        if count == 0:
-            raise LocationLookUpError
-        else:
-            return loc_string
-
-    def delete_location(self, session, owner, name):
-        expr = (Location.owner == owner) & (Location.name == name)
-        self.database.delete_entry(session, Location, expr)
-
-
-class DiscordDatabaseInterface(DatabaseInterface):
-
-    def add_location(self, session, owner_uuid, name, x_pos, z_pos, dimension=None):
-        owner = DatabaseInterface.find_player_by_discord_uuid(self, session, owner_uuid)
-        return DatabaseInterface.add_location(self, session, owner, name, x_pos, z_pos, dimension)
-
-    def add_shop(self, session, owner_uuid, name, x_pos, z_pos, dimension=None):
-        owner = DatabaseInterface.find_player_by_discord_uuid(self, session, owner_uuid)
-        return DatabaseInterface.add_shop(self, session, owner, name, x_pos, z_pos, dimension)
-
-    def add_tunnel(self, session, owner_uuid, color, number, location_name=""):
-        owner = DatabaseInterface.find_player_by_discord_uuid(self, session, owner_uuid)
-        return DatabaseInterface.add_tunnel(self, session, owner, color, number, location_name)
-
-    def add_item(self, session, owner_uuid, shop_name, item_name, price, amount):
-        owner = DatabaseInterface.find_player_by_discord_uuid(self, session, owner_uuid)
-        return DatabaseInterface.add_item(self, session, owner, shop_name, item_name, price, amount)
-
-    def add_player(self, session, player_name, discord_id):
-        try:
-            player = self.find_player(session, player_name)
-        except PlayerNotFound:
-            try:
-                uuid = grab_UUID(player_name)
-                player = self.find_player_by_mc_uuid(session, uuid)
-            except PlayerNotFound:
-                player = Player(player_name, discord_id)
-                self.database.add_object(session, player)
-            finally:
-                player.name = player_name
-        return player
-
-    def find_location_by_owner_uuid(self, session, owner_uuid):
-        owner = DatabaseInterface.find_player_by_discord_uuid(self, session, owner_uuid)
-        return DatabaseInterface.find_location_by_owner(self, session, owner)
-
-    def find_shop_by_owner_uuid(self, session, owner_uuid):
-        owner = DatabaseInterface.find_player_by_discord_uuid(self, session, owner_uuid)
-        return DatabaseInterface.find_shop_by_owner(self, session, owner)
-
-    def find_shop_by_name_and_owner_uuid(self, session, owner_uuid, name):
-        owner = DatabaseInterface.find_player_by_discord_uuid(self, session, owner_uuid)
-        return DatabaseInterface.find_shop_by_name_and_owner(self, session, owner, name)
-
-    def find_location_by_name_and_owner_uuid(self, session, owner_uuid, name):
-        owner = DatabaseInterface.find_player_by_discord_uuid(self, session, owner_uuid)
-        return DatabaseInterface.find_location_by_name_and_owner(self, session, owner, name)
-
-    def delete_location(self, session, owner_uuid, name):
-        owner = DatabaseInterface.find_player_by_discord_uuid(self, session, owner_uuid)
-        return DatabaseInterface.delete_location(self, session, owner, name)
 
 
 class GeoffreyDatabase:
@@ -257,7 +34,6 @@ class GeoffreyDatabase:
         session.query(Shop).delete()
         session.query(Location).delete()
         session.query(Player).delete()
-
         session.commit()
 
     def add_object(self, session, obj):
@@ -300,7 +76,6 @@ class GeoffreyDatabase:
 
     def combine_filter(self, filter_value):
         return expression.and_(filter_value[0])
-
 
 class TunnelDirection(enum.Enum):
     North = 'green'
@@ -490,3 +265,5 @@ class ItemListing(SQL_Base):
 
     def __str__(self):
         return "Item: **{}**, Price: **{}** for **{}**D".format(self.name, self.amount, self.price)
+
+

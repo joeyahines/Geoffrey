@@ -1,12 +1,9 @@
 from discord.ext import commands
-from DatabaseModels import *
+from DiscordDatabaseInterface import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 from itertools import zip_longest
 from BotConfig import *
-
-import shlex
-#from WebInterface import *
 
 TOKEN = ''
 command_prefix = '?'
@@ -93,7 +90,8 @@ async def register(ctx):
 @bot.command(pass_context=True)
 async def addbase(ctx, x_pos: int, z_pos: int, * args):
     '''
-    Adds your base to the database. The name is optional.
+    Adds your base to the database.
+        The name is optional.
         ?addbase [X Coordinate] [Y Coordinate] [Z Coordinate] [Base Name]
     '''
     session = database_interface.database.Session()
@@ -119,7 +117,8 @@ async def addbase(ctx, x_pos: int, z_pos: int, * args):
 @bot.command(pass_context=True)
 async def addshop(ctx, x_pos: int, z_pos: int, *args):
     '''
-    Adds your shop to the database. The name is optional.
+    Adds your shop to the database.
+        The name is optional.
         ?addshop [X Coordinate] [Y Coordinate] [Z Coordinate] [Shop Name]
     '''
     session = database_interface.database.Session()
@@ -147,7 +146,7 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
 async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     '''
     Adds your tunnel to the database.
-    The location name is optional. If the location has a tunnel, it is updated.
+        The location name is optional. If the location has a tunnel, it is updated.
         ?addtunnel [Tunnel Color] [Tunnel_Number] [Location Name]
     '''
     session = database_interface.database.Session()
