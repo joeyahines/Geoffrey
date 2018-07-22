@@ -27,5 +27,11 @@ class EntryNameNotUniqueError(DataBaseError):
 class StringTooLong(DataBaseError):
     '''Given string is too long.'''
 
+class DatabaseValueError(DataBaseError):
+    ''''String too long or number too large'''
+
+class ItemNotFound(DataBaseError):
+    '''No item matches found in database'''
+
 
 

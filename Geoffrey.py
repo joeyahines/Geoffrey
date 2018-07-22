@@ -1,11 +1,10 @@
 from discord.ext import commands
-from DiscordDatabaseInterface import *
+from Commands import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 from itertools import zip_longest
 from BotConfig import *
 
-TOKEN = ''
 command_prefix = '?'
 description = '''
 Geoffrey started his life as an inside joke none of you will understand.
@@ -38,25 +37,18 @@ async def on_command_error(error, ctx):
     elif isinstance(error, commands.UserInputError):
         error_str = 'Invalid syntax for {} you ding dong, please read ?help {}.'\
             .format(ctx.invoked_with, ctx.invoked_with)
-        database_interface.database.session.rollback()
     elif isinstance(error.original, UsernameLookupFailed):
         error_str = error.original.__doc__
-    elif isinstance(error.original, OverflowError):
-        error_str = 'Wow buddy, that\'s a big number. Please don\'t do that.'
-        database_interface.database.session.rollback()
     elif isinstance(error.original, PlayerNotFound):
         error_str = 'Make sure to use ?register first you ding dong.'
-        database_interface.database.session.rollback()
     elif isinstance(error.original, EntryNameNotUniqueError):
         error_str = 'An entry in the database already has that name ding dong.'
-        database_interface.database.session.rollback()
-    elif isinstance(error.original, StringTooLong):
-        error_str = 'Use a shorter name you, dong ding.'
-        database_interface.database.session.rollback()
+    elif isinstance(error.original, DatabaseValueError):
+        error_str = 'Use a shorter name  or a smaller value, dong ding.'
     else:
         error_str = bad_error_message.format(ctx.invoked_with, error)
 
-    await bot.send_message(ctx.message.channel, error_str)
+    bot.send_message(ctx.message.channel, '**Error Running Command:** {}'.format(error_str))
 
 
 @bot.command()
@@ -74,17 +66,14 @@ async def register(ctx):
     You must do this before adding entries to the database.
     '''
 
-    session = database_interface.database.Session()
     try:
         player_name = get_nickname(ctx.message.author)
-        database_interface.add_player(session, player_name, ctx.message.author.id)
+        bot_commands.register(player_name, ctx.message.author.id)
+        await bot.say('{}, you have been added to the database.'.format(ctx.message.author.mention))
     except AttributeError:
         await bot.say('{}, run this command on 24CC whoever you are'.format(ctx.message.author.mention))
-        return
     except LocationInitError:
         raise commands.UserInputError
-    session.close()
-    await bot.say('{}, you have been added to the database.'.format(ctx.message.author.mention))
 
 
 @bot.command(pass_context=True)
@@ -94,24 +83,23 @@ async def addbase(ctx, x_pos: int, z_pos: int, * args):
         The name is optional.
         ?addbase [X Coordinate] [Y Coordinate] [Z Coordinate] [Base Name]
     '''
-    session = database_interface.database.Session()
     if len(args) > 0:
         name = ' '.join(args)
     else:
-        name = '{}\'s_Base'.format(database_interface.find_player_by_discord_uuid(session, ctx.message.author.id).name)
+        name = None
+
     try:
-        base = database_interface.add_location(session, ctx.message.author.id, name, x_pos, z_pos)
+        base = bot_commands.addbase(x_pos, z_pos, base_name=name, discord_uuid=ctx.message.author.id)
+        await bot.say('{}, your base has been added to the database: {}'.format(ctx.message.author.mention, base))
     except LocationInitError:
         raise commands.UserInputError
     except EntryNameNotUniqueError:
-        await bot.say('{}, a based called {} already exists. You need to specify a different name.'.format(
-            ctx.message.author.mention, name))
-        return
-
-    await bot.say('{}, your base named **{}** located at {} has been added'
-                  ' to the database.'.format(ctx.message.author.mention, base.name, base.pos_to_str()))
-
-    session.close()
+        if name is None:
+            await bot.say('{}, you already have one base in the database, you need to specify a base'
+                          ' name'.format(ctx.message.author.mention))
+        else:
+            await bot.say('{}, a base called **{}** already exists. You need to specify a different name.'.format(
+                ctx.message.author.mention, name))
 
 
 @bot.command(pass_context=True)
@@ -121,26 +109,23 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
         The name is optional.
         ?addshop [X Coordinate] [Y Coordinate] [Z Coordinate] [Shop Name]
     '''
-    session = database_interface.database.Session()
     if len(args) > 0:
         name = ' '.join(args)
     else:
-        name = '{}\'s_Shop'.format(database_interface.find_player_by_discord_uuid(session, ctx.message.author.id).name)
+        name = None
 
     try:
-        shop = database_interface.add_shop(session, ctx.message.author.id, name, x_pos, z_pos)
+        shop = bot_commands.addshop(x_pos, z_pos, shop_name=name, discord_uuid=ctx.message.author.id)
+        await bot.say('{}, your shop has been added to the database: {}'.format(ctx.message.author.mention, shop))
     except LocationInitError:
         raise commands.UserInputError
     except EntryNameNotUniqueError:
-        await bot.say('{}, a shop called **{}** already exists. You need to specify a different name.'.format(
-            ctx.message.author.mention, name))
-        return
-
-    await bot.say('{}, your shop named **{}** located at {} has been added'
-                  ' to the database.'.format(ctx.message.author.mention, shop.name, shop.pos_to_str()))
-
-    session.close()
-
+        if name is None:
+            await bot.say('{}, you already have one shop in the database, you need to specify a shop name'.format(
+                ctx.message.author.mention))
+        else:
+            await bot.say('{}, a shop called **{}** already exists. You need to specify a different name.'.format(
+                ctx.message.author.mention, name))
 
 @bot.command(pass_context=True)
 async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
@@ -149,14 +134,14 @@ async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
         The location name is optional. If the location has a tunnel, it is updated.
         ?addtunnel [Tunnel Color] [Tunnel_Number] [Location Name]
     '''
-    session = database_interface.database.Session()
     try:
-        if len(args) == 0:
-            location_name = None
-        else:
+        if len(args) > 0:
             location_name = ' '.join(args)
+        else:
+            location_name = None
 
-        database_interface.add_tunnel(session, ctx.message.author.id, tunnel_color, tunnel_number, location_name)
+        bot_commands.tunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id, location_name=location_name)
+        await bot.say('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
     except EntryNameNotUniqueError:
         await bot.say('{}, you already have one tunnel in the database, please specify a location.'.format(
             ctx.message.author.mention))
@@ -164,14 +149,8 @@ async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     except LocationLookUpError:
         await bot.say('{}, you do not have a location called **{}**.'.format(
             ctx.message.author.mention, args[0]))
-        return
-
     except ValueError:
         raise commands.UserInputError
-
-    await bot.say('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
-
-    session.close()
 
 
 @bot.command(pass_context=True)
@@ -180,16 +159,12 @@ async def find(ctx, search: str):
     Finds all the locations and tunnels matching the search term
         ?find [Search]
     '''
-    session = database_interface.database.Session()
     try:
-        result = database_interface.search_all_fields(session, search)
+        result = bot_commands.find(search)
 
         await bot.say('{}, The following entries match **{}**:\n{}'.format(ctx.message.author.mention, search, result))
     except LocationLookUpError:
         await bot.say('{}, no matches **{}** were found in the database'.format(ctx.message.author.mention, search))
-
-    session.close()
-
 
 @bot.command(pass_context=True)
 async def delete(ctx, * args):
@@ -197,15 +172,12 @@ async def delete(ctx, * args):
     Deletes a location from the database.
         ?delete [Location name]
     '''
-    session = database_interface.database.Session()
     try:
         name = ' '.join(args)
-        database_interface.delete_location(session, ctx.message.author.id, name)
+        commands.delete(name, discord_uuid=ctx.message.author.id)
         await bot.say('{}, your location named **{}** has been deleted.'.format(ctx.message.author.mention, name))
     except (DeleteEntryError, PlayerNotFound):
         await bot.say('{}, you do not have a location named **{}**.'.format(ctx.message.author.mention, name))
-
-    session.close()
 
 
 @bot.command(pass_context=True)
@@ -220,11 +192,11 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
     Optional Flags:
     -d [dimension]
     '''
-    session = database_interface.database.Session()
-    radius = 200
-    dimension = 'Overworld'
 
     try:
+        radius = 200
+        dimension = 'Overworld'
+
         if len(args) > 0:
             if args[0] == '-d':
                 dimension = args[1]
@@ -235,20 +207,16 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
                     if args[1] == '-d':
                         dimension = args[2]
 
-        base_list = database_interface.find_location_around(session, x_pos, z_pos, radius, dimension)
+        base_string = bot_commands.findaround(x_pos, z_pos, radius, dimension)
 
-        if len(base_list) != 0:
-            base_string = loc_list_to_string(base_list, '{} \n{}')
-
-            await bot.say('{}, there are **{}** locations(s) within **{}** blocks of that point: \n {}'.format(
-                ctx.message.author.mention, len(base_list), radius, base_string))
+        if len(base_string) != 0:
+            await bot.say('{}, the following locations(s) within **{}** blocks of that point: \n {}'.format(
+                ctx.message.author.mention, radius, base_string))
         else:
             await bot.say('{}, there are no locations within {} blocks of that point'
                           .format(ctx.message.author.mention, radius))
     except ValueError:
         raise commands.UserInputError
-
-    session.close()
 
 
 @bot.command(pass_context=True)
@@ -259,19 +227,13 @@ async def additem(ctx, item_name: str, quantity: int, diamond_price: int, * args
 
     ?additem [Item Name] [Quantity] [Price] [Shop name]
     '''
-    session = database_interface.database.Session()
     try:
-        shop_list = database_interface.find_shop_by_owner_uuid(session, ctx.message.author.id)
-
-        if len(shop_list) == 1:
-            shop_name = shop_list[0].name
+        if len(args) > 0:
+            shop_name = ' '.join(args)
         else:
-            if len(args) == 0:
-                raise LocationInitError
-            else:
-                shop_name = ' '.join(args)
+            shop_name = None
 
-            database_interface.add_item(session, ctx.message.author.id, shop_name, item_name, diamond_price, quantity)
+        bot_commands.additem(item_name, quantity, diamond_price, shop_name=shop_name)
         await bot.say('{}, **{}** has been added to the inventory of **{}**.'.format(ctx.message.author.mention,
                                                                                      item_name, shop_name))
     except PlayerNotFound:
@@ -281,9 +243,7 @@ async def additem(ctx, item_name: str, quantity: int, diamond_price: int, * args
                       .format(ctx.message.author.mention))
     except LocationLookUpError:
         await bot.say('{}, you don\'t have any shops named **{}** in the database.'.format(ctx.message.author.mention,
-                                                                                          shop_name))
-
-    session.close()
+                                                                                           shop_name))
 
 
 @bot.command(pass_context=True)
@@ -293,14 +253,11 @@ async def selling(ctx, item_name: str):
 
     ?selling [item]
     '''
-    session = database_interface.database.Session()
-    shop_list = database_interface.find_shop_selling_item(session, item_name)
-
-    shop_list_str = loc_list_to_string(shop_list)
-    await bot.say('{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name,
-                                                                      shop_list_str))
-
-    session.close()
+    try:
+        result = bot_commands.selling(item_name)
+        await bot.say('{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
+    except ItemNotFound:
+        await bot.say('{}, bo shops sell {}'.format(ctx.message.author.mention, item_name))
 
 
 @bot.command(pass_context=True)
@@ -312,19 +269,20 @@ async def info(ctx, * args):
 
     ?info [Location Name]
     '''
-    session = database_interface.database.Session()
     try:
-        name = ' '.join(args)
-        loc = database_interface.find_location_by_name(session, name)[0]
+        if len(args) > 0:
+            name = ' '.join(args)
+        else:
+            raise commands.UserInputError
+
+        info_str = bot_commands.info(name)
+        await bot.say(info_str)
     except IndexError:
         await bot.say('{}, no locations in the database match {}.'.format(ctx.message.author.mention, name))
         return
 
-    await bot.say('{}'.format(loc.full_str()))
-
-    session.close()
-
 # Helper Functions ************************************************************
+
 
 def get_nickname(discord_user):
     if discord_user.nick is None:
@@ -336,15 +294,6 @@ def get_nickname(discord_user):
         name = 'aeskdar'
 
     return name
-
-
-def loc_list_to_string(loc_list, str_format='{}\n{}'):
-    loc_string = ''
-
-    for loc in loc_list:
-        loc_string = str_format.format(loc_string, loc)
-
-    return loc_string
 
 
 def get_args_dict(args):
@@ -362,7 +311,7 @@ TOKEN = config['Discord']['Token']
 
 engine_arg = get_engine_arg(config)
 
-database_interface = DiscordDatabaseInterface(engine_arg)
+bot_commands = Commands(engine_arg)
 
 bot.run(TOKEN)
 

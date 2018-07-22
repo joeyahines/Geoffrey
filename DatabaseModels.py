@@ -43,17 +43,19 @@ class GeoffreyDatabase:
                 session.add(obj)
                 session.commit()
         except IntegrityError:
-            session.rollback()
             raise EntryNameNotUniqueError
         except DataError:
+            raise DatabaseValueError
+        except:
             session.rollback()
-            raise StringTooLong
+
 
     def query_by_filter(self, session, obj_type, * args):
         filter_value = self.combine_filter(args)
         return session.query(obj_type).filter(filter_value).all()
 
     def delete_entry(self, session, obj_type, * args):
+
         filter_value = self.combine_filter(args)
         entry = session.query(obj_type).filter(filter_value)
 
@@ -63,7 +65,7 @@ class GeoffreyDatabase:
         else:
             raise DeleteEntryError
 
-            session.close()
+        session.close()
 
     def print_database(self, session, obj_type):
         obj_list = session.query(obj_type).all()
@@ -192,7 +194,7 @@ class Location(SQL_Base):
             raise LocationInitError
 
     def dynmap_link(self):
-        return 'http://24carrotcraft.com:8123/?worldname=season3&mapname=surface&zoom=4&x={}&y=65&z={}'.\
+        return '<http://24carrotcraft.com:8123/?worldname=season3&mapname=surface&zoom=4&x={}&y=65&z={}>'.\
             format(self.x, self.z)
 
     def pos_to_str(self):
@@ -223,11 +225,11 @@ class Shop(Location):
     def inv_to_str(self):
 
         if len(self.inventory.all()) != 0:
-            inv = '\n\t*Inventory:*'
-            str_format = '{}\n\t\t{}'
+            inv = '\n**Inventory**:'
+            str_format = '{}\n{}'
 
             for item in self.inventory:
-                inv = str_format.format(inv, item)
+                inv = str_format.format(inv, item.listing_str())
 
             return inv
         else:
@@ -260,10 +262,10 @@ class ItemListing(SQL_Base):
         self.amount = amount
         self.shop = shop
 
-    def selling_info(self):
-        return 'Shop: **{}**, {}'.format(self.shop.name, self.__str__())
+    def listing_str(self):
+        return 'Item: **{}**, Price: **{}** for **{}**D'.format(self.name, self.amount, self.price)
 
     def __str__(self):
-        return "Item: **{}**, Price: **{}** for **{}**D".format(self.name, self.amount, self.price)
+        return 'Shop: **{}**, {}'.format(self.shop.name, self.listing_str())
 
 

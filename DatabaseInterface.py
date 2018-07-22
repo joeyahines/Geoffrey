@@ -44,21 +44,18 @@ class DatabaseInterface:
 
         return item
 
-    def add_player(self, session, player_name):
-
+    def add_player(self, session, player_name, discord_uuid=None):
         try:
             player = self.find_player(session, player_name)
         except PlayerNotFound:
-            uuid = grab_UUID(player_name)
+            mc_uuid = grab_UUID(player_name)
             try:
-                player = self.find_player_by_mc_uuid(session, uuid)
+                player = self.find_player_by_mc_uuid(session, mc_uuid)
+                player.name = player_name
             except PlayerNotFound:
-                player = Player(player_name, uuid)
+                player = Player(player_name, discord_uuid)
                 self.database.add_object(session, player)
 
-        player.name = player_name
-
-        session.commit()
         return player
 
     def find_location_by_name(self, session, name):
@@ -94,7 +91,7 @@ class DatabaseInterface:
         expr = (Location.x < x_pos + radius + 1) & (Location.x > x_pos - radius - 1) & (Location.z < z_pos + radius + 1) \
                & (Location.z > z_pos - radius - 1) & (Location.dimension == dimension_obj)
 
-        return self.database.query_by_filter(session, Location, expr)
+        return list_to_string(self.database.query_by_filter(session, Location, expr))
 
     def find_tunnel_by_owner(self, session, owner):
         expr = Tunnel.owner == owner
@@ -111,12 +108,7 @@ class DatabaseInterface:
 
     def find_shop_selling_item(self, session, item_name):
         listings = self.find_item(session, item_name)
-
-        shops = []
-        for listing in listings:
-            shops.append(listing.selling_info())
-
-        return shops
+        return list_to_string(listings)
 
     def find_player(self, session, player_name):
         expr = Player.name.ilike(player_name)
@@ -178,3 +170,12 @@ def check_similarity(a, b):
         return True
     else:
         return False
+
+
+def list_to_string(loc_list, str_format='{}\n{}'):
+    loc_string = ''
+
+    for loc in loc_list:
+        loc_string = str_format.format(loc_string, loc)
+
+    return loc_string
