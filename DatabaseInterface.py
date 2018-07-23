@@ -140,7 +140,7 @@ class DatabaseInterface:
         return player
 
     def search_all_fields(self, session, search):
-        loc_string = ''
+        loc_string = '\n**Locations:**'
         count = 0
 
         expr = Location.owner.has(Player.name.ilike('%{}%'.format(search))) | Location.name.ilike('%{}%'.format(search))
@@ -148,9 +148,11 @@ class DatabaseInterface:
             loc_string = "{}\n{}".format(loc_string, loc)
             count += 1
 
-        expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location is None
-        for loc in self.database.query_by_filter(session, Tunnel, expr):
-            loc_string = "{}\n{}".format(loc_string, loc)
+        loc_string = loc_string + '\n\n**Tunnels:**'
+
+        expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location == None
+        for tunnel in self.database.query_by_filter(session, Tunnel, expr):
+            loc_string = "{}\n{}".format(loc_string, tunnel.full_str())
             count += 1
 
         if count == 0:

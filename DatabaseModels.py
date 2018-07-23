@@ -154,6 +154,9 @@ class Tunnel(SQL_Base):
         except (ValueError, IndexError):
             raise TunnelInitError
 
+    def full_str(self):
+        return 'Owner: **{}**\'s Tunnel: **{}**'.format(self.owner.name, self.__str__())
+
     def __str__(self):
         return '{} {}'.format(self.tunnel_direction.value.title(), self.tunnel_number)
 
@@ -201,7 +204,8 @@ class Location(SQL_Base):
         return '(x= {}, z= {}) in the {}'.format(self.x, self.z, self.dimension.value.title())
 
     def info_str(self):
-        return "Name: **{}**, Type: **{}** Position: **{}**".format(self.name, self.type, self.pos_to_str())
+        return "Name: **{}**, Type: **{}**, Owner: **{}** Position: **{}**".format(self.name, self.type,
+                                                                                   self.owner.name, self.pos_to_str())
 
     def full_str(self):
         return self.__str__() + '\n' + self.dynmap_link()
