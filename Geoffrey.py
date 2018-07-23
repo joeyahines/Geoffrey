@@ -44,11 +44,12 @@ async def on_command_error(error, ctx):
     elif isinstance(error.original, EntryNameNotUniqueError):
         error_str = 'An entry in the database already has that name ding dong.'
     elif isinstance(error.original, DatabaseValueError):
-        error_str = 'Use a shorter name  or a smaller value, dong ding.'
+        error_str = 'Use a shorter name or a smaller value, dong ding.'
     else:
         error_str = bad_error_message.format(ctx.invoked_with, error)
 
-    bot.send_message(ctx.message.channel, '**Error Running Command:** {}'.format(error_str))
+    await bot.send_message(ctx.message.channel, '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
+                                                                                          error_str))
 
 
 @bot.command()

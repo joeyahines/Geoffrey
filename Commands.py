@@ -44,9 +44,6 @@ class Commands:
             base = self.interface.add_base(session, player, base_name, x_pos, z_pos)
 
             base_name = base.name
-        except EntryNameNotUniqueError:
-            session.rollback()
-            raise EntryNameNotUniqueError
         finally:
             session.close()
 
@@ -81,9 +78,6 @@ class Commands:
 
             tunnel = self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, location_name)
             tunnel_info = tunnel.__str__()
-        except EntryNameNotUniqueError:
-            session.rollback()
-            raise EntryNameNotUniqueError
         finally:
             session.close()
 
