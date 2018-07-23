@@ -75,6 +75,9 @@ async def register(ctx):
         await bot.say('{}, run this command on 24CC whoever you are'.format(ctx.message.author.mention))
     except LocationInitError:
         raise commands.UserInputError
+    except PlayerInDB:
+        await bot.say('{}, you are already in the database. Ding dong.'.format(ctx.message.author.mention))
+
 
 
 @bot.command(pass_context=True)

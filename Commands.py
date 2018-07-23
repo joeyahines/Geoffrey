@@ -21,8 +21,12 @@ class Commands:
         session = self.interface.database.Session()
 
         try:
-            player = self.interface.add_player(session, player_name, discord_uuid)
-            player_name = player.name
+            try:
+                self.interface.find_player(session, player_name)
+                raise PlayerInDB
+            except PlayerNotFound:
+                player = self.interface.add_player(session, player_name, discord_uuid)
+                player_name = player.name
         finally:
             session.close()
 

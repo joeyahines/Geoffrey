@@ -39,5 +39,7 @@ class InvalidDimError(DataBaseError):
 class InvalidTunnelError(DataBaseError):
     """Invalid tunnel name"""
 
+class PlayerInDB(DataBaseError):
+    """Player already registered in database"""
 
 
