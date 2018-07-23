@@ -135,6 +135,8 @@ class DatabaseInterface:
 
         try:
             player = self.database.query_by_filter(session, Player, expr)[0]
+            player.name = grab_playername(player.mc_uuid)
+            session.commit()
         except IndexError:
             raise PlayerNotFound
         return player
@@ -151,6 +153,7 @@ class DatabaseInterface:
         loc_string = loc_string + '\n\n**Tunnels:**'
 
         expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location == None
+
         for tunnel in self.database.query_by_filter(session, Tunnel, expr):
             loc_string = "{}\n{}".format(loc_string, tunnel.full_str())
             count += 1

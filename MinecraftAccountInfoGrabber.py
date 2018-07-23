@@ -21,5 +21,7 @@ def grab_UUID(username):
 
 def grab_playername(uuid):
     player_data = grab_json(username_lookup_url.format(uuid))
-    return player_data[0]['name']
+
+    last_index = len(player_data)-1
+    return player_data[last_index]['name']
 

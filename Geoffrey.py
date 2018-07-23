@@ -4,6 +4,8 @@ from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 from itertools import zip_longest
 from BotConfig import *
+import time
+import threading
 
 command_prefix = '?'
 description = '''
@@ -310,6 +312,21 @@ def get_args_dict(args):
         return {}
 
 
+def update_user_names(bot_commands):
+    threading.Timer(600, update_user_names, [bot_commands]).start()
+    session = bot_commands.interface.database.Session()
+
+    player_list = session.query(Player).all()
+
+    for player in player_list:
+        player.name = grab_playername(player.mc_uuid)
+
+    print("Updating MC usernames...")
+    session.commit()
+
+    session.close()
+
+
 # Bot Startup ******************************************************************
 
 config = read_config()
@@ -320,5 +337,8 @@ engine_arg = get_engine_arg(config)
 
 bot_commands = Commands(engine_arg)
 
+update_user_names(bot_commands)
+
 bot.run(TOKEN)
+
 

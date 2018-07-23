@@ -41,11 +41,11 @@ class Commands:
 
             if len(self.interface.find_location_by_owner(session, player)) == 0:
                 if base_name is None:
-                    base_name = "{}'s Base".format()
+                    base_name = "{}'s Base".format(player.name)
             elif base_name is None:
                 raise EntryNameNotUniqueError
 
-            base = self.interface.add_base(session, player, base_name, x_pos, z_pos)
+            base = self.interface.add_location(session, player, base_name, x_pos, z_pos)
 
             base_name = base.name
         finally:
@@ -61,7 +61,7 @@ class Commands:
 
             if len(self.interface.find_shop_by_owner(session, player)) == 0:
                 if shop_name is None:
-                    shop_name = "{}'s Shop".format()
+                    shop_name = "{}'s Shop".format(player.name)
             elif shop_name is None:
                 raise EntryNameNotUniqueError
 
