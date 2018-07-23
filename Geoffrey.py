@@ -133,7 +133,7 @@ async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     '''
     Adds your tunnel to the database.
         The location name is optional. If the location has a tunnel, it is updated.
-        ?addtunnel [Tunnel Color] [Tunnel_Number] [Location Name]
+        ?tunnel [Tunnel Color] [Tunnel Number] [Location Name]
     '''
     try:
         if len(args) > 0:
@@ -150,22 +150,25 @@ async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     except LocationLookUpError:
         await bot.say('{}, you do not have a location called **{}**.'.format(
             ctx.message.author.mention, args[0]))
-    except ValueError:
-        raise commands.UserInputError
+    except TunnelInitError:
+        await bot.say('{}, invalid tunnel color.'.format(ctx.message.author.mention))
+    except InvalidTunnelError:
+        await bot.say('{}, {} is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
 
 
 @bot.command(pass_context=True)
-async def find(ctx, search: str):
+async def find(ctx, * args):
     '''
     Finds all the locations and tunnels matching the search term
         ?find [Search]
     '''
     try:
+        search = ' '.join(args)
         result = bot_commands.find(search)
 
         await bot.say('{}, The following entries match **{}**:\n{}'.format(ctx.message.author.mention, search, result))
     except LocationLookUpError:
-        await bot.say('{}, no matches **{}** were found in the database'.format(ctx.message.author.mention, search))
+        await bot.say('{}, no matches to **{}** were found in the database'.format(ctx.message.author.mention, search))
 
 @bot.command(pass_context=True)
 async def delete(ctx, * args):
@@ -175,7 +178,7 @@ async def delete(ctx, * args):
     '''
     try:
         name = ' '.join(args)
-        commands.delete(name, discord_uuid=ctx.message.author.id)
+        bot_commands.delete(name, discord_uuid=ctx.message.author.id)
         await bot.say('{}, your location named **{}** has been deleted.'.format(ctx.message.author.mention, name))
     except (DeleteEntryError, PlayerNotFound):
         await bot.say('{}, you do not have a location named **{}**.'.format(ctx.message.author.mention, name))
@@ -216,8 +219,8 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
         else:
             await bot.say('{}, there are no locations within {} blocks of that point'
                           .format(ctx.message.author.mention, radius))
-    except ValueError:
-        raise commands.UserInputError
+    except InvalidDimError:
+        await bot.say('{}, {} is an invalid dimension.'.format(ctx.message.author.mention, dimension))
 
 
 @bot.command(pass_context=True)

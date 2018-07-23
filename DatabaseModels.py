@@ -49,7 +49,6 @@ class GeoffreyDatabase:
         except:
             session.rollback()
 
-
     def query_by_filter(self, session, obj_type, * args):
         filter_value = self.combine_filter(args)
         return session.query(obj_type).filter(filter_value).all()
@@ -79,6 +78,7 @@ class GeoffreyDatabase:
     def combine_filter(self, filter_value):
         return expression.and_(filter_value[0])
 
+
 class TunnelDirection(enum.Enum):
     North = 'green'
     East = 'blue'
@@ -97,7 +97,7 @@ class TunnelDirection(enum.Enum):
         elif check_similarity(TunnelDirection.West.value, arg):
             return TunnelDirection.West
         else:
-            raise ValueError
+            raise InvalidTunnelError
 
 
 class Dimension(enum.Enum):
@@ -114,7 +114,7 @@ class Dimension(enum.Enum):
         elif check_similarity(Dimension.end.value, arg):
             return Dimension.end
         else:
-            raise ValueError
+            raise InvalidDimError
 
 
 class Player(SQL_Base):

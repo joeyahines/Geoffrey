@@ -33,5 +33,11 @@ class DatabaseValueError(DataBaseError):
 class ItemNotFound(DataBaseError):
     '''No item matches found in database'''
 
+class InvalidDimError(DataBaseError):
+    """Invalid dimension name"""
+
+class InvalidTunnelError(DataBaseError):
+    """Invalid tunnel name"""
+
 
 
