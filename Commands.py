@@ -47,33 +47,33 @@ class Commands:
 
             base = self.interface.add_location(session, player, base_name, x_pos, z_pos)
 
-            base_name = base.name
+            base_str = base.__str__()
         finally:
             session.close()
 
-        return base_name
+        return base_str
 
-    def addshop(self, x_pos, z_pos, shop_name=None, discord_uuid=None, mc_uuid=None):
+    def addshop(self, x_pos, z_pos, shop_str=None, discord_uuid=None, mc_uuid=None):
         session = self.interface.database.Session()
 
         try:
             player = self.get_player(session, discord_uuid, mc_uuid)
 
             if len(self.interface.find_shop_by_owner(session, player)) == 0:
-                if shop_name is None:
-                    shop_name = "{}'s Shop".format(player.name)
-            elif shop_name is None:
+                if shop_str is None:
+                    shop_str = "{}'s Shop".format(player.name)
+            elif shop_str is None:
                 raise EntryNameNotUniqueError
 
-            shop = self.interface.add_shop(session, player, shop_name, x_pos, z_pos)
+            shop = self.interface.add_shop(session, player, shop_str, x_pos, z_pos)
 
-            shop_name = shop.name
+            shop_str = shop.__str__()
         finally:
             session.close()
 
-        return shop_name
+        return shop_str
 
-    def tunnel(self, tunnel_color, tunnel_number, location_name, discord_uuid=None, mc_uuid=None):
+    def addtunnel(self, tunnel_color, tunnel_number, location_name, discord_uuid=None, mc_uuid=None):
 
         session = self.interface.database.Session()
         try:
@@ -153,3 +153,22 @@ class Commands:
             session.close()
 
         return loc
+
+    def tunnel(self, player_name):
+        session = self.interface.database.Session()
+
+        try:
+            tunnel_list = self.interface.find_tunnel_by_owner_name(session, player_name)
+
+            if len(tunnel_list) == 0:
+                raise LocationLookUpError
+
+            tunnel_str = ''
+
+            for tunnel in tunnel_list:
+                tunnel_str = '{}\n{}'.format(tunnel_str, tunnel.full_str())
+
+        finally:
+            session.close()
+
+        return tunnel_str

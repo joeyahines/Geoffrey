@@ -96,7 +96,7 @@ async def addbase(ctx, x_pos: int, z_pos: int, * args):
 
     try:
         base = bot_commands.addbase(x_pos, z_pos, base_name=name, discord_uuid=ctx.message.author.id)
-        await bot.say('{}, your base has been added to the database: {}'.format(ctx.message.author.mention, base))
+        await bot.say('{}, your base has been added to the database: \n\n{}'.format(ctx.message.author.mention, base))
     except LocationInitError:
         raise commands.UserInputError
     except EntryNameNotUniqueError:
@@ -121,8 +121,8 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
         name = None
 
     try:
-        shop = bot_commands.addshop(x_pos, z_pos, shop_name=name, discord_uuid=ctx.message.author.id)
-        await bot.say('{}, your shop has been added to the database: {}'.format(ctx.message.author.mention, shop))
+        shop = bot_commands.addshop(x_pos, z_pos, shop_str=name, discord_uuid=ctx.message.author.id)
+        await bot.say('{}, your shop has been added to the database: \n\n{}'.format(ctx.message.author.mention, shop))
     except LocationInitError:
         raise commands.UserInputError
     except EntryNameNotUniqueError:
@@ -134,7 +134,7 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
                 ctx.message.author.mention, name))
 
 @bot.command(pass_context=True)
-async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
+async def addtunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     '''
     Adds your tunnel to the database.
         The location name is optional. If the location has a tunnel, it is updated.
@@ -146,7 +146,7 @@ async def tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
         else:
             location_name = None
 
-        bot_commands.tunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id, location_name=location_name)
+        bot_commands.addtunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id, location_name=location_name)
         await bot.say('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
     except EntryNameNotUniqueError:
         await bot.say('{}, you already have one tunnel in the database, please specify a location.'.format(
@@ -174,6 +174,20 @@ async def find(ctx, * args):
         await bot.say('{}, The following entries match **{}**:\n{}'.format(ctx.message.author.mention, search, result))
     except LocationLookUpError:
         await bot.say('{}, no matches to **{}** were found in the database'.format(ctx.message.author.mention, search))
+
+@bot.command(pass_context=True)
+async def tunnel(ctx, player: str):
+    '''
+    Finds all the tunnels a player owns.
+        ?tunnel [Player]
+    '''
+    try:
+        result = bot_commands.tunnel(player)
+
+        await bot.say('{}, **{}** owns the following tunnels: \n{}'.format(ctx.message.author.mention, player, result))
+    except LocationLookUpError:
+        await bot.say('{}, no tunnels for the player **{}** were found in the database'
+                      .format(ctx.message.author.mention, player))
 
 @bot.command(pass_context=True)
 async def delete(ctx, * args):
@@ -242,9 +256,10 @@ async def additem(ctx, item_name: str, quantity: int, diamond_price: int, * args
         else:
             shop_name = None
 
-        bot_commands.additem(item_name, quantity, diamond_price, shop_name=shop_name)
-        await bot.say('{}, **{}** has been added to the inventory of **{}**.'.format(ctx.message.author.mention,
-                                                                                     item_name, shop_name))
+        bot_commands.additem(item_name, quantity, diamond_price, shop_name=shop_name,
+                             discord_uuid=ctx.message.author.id)
+        await bot.say('{}, **{}** has been added to the inventory of your shop.'.format(ctx.message.author.mention,
+                                                                                        item_name))
     except PlayerNotFound:
         await bot.say('{}, you don\'t have any shops in the database.'.format(ctx.message.author.mention))
     except LocationInitError:
@@ -315,13 +330,12 @@ def get_args_dict(args):
 def update_user_names(bot_commands):
     threading.Timer(600, update_user_names, [bot_commands]).start()
     session = bot_commands.interface.database.Session()
-
+    print("Updating MC usernames...")
     player_list = session.query(Player).all()
 
     for player in player_list:
         player.name = grab_playername(player.mc_uuid)
 
-    print("Updating MC usernames...")
     session.commit()
 
     session.close()

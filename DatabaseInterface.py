@@ -99,7 +99,7 @@ class DatabaseInterface:
         return self.database.query_by_filter(session, Tunnel, expr)
 
     def find_tunnel_by_owner_name(self, session, owner_name):
-        expr = Tunnel.owner.has(Player.name.ilike(owner_name))
+        expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(owner_name)))
         return self.database.query_by_filter(session, Tunnel, expr)
 
     def find_item(self, session, item_name):
@@ -150,13 +150,14 @@ class DatabaseInterface:
             loc_string = "{}\n{}".format(loc_string, loc)
             count += 1
 
-        loc_string = loc_string + '\n\n**Tunnels:**'
-
         expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location == None
+        tunnels = self.database.query_by_filter(session, Tunnel, expr)
 
-        for tunnel in self.database.query_by_filter(session, Tunnel, expr):
-            loc_string = "{}\n{}".format(loc_string, tunnel.full_str())
-            count += 1
+        if len(tunnels) > 0:
+            loc_string = loc_string + '\n\n**Tunnels:**'
+            for tunnel in tunnels:
+                loc_string = "{}\n{}".format(loc_string, tunnel.full_str())
+                count += 1
 
         if count == 0:
             raise LocationLookUpError
