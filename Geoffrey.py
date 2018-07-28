@@ -4,7 +4,6 @@ from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 from itertools import zip_longest
 from BotConfig import *
-import time
 import threading
 
 command_prefix = '?'
@@ -37,7 +36,7 @@ async def on_command_error(error, ctx):
     if isinstance(error, commands.CommandNotFound):
         error_str = 'Command not found, ding dongs like you can use ?help to see all the commands this bot can do.'
     elif isinstance(error, commands.UserInputError):
-        error_str = 'Invalid syntax for {} you ding dong, please read ?help {}.'\
+        error_str = 'Invalid syntax for **{}** you ding dong, please read ?help {}.'\
             .format(ctx.invoked_with, ctx.invoked_with)
     elif isinstance(error.original, UsernameLookupFailed):
         error_str = error.original.__doc__
@@ -89,10 +88,8 @@ async def addbase(ctx, x_pos: int, z_pos: int, * args):
         The name is optional.
         ?addbase [X Coordinate] [Y Coordinate] [Z Coordinate] [Base Name]
     '''
-    if len(args) > 0:
-        name = ' '.join(args)
-    else:
-        name = None
+
+    name = get_name(args)
 
     try:
         base = bot_commands.addbase(x_pos, z_pos, base_name=name, discord_uuid=ctx.message.author.id)
@@ -115,10 +112,8 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
         The name is optional.
         ?addshop [X Coordinate] [Y Coordinate] [Z Coordinate] [Shop Name]
     '''
-    if len(args) > 0:
-        name = ' '.join(args)
-    else:
-        name = None
+
+    name = get_name(args)
 
     try:
         shop = bot_commands.addshop(x_pos, z_pos, shop_str=name, discord_uuid=ctx.message.author.id)
@@ -141,10 +136,7 @@ async def addtunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
         ?tunnel [Tunnel Color] [Tunnel Number] [Location Name]
     '''
     try:
-        if len(args) > 0:
-            location_name = ' '.join(args)
-        else:
-            location_name = None
+        location_name = get_name(args)
 
         bot_commands.addtunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id, location_name=location_name)
         await bot.say('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
@@ -168,7 +160,11 @@ async def find(ctx, * args):
         ?find [Search]
     '''
     try:
-        search = ' '.join(args)
+        search = get_name(args)
+
+        if search is None:
+            raise commands.UserInputError
+
         result = bot_commands.find(search)
 
         await bot.say('{}, The following entries match **{}**:\n{}'.format(ctx.message.author.mention, search, result))
@@ -196,7 +192,11 @@ async def delete(ctx, * args):
         ?delete [Location name]
     '''
     try:
-        name = ' '.join(args)
+        loc = get_name(args)
+
+        if loc is None:
+            raise commands.UserInputError
+
         bot_commands.delete(name, discord_uuid=ctx.message.author.id)
         await bot.say('{}, your location named **{}** has been deleted.'.format(ctx.message.author.mention, name))
     except (DeleteEntryError, PlayerNotFound):
@@ -251,10 +251,7 @@ async def additem(ctx, item_name: str, quantity: int, diamond_price: int, * args
     ?additem [Item Name] [Quantity] [Price] [Shop name]
     '''
     try:
-        if len(args) > 0:
-            shop_name = ' '.join(args)
-        else:
-            shop_name = None
+        shop_name = get_name(args)
 
         bot_commands.additem(item_name, quantity, diamond_price, shop_name=shop_name,
                              discord_uuid=ctx.message.author.id)
@@ -294,12 +291,12 @@ async def info(ctx, * args):
     ?info [Location Name]
     '''
     try:
-        if len(args) > 0:
-            name = ' '.join(args)
-        else:
+        loc = get_name(args)
+
+        if loc is None:
             raise commands.UserInputError
 
-        info_str = bot_commands.info(name)
+        info_str = bot_commands.info(loc)
         await bot.say(info_str)
     except IndexError:
         await bot.say('{}, no locations in the database match {}.'.format(ctx.message.author.mention, name))
@@ -307,6 +304,13 @@ async def info(ctx, * args):
 
 # Helper Functions ************************************************************
 
+def get_name(args):
+    if len(args) > 0:
+        name = ' '.join(args)
+    else:
+        name = None
+
+    return name
 
 def get_nickname(discord_user):
     if discord_user.nick is None:
@@ -354,5 +358,6 @@ bot_commands = Commands(engine_arg)
 update_user_names(bot_commands)
 
 bot.run(TOKEN)
+
 
 
