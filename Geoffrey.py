@@ -35,6 +35,8 @@ async def on_ready():
 async def on_command_error(error, ctx):
     if isinstance(error, commands.CommandNotFound):
         error_str = 'Command not found, ding dongs like you can use ?help to see all the commands this bot can do.'
+    elif isinstance(error, commands.CommandOnCooldown):
+        return
     elif isinstance(error, commands.UserInputError):
         error_str = 'Invalid syntax for **{}** you ding dong, please read ?help {}.'\
             .format(ctx.invoked_with, ctx.invoked_with)
@@ -53,6 +55,7 @@ async def on_command_error(error, ctx):
                                                                                           error_str))
 
 
+@commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command()
 async def test():
     '''
@@ -61,6 +64,7 @@ async def test():
     await bot.say('I\'m here you ding dong')
 
 
+@commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
 async def register(ctx):
     '''
@@ -80,7 +84,7 @@ async def register(ctx):
         await bot.say('{}, you are already in the database. Ding dong.'.format(ctx.message.author.mention))
 
 
-
+@commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
 async def addbase(ctx, x_pos: int, z_pos: int, * args):
     '''
@@ -105,6 +109,7 @@ async def addbase(ctx, x_pos: int, z_pos: int, * args):
                 ctx.message.author.mention, name))
 
 
+@commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
 async def addshop(ctx, x_pos: int, z_pos: int, *args):
     '''
@@ -128,6 +133,8 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
             await bot.say('{}, a shop called **{}** already exists. You need to specify a different name.'.format(
                 ctx.message.author.mention, name))
 
+
+@commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
 async def addtunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     '''
@@ -155,6 +162,7 @@ async def addtunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
         await bot.say('{}, {} is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
 
 
+@commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
 async def find(ctx, * args):
     '''
@@ -173,6 +181,8 @@ async def find(ctx, * args):
     except LocationLookUpError:
         await bot.say('{}, no matches to **{}** were found in the database'.format(ctx.message.author.mention, search))
 
+
+@commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
 async def tunnel(ctx, player: str):
     '''
@@ -187,6 +197,8 @@ async def tunnel(ctx, player: str):
         await bot.say('{}, no tunnels for the player **{}** were found in the database'
                       .format(ctx.message.author.mention, player))
 
+
+@commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
 async def delete(ctx, * args):
     '''
@@ -206,6 +218,7 @@ async def delete(ctx, * args):
 
 
 @bot.command(pass_context=True)
+@commands.cooldown(5, 60, commands.BucketType.user)
 async def findaround(ctx, x_pos: int, z_pos: int, * args):
     '''
     Finds all the locations around a certain point.
@@ -245,6 +258,7 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
 
 
 @bot.command(pass_context=True)
+@commands.cooldown(5, 60, commands.BucketType.user)
 async def additem(ctx, item_name: str, quantity: int, diamond_price: int, * args):
     '''
     Adds an item to a shop's inventory.
@@ -269,6 +283,7 @@ async def additem(ctx, item_name: str, quantity: int, diamond_price: int, * args
                                                                                            shop_name))
 
 
+@commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
 async def selling(ctx, item_name: str):
     '''
@@ -280,9 +295,10 @@ async def selling(ctx, item_name: str):
         result = bot_commands.selling(item_name)
         await bot.say('{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
     except ItemNotFound:
-        await bot.say('{}, no shops sell **{}**'.format(ctx.message.author.mention, item_name))
+        await bot.say('{}, no shop sells **{}**.'.format(ctx.message.author.mention, item_name))
 
 
+@commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
 async def info(ctx, * args):
     '''

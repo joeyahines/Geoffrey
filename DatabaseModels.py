@@ -51,9 +51,9 @@ class GeoffreyDatabase:
         except:
             session.rollback()
 
-    def query_by_filter(self, session, obj_type, * args):
+    def query_by_filter(self, session, obj_type, *args, limit=10):
         filter_value = self.combine_filter(args)
-        return session.query(obj_type).filter(filter_value).all()
+        return session.query(obj_type).filter(filter_value).limit(limit).all()
 
     def delete_entry(self, session, obj_type, * args):
 

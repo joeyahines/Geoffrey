@@ -148,11 +148,14 @@ class DatabaseInterface:
     def search_all_fields(self, session, search):
         loc_string = '\n**Locations:**'
         count = 0
-
+        limit = 10
         expr = Location.owner.has(Player.name.ilike('%{}%'.format(search))) | Location.name.ilike('%{}%'.format(search))
-        for loc in self.database.query_by_filter(session, Location, expr):
+        for loc in self.database.query_by_filter(session, Location, expr, limit=limit):
             loc_string = "{}\n{}".format(loc_string, loc)
             count += 1
+
+        if count == limit:
+            loc_string = loc_string + '\n**. . .**'
 
         expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location == None
         tunnels = self.database.query_by_filter(session, Tunnel, expr)
