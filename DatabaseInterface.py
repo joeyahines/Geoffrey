@@ -146,16 +146,20 @@ class DatabaseInterface:
         return player
 
     def search_all_fields(self, session, search):
-        loc_string = '\n**Locations:**'
-        count = 0
+        loc_string = ''
         limit = 10
-        expr = Location.owner.has(Player.name.ilike('%{}%'.format(search))) | Location.name.ilike('%{}%'.format(search))
-        for loc in self.database.query_by_filter(session, Location, expr, limit=limit):
-            loc_string = "{}\n{}".format(loc_string, loc)
-            count += 1
 
-        if count == limit:
-            loc_string = loc_string + '\n**. . .**'
+        expr = Location.owner.has(Player.name.ilike('%{}%'.format(search))) | Location.name.ilike('%{}%'.format(search))
+        locations = self.database.query_by_filter(session, Location, expr, limit=limit)
+
+        if len(locations) > 0:
+            loc_string = loc_string + '\n**Locations:**'
+
+            for loc in locations:
+                loc_string = "{}\n{}".format(loc_string, loc)
+
+            if len(locations) == limit:
+                loc_string = loc_string + '\n**. . .**'
 
         expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location == None
         tunnels = self.database.query_by_filter(session, Tunnel, expr)
@@ -164,9 +168,11 @@ class DatabaseInterface:
             loc_string = loc_string + '\n\n**Tunnels:**'
             for tunnel in tunnels:
                 loc_string = "{}\n{}".format(loc_string, tunnel.full_str())
-                count += 1
 
-        if count == 0:
+            if len(tunnels) == limit:
+                loc_string = loc_string + '\n**. . .**'
+
+        if len(tunnels) + len(locations) == 0:
             raise LocationLookUpError
         else:
             return loc_string

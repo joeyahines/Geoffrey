@@ -179,7 +179,7 @@ async def find(ctx, * args):
 
         await bot.say('{}, The following entries match **{}**:\n{}'.format(ctx.message.author.mention, search, result))
     except LocationLookUpError:
-        await bot.say('{}, no matches to **{}** were found in the database'.format(ctx.message.author.mention, search))
+        await bot.say('{}, no matches to **{}** were found in the database.'.format(ctx.message.author.mention, search))
 
 
 @commands.cooldown(5, 60, commands.BucketType.user)
@@ -194,7 +194,7 @@ async def tunnel(ctx, player: str):
 
         await bot.say('{}, **{}** owns the following tunnels: \n{}'.format(ctx.message.author.mention, player, result))
     except LocationLookUpError:
-        await bot.say('{}, no tunnels for the player **{}** were found in the database'
+        await bot.say('{}, no tunnels for the player **{}** were found in the database/'
                       .format(ctx.message.author.mention, player))
 
 

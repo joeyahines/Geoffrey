@@ -157,7 +157,12 @@ class Tunnel(SQL_Base):
             raise TunnelInitError
 
     def full_str(self):
-        return 'Owner: **{}** Tunnel: **{}**'.format(self.owner.name, self.__str__())
+        if self.location is None:
+            string = 'Tunnel: **{}**'.format(self.__str__())
+        else:
+            string = 'Location: **{}** Tunnel: **{}**'.format(self.location.name, self.__str__())
+
+        return string
 
     def __str__(self):
         return '{} {}'.format(self.tunnel_direction.value.title(), self.tunnel_number)
