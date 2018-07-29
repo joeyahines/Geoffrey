@@ -132,7 +132,7 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
 async def addtunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     '''
     Adds your tunnel to the database.
-        The location name is optional. If the location has a tunnel, it is updated.
+        The location name is optional.
         ?tunnel [Tunnel Color] [Tunnel Number] [Location Name]
     '''
     try:
@@ -147,6 +147,8 @@ async def addtunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     except LocationLookUpError:
         await bot.say('{}, you do not have a location called **{}**.'.format(
             ctx.message.author.mention, args[0]))
+    except LocationHasTunnelError:
+        await bot.say('{}, **{}** already has a tunnel.'.format(ctx.message.author.mention, args[0]))
     except TunnelInitError:
         await bot.say('{}, invalid tunnel color.'.format(ctx.message.author.mention))
     except InvalidTunnelError:
@@ -197,10 +199,10 @@ async def delete(ctx, * args):
         if loc is None:
             raise commands.UserInputError
 
-        bot_commands.delete(name, discord_uuid=ctx.message.author.id)
-        await bot.say('{}, your location named **{}** has been deleted.'.format(ctx.message.author.mention, name))
+        bot_commands.delete(loc, discord_uuid=ctx.message.author.id)
+        await bot.say('{}, your location named **{}** has been deleted.'.format(ctx.message.author.mention, loc))
     except (DeleteEntryError, PlayerNotFound):
-        await bot.say('{}, you do not have a location named **{}**.'.format(ctx.message.author.mention, name))
+        await bot.say('{}, you do not have a location named **{}**.'.format(ctx.message.author.mention, loc))
 
 
 @bot.command(pass_context=True)
@@ -278,7 +280,7 @@ async def selling(ctx, item_name: str):
         result = bot_commands.selling(item_name)
         await bot.say('{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
     except ItemNotFound:
-        await bot.say('{}, bo shops sell {}'.format(ctx.message.author.mention, item_name))
+        await bot.say('{}, no shops sell **{}**'.format(ctx.message.author.mention, item_name))
 
 
 @bot.command(pass_context=True)

@@ -27,6 +27,7 @@ class Commands:
             except PlayerNotFound:
                 player = self.interface.add_player(session, player_name, discord_uuid)
                 player_name = player.name
+
         finally:
             session.close()
 
@@ -140,6 +141,9 @@ class Commands:
 
         try:
             shop_list = self.interface.find_shop_selling_item(session, item_name)
+
+            if len(shop_list) == 0:
+                raise ItemNotFound
         finally:
             session.close()
 

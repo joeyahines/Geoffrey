@@ -11,24 +11,28 @@ class TestGeoffreyDatabase(TestCase):
 
         engine_arg = config['SQL']['test_args']
         self.commands = Commands(engine_arg)
+
+        self.session = self.commands.interface.database.Session()
+        self.commands.interface.database.clear_all(self.session)
         self.owner = Player('ZeroHD', '143072699567177728')
         self.loc = Location('test', 1, 3, self.owner, dimension='Nether')
         self.tunnel = Tunnel(self.owner, 'Green', 105, self.loc)
 
-        self.session = self.commands.interface.database.Session()
-        self.commands.interface.database.clear_all(self.session)
-
     def tearDown(self):
+        self.session.commit()
         self.session.close()
 
     def add_shop(self, player):
-        return self.commands.interface.add_shop(self.session, player, 'test', 1, 3, "nether")
+        shop = self.commands.interface.add_shop(self.session, player, 'test', 1, 3, "nether")
+        return shop
 
     def add_player(self):
-        return self.commands.interface.add_player(self.session, 'ZeroHD', discord_uuid='143072699567177728')
+        player = self.commands.interface.add_player(self.session, 'ZeroHD', discord_uuid='143072699567177728')
+        return player
 
     def add_loc(self, player):
-        return self.commands.interface.add_location(self.session, player, 'test', 0, 0)
+        loc = self.commands.interface.add_location(self.session, player, 'test', 0, 0)
+        return loc
 
     def test_add_object(self):
         self.commands.interface.database.add_object(self.session, self.loc)
@@ -54,9 +58,16 @@ class TestGeoffreyDatabase(TestCase):
     def test_delete_entry(self):
         self.commands.interface.database.add_object(self.session, self.loc)
         self.commands.interface.database.add_object(self.session, self.owner)
-
+        self.session.commit()
+        id = self.loc.owner_id
         expr = Location.owner == self.owner
         self.commands.interface.database.delete_entry(self.session, Location, expr)
+
+        expr = Player.name == 'ZeroHD'
+        player = self.commands.interface.database.query_by_filter(self.session, Player, expr)[0]
+        self.assertEqual(player.name, 'ZeroHD')
+
+        expr = Location.owner == player
 
         loc2 = self.commands.interface.database.query_by_filter(self.session, Location, expr)
 
@@ -83,12 +94,13 @@ class TestGeoffreyDatabase(TestCase):
         self.assertEqual(loc_list[1].id, shop2.id)
 
     def test_add_tunnel(self):
-        self.session = self.commands.interface.database.Session()
         player = self.add_player()
         tunnel1 = self.commands.interface.add_tunnel(self.session, player, 'green', 155, None)
 
         tunnel2 = self.commands.interface.find_tunnel_by_owner_name(self.session, 'ZeroHD')[0]
         self.assertEqual(tunnel1, tunnel2)
+
+
 
     def test_add_item(self):
         owner = self.add_player()
@@ -115,16 +127,14 @@ class TestGeoffreyDatabase(TestCase):
         self.assertEqual(loc_list[0].id, shop.id)
 
     def test_delete_base(self):
-        self.session = self.commands.interface.database.Session()
         owner = self.add_player()
         self.add_loc(owner)
 
         self.commands.interface.delete_location(self.session, owner, 'test')
 
-        loc_list = self.commands.interface.find_location_by_name_and_owner(self.session, owner, 'test')
+        loc_list = self.commands.interface.find_location_by_name(self.session, 'test')
 
         self.assertEqual(len(loc_list), 0)
-        self.session.close()
 
     def test_find_location_around(self):
         owner = self.add_player()
@@ -195,7 +205,7 @@ class TestGeoffreyDatabase(TestCase):
     def test_big_input(self):
         owner = self.add_player()
 
-        self.assertRaises(StringTooLong, self.commands.interface.add_location, self.session, owner,
+        self.assertRaises(DatabaseValueError, self.commands.interface.add_location, self.session, owner,
                                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
                                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
                                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', 0, 0,)

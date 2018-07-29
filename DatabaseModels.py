@@ -38,13 +38,15 @@ class GeoffreyDatabase:
 
     def add_object(self, session, obj):
         try:
-            ret = not session.query(exists().where(type(obj).id == obj.id))
-            if not ret:
+            ret = session.query(exists().where(type(obj).id == obj.id))
+            if ret:
                 session.add(obj)
                 session.commit()
         except IntegrityError:
+            session.rollback()
             raise EntryNameNotUniqueError
         except DataError:
+            session.rollback()
             raise DatabaseValueError
         except:
             session.rollback()
@@ -60,11 +62,10 @@ class GeoffreyDatabase:
 
         if entry.first() is not None:
             entry.delete()
-            session.commit()
         else:
             raise DeleteEntryError
 
-        session.close()
+        session.commit()
 
     def print_database(self, session, obj_type):
         obj_list = session.query(obj_type).all()
@@ -123,8 +124,9 @@ class Player(SQL_Base):
     mc_uuid = Column(String(128))
     discord_uuid = Column(String(128))
     name = Column(String(128))
+
     locations = relationship("Location", back_populates="owner", lazy='dynamic',
-                             cascade="save-update, merge, delete, delete-orphan")
+                             cascade="save-update, merge, delete, delete-orphan", single_parent=True)
 
     tunnels = relationship("Tunnel", back_populates="owner", lazy='dynamic',
                            cascade="save-update, merge, delete, delete-orphan")
@@ -143,7 +145,7 @@ class Tunnel(SQL_Base):
     owner_id = Column(Integer, ForeignKey('Players.id'))
     owner = relationship("Player", back_populates="tunnels", cascade="save-update, merge, delete")
     location_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'))
-    location = relationship("Location", back_populates="tunnel",)
+    location = relationship("Location", back_populates="tunnel", lazy="joined")
 
     def __init__(self, owner, tunnel_color, tunnel_number, location=None):
         try:
@@ -165,7 +167,7 @@ class Location(SQL_Base):
     __tablename__ = 'Locations'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(128), unique=True, )
+    name = Column(String(128), unique=True)
     x = Column(Integer)
     z = Column(Integer)
 

@@ -61,8 +61,9 @@ class TestCommands(TestCase):
 
         if 'Green' not in tunnel2:
             self.fail()
-        else:
-            pass
+
+        self.assertRaises(LocationHasTunnelError, self.commands.addtunnel, 'Blue', 50, location_name='test_shop',
+                        discord_uuid='143072699567177728')
 
     def test_find(self):
         self.commands.register('ZeroHD', '143072699567177728')
@@ -83,7 +84,6 @@ class TestCommands(TestCase):
         self.commands.delete('frick', discord_uuid='143072699567177728')
 
         self.assertRaises(LocationLookUpError, self.commands.find, 'zerohd')
-
 
     def test_findaround(self):
         self.commands.register('ZeroHD', '143072699567177728')
@@ -154,3 +154,5 @@ class TestCommands(TestCase):
             pass
         else:
             self.fail()
+
+

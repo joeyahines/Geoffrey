@@ -8,6 +8,8 @@ class LocationInitError(DataBaseError):
 class TunnelInitError(DataBaseError):
     '''Error in initializing Tunnel'''
 
+class NoMatchFoundError(DataBaseError):
+    '''No matches were found in the database'''
 
 class LocationLookUpError(DataBaseError):
     '''Error in finding location in database'''
@@ -41,5 +43,8 @@ class InvalidTunnelError(DataBaseError):
 
 class PlayerInDB(DataBaseError):
     """Player already registered in database"""
+
+class LocationHasTunnelError(DataBaseError):
+    """That location already has a tunnel"""
 
 

@@ -17,20 +17,25 @@ class DatabaseInterface:
         return shop
 
     def add_tunnel(self, session, owner, color, number, location_name):
+        tunnels = self.find_tunnel_by_owner(session, owner)
         if location_name is None:
-            if len(self.find_tunnel_by_owner(session, owner)):
+            if len(tunnels):
                 raise EntryNameNotUniqueError
             else:
                 location = None
         else:
             try:
                 location = self.find_location_by_name_and_owner(session, owner, location_name)[0]
+
+                if location.tunnel is not None:
+                    raise LocationHasTunnelError
+
             except IndexError:
                 raise LocationLookUpError
 
         tunnel = Tunnel(owner, color, number, location)
-
         self.database.add_object(session, tunnel)
+
         return tunnel
 
     def add_item(self, session, owner, shop_name, item_name, price, amount):
@@ -135,8 +140,7 @@ class DatabaseInterface:
 
         try:
             player = self.database.query_by_filter(session, Player, expr)[0]
-            player.name = grab_playername(player.mc_uuid)
-            session.commit()
+
         except IndexError:
             raise PlayerNotFound
         return player
