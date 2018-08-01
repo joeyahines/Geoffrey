@@ -139,7 +139,6 @@ async def add_shop(ctx, x_pos: int, z_pos: int, *args):
 async def add_tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     '''
     Adds your tunnel to the database.
-        The location name is optional.
         ?tunnel [Tunnel Color] [Tunnel Number] [Location Name]
     '''
 
@@ -147,10 +146,6 @@ async def add_tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     try:
         bot_commands.add_tunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id, location_name=loc_name)
         await bot.say('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
-    except EntryNameNotUniqueError:
-        await bot.say('{}, you already have one tunnel in the database, please specify a location.'.format(
-            ctx.message.author.mention))
-        return
     except LocationLookUpError:
         await bot.say('{}, you do not have a location called **{}**.'.format(
             ctx.message.author.mention, loc_name))
@@ -158,6 +153,9 @@ async def add_tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
         await bot.say('{}, **{}** already has a tunnel.'.format(ctx.message.author.mention, loc_name))
     except TunnelInitError:
         await bot.say('{}, invalid tunnel color.'.format(ctx.message.author.mention))
+    except EntryNameNotUniqueError:
+        await bot.say('{}, you have more than one location, you need to specify a location.'
+                      .format(ctx.message.author.mention))
     except InvalidTunnelError:
         await bot.say('{}, **{}** is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
 

@@ -76,15 +76,23 @@ class Commands:
 
         return shop_name
 
-    def add_tunnel(self, tunnel_color, tunnel_number, location_name, discord_uuid=None, mc_uuid=None):
+    def add_tunnel(self, tunnel_color, tunnel_number, location_name=None, discord_uuid=None, mc_uuid=None):
 
         session = self.interface.database.Session()
         try:
 
             player = self.get_player(session, discord_uuid, mc_uuid)
+            if location_name is None:
+                location_list = self.interface.find_location_by_owner(session, player)
+
+                if len(location_list) > 1:
+                    raise EntryNameNotUniqueError
+
+                location_name = location_list[0].name
 
             tunnel = self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, location_name)
             tunnel_info = tunnel.__str__()
+
         finally:
             session.close()
 
