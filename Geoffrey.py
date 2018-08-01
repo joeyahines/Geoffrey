@@ -355,6 +355,8 @@ async def edit_tunnel(ctx, tunnel_color: str, tunnel_number: int, * args):
     except LocationLookUpError:
         await bot.say('{}, you do not have a location called **{}**.'.format(
             ctx.message.author.mention, loc))
+    except InvalidTunnelError:
+        await bot.say('{}, {} is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
 
 @commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)

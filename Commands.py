@@ -192,6 +192,12 @@ class Commands:
             session.commit()
 
             loc_str = location.__str__()
+        except IntegrityError:
+            session.rollback()
+            raise EntryNameNotUniqueError
+        except DataError:
+            session.rollback()
+            raise DatabaseValueError
         except IndexError:
             raise LocationLookUpError
         finally:
@@ -215,6 +221,12 @@ class Commands:
             loc_str = location.__str__()
 
             session.commit()
+        except IntegrityError:
+            session.rollback()
+            raise EntryNameNotUniqueError
+        except DataError:
+            session.rollback()
+            raise DatabaseValueError
         except IndexError:
             raise LocationLookUpError
         finally:
@@ -232,6 +244,13 @@ class Commands:
             location.name = new_name
             loc_str = location.__str__()
             session.commit()
+
+        except IntegrityError:
+            session.rollback()
+            raise EntryNameNotUniqueError
+        except DataError:
+            session.rollback()
+            raise DatabaseValueError
         except IndexError:
             raise LocationLookUpError
         finally:
