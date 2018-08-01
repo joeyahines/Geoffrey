@@ -86,11 +86,11 @@ async def register(ctx):
 
 @commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
-async def addbase(ctx, x_pos: int, z_pos: int, * args):
+async def add_base(ctx, x_pos: int, z_pos: int, * args):
     '''
     Adds your base to the database.
         The name is optional.
-        ?addbase [X Coordinate] [Z Coordinate] [Base Name]
+        ?add_base [X Coordinate] [Z Coordinate] [Base Name]
     '''
 
     name = get_name(args)
@@ -111,17 +111,17 @@ async def addbase(ctx, x_pos: int, z_pos: int, * args):
 
 @commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
-async def addshop(ctx, x_pos: int, z_pos: int, *args):
+async def add_shop(ctx, x_pos: int, z_pos: int, *args):
     '''
     Adds your shop to the database.
         The name is optional.
-        ?addshop [X Coordinate] [Z Coordinate] [Shop Name]
+        ?add_shop [X Coordinate] [Z Coordinate] [Shop Name]
     '''
 
     name = get_name(args)
 
     try:
-        shop = bot_commands.add_shop(x_pos, z_pos, shop_str=name, discord_uuid=ctx.message.author.id)
+        shop = bot_commands.add_shop(x_pos, z_pos, shop_name=name, discord_uuid=ctx.message.author.id)
         await bot.say('{}, your shop has been added to the database: \n\n{}'.format(ctx.message.author.mention, shop))
     except LocationInitError:
         raise commands.UserInputError
@@ -136,15 +136,15 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
 
 @commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
-async def addtunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
+async def add_tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     '''
     Adds your tunnel to the database.
         The location name is optional.
         ?tunnel [Tunnel Color] [Tunnel Number] [Location Name]
     '''
-    try:
-        loc_name = get_name(args)
 
+    loc_name = get_name(args)
+    try:
         bot_commands.add_tunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id, location_name=loc_name)
         await bot.say('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
     except EntryNameNotUniqueError:
@@ -159,7 +159,7 @@ async def addtunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     except TunnelInitError:
         await bot.say('{}, invalid tunnel color.'.format(ctx.message.author.mention))
     except InvalidTunnelError:
-        await bot.say('{}, {} is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
+        await bot.say('{}, **{}** is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
 
 
 @commands.cooldown(5, 60, commands.BucketType.user)
@@ -169,8 +169,8 @@ async def find(ctx, * args):
     Finds all the locations and tunnels matching the search term
         ?find [Search]
     '''
+    search = get_name(args)
     try:
-        search = get_name(args)
 
         if search is None:
             raise commands.UserInputError
@@ -205,9 +205,8 @@ async def delete(ctx, * args):
     Deletes a location from the database.
         ?delete [Location name]
     '''
+    loc = get_name(args)
     try:
-        loc = get_name(args)
-
         if loc is None:
             raise commands.UserInputError
 
@@ -219,13 +218,13 @@ async def delete(ctx, * args):
 
 @bot.command(pass_context=True)
 @commands.cooldown(5, 60, commands.BucketType.user)
-async def findaround(ctx, x_pos: int, z_pos: int, * args):
+async def find_around(ctx, x_pos: int, z_pos: int, * args):
     '''
     Finds all the locations around a certain point.
     The radius defaults to 200 blocks if no value is given.
     Default dimension is overworld.
 
-    ?findaround [X Coordinate] [Z Coordinate] [Radius] [Optional Flags]
+    ?find_around [X Coordinate] [Z Coordinate] [Radius] [Optional Flags]
 
     Optional Flags:
     -d [dimension]
@@ -259,16 +258,15 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
 
 @bot.command(pass_context=True)
 @commands.cooldown(5, 60, commands.BucketType.user)
-async def additem(ctx, item_name: str, quantity: int, diamond_price: int, * args):
+async def add_item(ctx, item_name: str, quantity: int, diamond_price: int, * args):
     '''
     Adds an item to a shop's inventory.
     Quantity for Diamond Price.
 
     ?additem [Item Name] [Quantity] [Price] [Shop name]
     '''
+    shop_name = get_name(args)
     try:
-        shop_name = get_name(args)
-
         bot_commands.add_item(item_name, quantity, diamond_price, shop_name=shop_name,
                               discord_uuid=ctx.message.author.id)
         await bot.say('{}, **{}** has been added to the inventory of your shop.'.format(ctx.message.author.mention,
@@ -308,8 +306,8 @@ async def info(ctx, * args):
 
     ?info [Location Name]
     '''
+    loc = get_name(args)
     try:
-        loc = get_name(args)
 
         if loc is None:
             raise commands.UserInputError
@@ -329,8 +327,8 @@ async def edit_pos(ctx, x_pos: int, y_pos: int, * args):
 
         ?edit_pos [X Coordinate] [Z Coordinate] [Location Name]
     '''
+    loc = get_name(args)
     try:
-        loc = get_name(args)
         loc_str = bot_commands.edit_pos(x_pos, y_pos, loc, discord_uuid=ctx.message.author.id)
 
         await bot.say('{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
@@ -347,8 +345,8 @@ async def edit_tunnel(ctx, tunnel_color: str, tunnel_number: int, * args):
 
         ?edit_tunnel [Tunnel Color] [Tunnel Number] [Location Name]
     '''
+    loc = get_name(args)
     try:
-        loc = get_name(args)
         loc_str = bot_commands.edit_tunnel(tunnel_color, tunnel_number, loc, discord_uuid=ctx.message.author.id)
 
         await bot.say('{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
@@ -356,7 +354,8 @@ async def edit_tunnel(ctx, tunnel_color: str, tunnel_number: int, * args):
         await bot.say('{}, you do not have a location called **{}**.'.format(
             ctx.message.author.mention, loc))
     except InvalidTunnelError:
-        await bot.say('{}, {} is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
+        await bot.say('{}, **{}** is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
+
 
 @commands.cooldown(5, 60, commands.BucketType.user)
 @bot.command(pass_context=True)
@@ -375,6 +374,25 @@ async def edit_name(ctx, new_name: str, current_name: str):
         await bot.say('{}, you do not have a location called **{}**.'.format(
             ctx.message.author.mention, current_name))
 
+
+@commands.cooldown(5, 60, commands.BucketType.user)
+@bot.command(pass_context=True)
+async def delete_item(ctx, item: str, * args):
+    '''
+        Deletes an item listing from a shop inventory
+
+        ?delete_name [Item] [Shop Name]
+    '''
+
+    shop = get_name(args)
+    try:
+        bot_commands.delete_item(item, shop, discord_uuid=ctx.message.author.id)
+
+        await bot.say('{}, **{}** has been removed from the inventory of **{}**.', item, shop)
+    except LocationLookUpError:
+        await bot.say('{}, you do not have a shop called **{}**.'.format(ctx.message.author.mention, shop))
+    except DeleteEntryError:
+        await bot.say('{}, **{}** does not sell **{}**.', shop, item)
 
 # Helper Functions ************************************************************
 

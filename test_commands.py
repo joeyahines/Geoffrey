@@ -51,7 +51,7 @@ class TestCommands(TestCase):
 
     def test_addtunnel(self):
         self.commands.register('ZeroHD', '143072699567177728')
-        self.commands.add_shop(0, 0, shop_str='test shop', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
 
         tunnel1 = self.commands.add_tunnel('green', 50, None, discord_uuid='143072699567177728')
 
@@ -67,7 +67,7 @@ class TestCommands(TestCase):
 
     def test_find(self):
         self.commands.register('ZeroHD', '143072699567177728')
-        self.commands.add_shop(0, 0, shop_str='frick', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='frick', discord_uuid='143072699567177728')
         self.commands.add_base(0, 0, 'heck', discord_uuid='143072699567177728')
 
         result = self.commands.find('zerohd')
@@ -79,7 +79,7 @@ class TestCommands(TestCase):
 
     def test_delete(self):
         self.commands.register('ZeroHD', '143072699567177728')
-        self.commands.add_shop(0, 0, shop_str='frick', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='frick', discord_uuid='143072699567177728')
 
         self.commands.delete('frick', discord_uuid='143072699567177728')
 
@@ -87,7 +87,7 @@ class TestCommands(TestCase):
 
     def test_findaround(self):
         self.commands.register('ZeroHD', '143072699567177728')
-        self.commands.add_shop(0, 0, shop_str='frick', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='frick', discord_uuid='143072699567177728')
 
         result = self.commands.find_around(0, 0)
 
@@ -107,7 +107,7 @@ class TestCommands(TestCase):
         else:
             self.fail()
 
-        self.commands.add_shop(0, 0, shop_str='frick', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='frick', discord_uuid='143072699567177728')
 
         result = self.commands.add_item('cool', 5, 5, shop_name='frick', discord_uuid='143072699567177728')
 
@@ -118,7 +118,7 @@ class TestCommands(TestCase):
 
     def test_selling(self):
         self.commands.register('ZeroHD', '143072699567177728')
-        self.commands.add_shop(0, 0, shop_str='frick', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='frick', discord_uuid='143072699567177728')
 
         self.commands.add_item('cool', 5, 5, shop_name='frick', discord_uuid='143072699567177728')
 
@@ -131,7 +131,7 @@ class TestCommands(TestCase):
 
     def test_info(self):
         self.commands.register('ZeroHD', '143072699567177728')
-        self.commands.add_shop(0, 0, shop_str='frick', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='frick', discord_uuid='143072699567177728')
 
         self.commands.add_tunnel('Green', 50, location_name='frick', discord_uuid='143072699567177728')
 
@@ -144,7 +144,7 @@ class TestCommands(TestCase):
 
     def test_tunnel(self):
         self.commands.register('ZeroHD', '143072699567177728')
-        self.commands.add_shop(0, 0, shop_str='test shop', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
 
         tunnel = self.commands.add_tunnel('green', 50, None, discord_uuid='143072699567177728')
 
@@ -157,7 +157,7 @@ class TestCommands(TestCase):
 
     def test_edit_name(self):
         self.commands.register('ZeroHD', '143072699567177728')
-        self.commands.add_shop(0, 0, shop_str='test shop', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
 
         self.commands.edit_name('cool shop', 'test shop', discord_uuid='143072699567177728')
 
@@ -170,7 +170,7 @@ class TestCommands(TestCase):
 
     def test_edit_pos(self):
         self.commands.register('ZeroHD', '143072699567177728')
-        self.commands.add_shop(0, 0, shop_str='test shop', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
 
         self.commands.edit_pos(500, 500, 'test shop', discord_uuid='143072699567177728')
 
@@ -183,13 +183,27 @@ class TestCommands(TestCase):
 
     def test_edit_tunnel(self):
         self.commands.register('ZeroHD', '143072699567177728')
-        self.commands.add_shop(0, 0, shop_str='test shop', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
 
         self.commands.edit_tunnel('green', 500, 'test shop', discord_uuid='143072699567177728')
 
         result = self.commands.info('test shop')
 
         if 'Green' in result:
+            pass
+        else:
+            self.fail()
+
+    def test_delete_item(self):
+        self.commands.register('ZeroHD', '143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
+
+        self.commands.add_item('dirt', 5, 5, shop_name='test shop', discord_uuid='143072699567177728')
+        self.commands.add_item('wood', 5, 5, shop_name='test shop', discord_uuid='143072699567177728')
+
+        result = self.commands.delete_item('dirt', 'test_shop', discord_uuid='143072699567177728')
+
+        if ('dirt' not in result) & ('wood' in result):
             pass
         else:
             self.fail()

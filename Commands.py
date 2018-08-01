@@ -56,25 +56,25 @@ class Commands:
 
         return base_str
 
-    def add_shop(self, x_pos, z_pos, shop_str=None, discord_uuid=None, mc_uuid=None):
+    def add_shop(self, x_pos, z_pos, shop_name=None, discord_uuid=None, mc_uuid=None):
         session = self.interface.database.Session()
 
         try:
             player = self.get_player(session, discord_uuid, mc_uuid)
 
             if len(self.interface.find_shop_by_owner(session, player)) == 0:
-                if shop_str is None:
-                    shop_str = "{}'s Shop".format(player.name)
-            elif shop_str is None:
+                if shop_name is None:
+                    shop_name = "{}'s Shop".format(player.name)
+            elif shop_name is None:
                 raise EntryNameNotUniqueError
 
-            shop = self.interface.add_shop(session, player, shop_str, x_pos, z_pos)
+            shop = self.interface.add_shop(session, player, shop_name, x_pos, z_pos)
 
-            shop_str = shop.__str__()
+            shop_name = shop.__str__()
         finally:
             session.close()
 
-        return shop_str
+        return shop_name
 
     def add_tunnel(self, tunnel_color, tunnel_number, location_name, discord_uuid=None, mc_uuid=None):
 
@@ -257,5 +257,21 @@ class Commands:
             session.close()
 
         return loc_str
+
+    def delete_item(self, item, shop_name, discord_uuid=None, mc_uuid=None):
+        session = self.interface.database.Session()
+
+        try:
+            player = self.get_player(session, discord_uuid=discord_uuid, mc_uuid=mc_uuid)
+            shop = self.interface.find_shop_by_name_and_owner(session, player, shop_name)[0]
+
+            expr = (ItemListing.name == item) & (ItemListing.shop == shop)
+            self.interface.database.delete_entry(session, ItemListing, expr)
+
+            shop_str = shop.full_str()
+        finally:
+            session.close()
+
+        return shop_str
 
 
