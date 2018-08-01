@@ -388,11 +388,12 @@ async def delete_item(ctx, item: str, * args):
     try:
         bot_commands.delete_item(item, shop, discord_uuid=ctx.message.author.id)
 
-        await bot.say('{}, **{}** has been removed from the inventory of **{}**.', item, shop)
+        await bot.say('{}, **{}** has been removed from the inventory of **{}**.'.
+                      format(ctx.message.author.mention, item, shop))
     except LocationLookUpError:
         await bot.say('{}, you do not have a shop called **{}**.'.format(ctx.message.author.mention, shop))
     except DeleteEntryError:
-        await bot.say('{}, **{}** does not sell **{}**.', shop, item)
+        await bot.say('{}, **{}** does not sell **{}**.'.format(ctx.message.author.mention, shop, item))
 
 # Helper Functions ************************************************************
 
