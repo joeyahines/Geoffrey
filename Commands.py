@@ -1,4 +1,6 @@
 from DatabaseInterface import *
+from itertools import zip_longest
+from discord.ext.commands import UserInputError
 
 
 class Commands:
@@ -33,7 +35,7 @@ class Commands:
 
         return player_name
 
-    def addbase(self, x_pos, z_pos, base_name=None, discord_uuid=None, mc_uuid=None):
+    def add_base(self, x_pos, z_pos, base_name=None, discord_uuid=None, mc_uuid=None):
 
         session = self.interface.database.Session()
 
@@ -46,7 +48,7 @@ class Commands:
             elif base_name is None:
                 raise EntryNameNotUniqueError
 
-            base = self.interface.add_location(session, player, base_name, x_pos, z_pos)
+            base = self.interface.add_base(session, player, base_name, x_pos, z_pos)
 
             base_str = base.__str__()
         finally:
@@ -54,7 +56,7 @@ class Commands:
 
         return base_str
 
-    def addshop(self, x_pos, z_pos, shop_str=None, discord_uuid=None, mc_uuid=None):
+    def add_shop(self, x_pos, z_pos, shop_str=None, discord_uuid=None, mc_uuid=None):
         session = self.interface.database.Session()
 
         try:
@@ -74,7 +76,7 @@ class Commands:
 
         return shop_str
 
-    def addtunnel(self, tunnel_color, tunnel_number, location_name, discord_uuid=None, mc_uuid=None):
+    def add_tunnel(self, tunnel_color, tunnel_number, location_name, discord_uuid=None, mc_uuid=None):
 
         session = self.interface.database.Session()
         try:
@@ -106,7 +108,7 @@ class Commands:
         finally:
             session.close()
 
-    def findaround(self, x_pos, z_pos, radius=200, dimension='Overworld'):
+    def find_around(self, x_pos, z_pos, radius=200, dimension='Overworld'):
 
         session = self.interface.database.Session()
 
@@ -117,7 +119,7 @@ class Commands:
 
         return loc_list
 
-    def additem(self, item_name, quantity, diamond_price, shop_name, discord_uuid=None, mc_uuid=None):
+    def add_item(self, item_name, quantity, diamond_price, shop_name, discord_uuid=None, mc_uuid=None):
         session = self.interface.database.Session()
         try:
             player = self.get_player(session, discord_uuid, mc_uuid)
@@ -176,3 +178,65 @@ class Commands:
             session.close()
 
         return tunnel_str
+
+    def edit_pos(self, x, z, loc_name, discord_uuid=None, mc_uuid=None):
+        session = self.interface.database.Session()
+
+        try:
+            player = self.get_player(session, discord_uuid=discord_uuid, mc_uuid=mc_uuid)
+            location = self.interface.find_location_by_name_and_owner(session, player, loc_name)[0]
+
+            location.x = x
+            location.z = z
+
+            session.commit()
+
+            loc_str = location.__str__()
+        except IndexError:
+            raise LocationLookUpError
+        finally:
+            session.close()
+
+        return loc_str
+
+    def edit_tunnel(self, tunnel_color, tunnel_number, loc_name, discord_uuid=None, mc_uuid=None):
+        session = self.interface.database.Session()
+
+        try:
+            player = self.get_player(session, discord_uuid=discord_uuid, mc_uuid=mc_uuid)
+            location = self.interface.find_location_by_name_and_owner(session, player, loc_name)[0]
+
+            if location.tunnel is not None:
+                location.tunnel.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_color)
+                location.tunnel.tunnel_number = tunnel_number
+            else:
+                self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, loc_name)
+
+            loc_str = location.__str__()
+
+            session.commit()
+        except IndexError:
+            raise LocationLookUpError
+        finally:
+            session.close()
+
+        return loc_str
+
+    def edit_name(self, new_name, loc_name, discord_uuid=None, mc_uuid=None):
+        session = self.interface.database.Session()
+
+        try:
+            player = self.get_player(session, discord_uuid=discord_uuid, mc_uuid=mc_uuid)
+            location = self.interface.find_location_by_name_and_owner(session, player, loc_name)[0]
+
+            location.name = new_name
+            loc_str = location.__str__()
+            session.commit()
+        except IndexError:
+            raise LocationLookUpError
+        finally:
+            session.close()
+
+        return loc_str
+
+

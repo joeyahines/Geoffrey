@@ -6,10 +6,10 @@ class DatabaseInterface:
     def __init__(self, db_engine_arg):
         self.database = GeoffreyDatabase(db_engine_arg)
 
-    def add_location(self, session, owner, name, x_pos, z_pos, dimension=None):
-        location = Location(name, x_pos, z_pos, owner, dimension)
-        self.database.add_object(session, location)
-        return location
+    def add_base(self, session, owner, name, x_pos, z_pos, dimension=None):
+        base = Base(name, x_pos, z_pos, owner, dimension)
+        self.database.add_object(session, base)
+        return base
 
     def add_shop(self, session, owner, name, x_pos, z_pos, dimension=None):
         shop = Shop(name, x_pos, z_pos, owner, dimension)

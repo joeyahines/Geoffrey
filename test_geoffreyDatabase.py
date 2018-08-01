@@ -31,7 +31,7 @@ class TestGeoffreyDatabase(TestCase):
         return player
 
     def add_loc(self, player):
-        loc = self.commands.interface.add_location(self.session, player, 'test', 0, 0)
+        loc = self.commands.interface.add_base(self.session, player, 'test', 0, 0)
         return loc
 
     def test_add_object(self):
@@ -205,7 +205,7 @@ class TestGeoffreyDatabase(TestCase):
     def test_big_input(self):
         owner = self.add_player()
 
-        self.assertRaises(DatabaseValueError, self.commands.interface.add_location, self.session, owner,
+        self.assertRaises(DatabaseValueError, self.commands.interface.add_base, self.session, owner,
                                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
                                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
                                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', 0, 0,)
@@ -214,7 +214,7 @@ class TestGeoffreyDatabase(TestCase):
         owner = self.add_player()
         self.add_loc(owner)
 
-        self.assertRaises(EntryNameNotUniqueError, self.commands.interface.add_location, self.session,
+        self.assertRaises(EntryNameNotUniqueError, self.commands.interface.add_base, self.session,
                           owner, 'test', 0, 0, 0)
 
     def test_delete_parent(self):

@@ -8,6 +8,8 @@ from difflib import SequenceMatcher
 
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
+world_name = 'season3'
+
 
 SQL_Base = declarative_base()
 
@@ -204,8 +206,8 @@ class Location(SQL_Base):
             raise LocationInitError
 
     def dynmap_link(self):
-        return '<http://24carrotcraft.com:8123/?worldname=season3&mapname=surface&zoom=4&x={}&y=65&z={}>'.\
-            format(self.x, self.z)
+        return '<http://24carrotcraft.com:8123/?worldname={}&mapname=surface&zoom=4&x={}&y=65&z={}>'.\
+            format(world_name, self.x, self.z)
 
     def pos_to_str(self):
         return '(x= {}, z= {}) in the {}'.format(self.x, self.z, self.dimension.value.title())
@@ -222,6 +224,16 @@ class Location(SQL_Base):
             return "{}, Tunnel: **{}**".format(self.info_str(), self.tunnel)
         else:
             return self.info_str()
+
+
+class Base(Location):
+    __tablename__ = 'Bases'
+    base_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'), primary_key=True)
+    name = column_property(Column(String(128)), Location.name)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'Base',
+    }
 
 
 class Shop(Location):

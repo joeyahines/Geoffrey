@@ -90,13 +90,13 @@ async def addbase(ctx, x_pos: int, z_pos: int, * args):
     '''
     Adds your base to the database.
         The name is optional.
-        ?addbase [X Coordinate] [Y Coordinate] [Z Coordinate] [Base Name]
+        ?addbase [X Coordinate] [Z Coordinate] [Base Name]
     '''
 
     name = get_name(args)
 
     try:
-        base = bot_commands.addbase(x_pos, z_pos, base_name=name, discord_uuid=ctx.message.author.id)
+        base = bot_commands.add_base(x_pos, z_pos, base_name=name, discord_uuid=ctx.message.author.id)
         await bot.say('{}, your base has been added to the database: \n\n{}'.format(ctx.message.author.mention, base))
     except LocationInitError:
         raise commands.UserInputError
@@ -115,13 +115,13 @@ async def addshop(ctx, x_pos: int, z_pos: int, *args):
     '''
     Adds your shop to the database.
         The name is optional.
-        ?addshop [X Coordinate] [Y Coordinate] [Z Coordinate] [Shop Name]
+        ?addshop [X Coordinate] [Z Coordinate] [Shop Name]
     '''
 
     name = get_name(args)
 
     try:
-        shop = bot_commands.addshop(x_pos, z_pos, shop_str=name, discord_uuid=ctx.message.author.id)
+        shop = bot_commands.add_shop(x_pos, z_pos, shop_str=name, discord_uuid=ctx.message.author.id)
         await bot.say('{}, your shop has been added to the database: \n\n{}'.format(ctx.message.author.mention, shop))
     except LocationInitError:
         raise commands.UserInputError
@@ -143,9 +143,9 @@ async def addtunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
         ?tunnel [Tunnel Color] [Tunnel Number] [Location Name]
     '''
     try:
-        location_name = get_name(args)
+        loc_name = get_name(args)
 
-        bot_commands.addtunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id, location_name=location_name)
+        bot_commands.add_tunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id, location_name=loc_name)
         await bot.say('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
     except EntryNameNotUniqueError:
         await bot.say('{}, you already have one tunnel in the database, please specify a location.'.format(
@@ -153,9 +153,9 @@ async def addtunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
         return
     except LocationLookUpError:
         await bot.say('{}, you do not have a location called **{}**.'.format(
-            ctx.message.author.mention, args[0]))
+            ctx.message.author.mention, loc_name))
     except LocationHasTunnelError:
-        await bot.say('{}, **{}** already has a tunnel.'.format(ctx.message.author.mention, args[0]))
+        await bot.say('{}, **{}** already has a tunnel.'.format(ctx.message.author.mention, loc_name))
     except TunnelInitError:
         await bot.say('{}, invalid tunnel color.'.format(ctx.message.author.mention))
     except InvalidTunnelError:
@@ -245,7 +245,7 @@ async def findaround(ctx, x_pos: int, z_pos: int, * args):
                     if args[1] == '-d':
                         dimension = args[2]
 
-        base_string = bot_commands.findaround(x_pos, z_pos, radius, dimension)
+        base_string = bot_commands.find_around(x_pos, z_pos, radius, dimension)
 
         if len(base_string) != 0:
             await bot.say('{}, the following locations(s) within **{}** blocks of that point: \n {}'.format(
@@ -269,8 +269,8 @@ async def additem(ctx, item_name: str, quantity: int, diamond_price: int, * args
     try:
         shop_name = get_name(args)
 
-        bot_commands.additem(item_name, quantity, diamond_price, shop_name=shop_name,
-                             discord_uuid=ctx.message.author.id)
+        bot_commands.add_item(item_name, quantity, diamond_price, shop_name=shop_name,
+                              discord_uuid=ctx.message.author.id)
         await bot.say('{}, **{}** has been added to the inventory of your shop.'.format(ctx.message.author.mention,
                                                                                         item_name))
     except PlayerNotFound:
@@ -317,8 +317,62 @@ async def info(ctx, * args):
         info_str = bot_commands.info(loc)
         await bot.say(info_str)
     except IndexError:
-        await bot.say('{}, no locations in the database match {}.'.format(ctx.message.author.mention, name))
+        await bot.say('{}, no locations in the database match {}.'.format(ctx.message.author.mention, loc))
         return
+
+
+@commands.cooldown(5, 60, commands.BucketType.user)
+@bot.command(pass_context=True)
+async def edit_pos(ctx, x_pos: int, y_pos: int, * args):
+    '''
+        Edits the position of a location
+
+        ?edit_pos [X Coordinate] [Z Coordinate] [Location Name]
+    '''
+    try:
+        loc = get_name(args)
+        loc_str = bot_commands.edit_pos(x_pos, y_pos, loc, discord_uuid=ctx.message.author.id)
+
+        await bot.say('{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
+    except LocationLookUpError:
+        await bot.say('{}, you do not have a location called **{}**.'.format(
+            ctx.message.author.mention, loc))
+
+
+@commands.cooldown(5, 60, commands.BucketType.user)
+@bot.command(pass_context=True)
+async def edit_tunnel(ctx, tunnel_color: str, tunnel_number: int, * args):
+    '''
+        Edits the tunnel of a location
+
+        ?edit_tunnel [Tunnel Color] [Tunnel Number] [Location Name]
+    '''
+    try:
+        loc = get_name(args)
+        loc_str = bot_commands.edit_tunnel(tunnel_color, tunnel_number, loc, discord_uuid=ctx.message.author.id)
+
+        await bot.say('{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
+    except LocationLookUpError:
+        await bot.say('{}, you do not have a location called **{}**.'.format(
+            ctx.message.author.mention, loc))
+
+@commands.cooldown(5, 60, commands.BucketType.user)
+@bot.command(pass_context=True)
+async def edit_name(ctx, new_name: str, current_name: str):
+    '''
+        Edits the name of a location
+
+        IF A NAME HAS SPACES IN IT YOU NEED TO WRAP IT IN QUOTATION MARKS. ie "Cool Shop 123"
+        ?edit_name [New Name] [Current Name]
+    '''
+    try:
+        loc_str = bot_commands.edit_name(new_name, current_name, discord_uuid=ctx.message.author.id)
+
+        await bot.say('{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
+    except LocationLookUpError:
+        await bot.say('{}, you do not have a location called **{}**.'.format(
+            ctx.message.author.mention, current_name))
+
 
 # Helper Functions ************************************************************
 
@@ -344,7 +398,7 @@ def get_nickname(discord_user):
 
 def get_args_dict(args):
     if len(args) != 0:
-        return dict(zip_longest(*[iter(args)] * 2, fillvalue=""))
+        return dict(zip_longest(*[iter(args)] * 2, fillvalue=" "))
     else:
         return {}
 
