@@ -53,10 +53,6 @@ class TestCommands(TestCase):
         self.commands.register('ZeroHD', '143072699567177728')
         self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
 
-        tunnel1 = self.commands.add_tunnel('green', 50, None, discord_uuid='143072699567177728')
-
-        self.assertGreater(len(tunnel1), 0)
-
         tunnel2 = self.commands.add_tunnel('Green', 50, location_name='test_shop', discord_uuid='143072699567177728')
 
         if 'Green' not in tunnel2:
@@ -181,6 +177,18 @@ class TestCommands(TestCase):
         else:
             self.fail()
 
+        self.commands.edit_pos(500, 500, None, discord_uuid='143072699567177728')
+
+        if '500' in result:
+            pass
+        else:
+            self.fail()
+
+        self.commands.delete(name='test shop', discord_uuid='143072699567177728')
+
+        self.assertRaises(LocationLookUpError, self.commands.edit_pos, 5, 5, None,
+                          discord_uuid='143072699567177728')
+
     def test_edit_tunnel(self):
         self.commands.register('ZeroHD', '143072699567177728')
         self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
@@ -201,11 +209,21 @@ class TestCommands(TestCase):
         self.commands.add_item('dirt', 5, 5, shop_name='test shop', discord_uuid='143072699567177728')
         self.commands.add_item('wood', 5, 5, shop_name='test shop', discord_uuid='143072699567177728')
 
-        result = self.commands.delete_item('dirt', 'test_shop', discord_uuid='143072699567177728')
+        result = self.commands.delete_item('dirt', None, discord_uuid='143072699567177728')
 
         if ('dirt' not in result) & ('wood' in result):
             pass
         else:
             self.fail()
+
+        self.commands.add_shop(0, 0, shop_name='test shop2', discord_uuid='143072699567177728')
+        self.assertRaises(EntryNameNotUniqueError, self.commands.delete_item, 'wood', None,
+                          discord_uuid='143072699567177728')
+
+        self.commands.delete('test shop', discord_uuid='143072699567177728')
+        self.commands.delete('test shop2', discord_uuid='143072699567177728')
+
+        self.assertRaises(LocationLookUpError, self.commands.delete_item, 'wood', None,
+                          discord_uuid='143072699567177728')
 
 

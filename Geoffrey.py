@@ -138,7 +138,7 @@ async def add_shop(ctx, x_pos: int, z_pos: int, *args):
 @bot.command(pass_context=True)
 async def add_tunnel(ctx, tunnel_color: str, tunnel_number: int, *args):
     '''
-    Adds your tunnel to the database.
+    Adds your tunnel to the database. If you only have one location, you do not need to specify a location name.
         ?tunnel [Tunnel Color] [Tunnel Number] [Location Name]
     '''
 
@@ -192,7 +192,7 @@ async def tunnel(ctx, player: str):
 
         await bot.say('{}, **{}** owns the following tunnels: \n{}'.format(ctx.message.author.mention, player, result))
     except LocationLookUpError:
-        await bot.say('{}, no tunnels for the player **{}** were found in the database/'
+        await bot.say('{}, no tunnels for **{}** were found in the database.'
                       .format(ctx.message.author.mention, player))
 
 
@@ -235,6 +235,8 @@ async def find_around(ctx, x_pos: int, z_pos: int, * args):
         if len(args) > 0:
             if args[0] == '-d':
                 dimension = args[1]
+                if len(args) > 1:
+                    radius = int(args[2])
             else:
                 radius = int(args[0])
 
@@ -250,6 +252,9 @@ async def find_around(ctx, x_pos: int, z_pos: int, * args):
         else:
             await bot.say('{}, there are no locations within {} blocks of that point'
                           .format(ctx.message.author.mention, radius))
+    except ValueError:
+        await bot.say('{}, invalid radius, the radius must be a whole number.'.format(ctx.message.author.mention,
+                                                                                      radius))
     except InvalidDimError:
         await bot.say('{}, {} is an invalid dimension.'.format(ctx.message.author.mention, dimension))
 
@@ -313,7 +318,7 @@ async def info(ctx, * args):
         info_str = bot_commands.info(loc)
         await bot.say(info_str)
     except IndexError:
-        await bot.say('{}, no locations in the database match {}.'.format(ctx.message.author.mention, loc))
+        await bot.say('{}, no locations in the database match **{}**.'.format(ctx.message.author.mention, loc))
         return
 
 
@@ -389,9 +394,18 @@ async def delete_item(ctx, item: str, * args):
         await bot.say('{}, **{}** has been removed from the inventory of **{}**.'.
                       format(ctx.message.author.mention, item, shop))
     except LocationLookUpError:
-        await bot.say('{}, you do not have a shop called **{}**.'.format(ctx.message.author.mention, shop))
+        if shop is None:
+            await bot.say('{}, you do have any shops in the database.'.format(ctx.message.author.mention))
+        else:
+            await bot.say('{}, you do not have a shop called **{}**.'.format(ctx.message.author.mention, shop))
+    except EntryNameNotUniqueError:
+        await bot.say('{}, you have more than one shop in the database, please specify a shop name.'
+                      .format(ctx.message.author.mention))
     except DeleteEntryError:
-        await bot.say('{}, **{}** does not sell **{}**.'.format(ctx.message.author.mention, shop, item))
+        if shop is not None:
+            await bot.say('{}, **{}** does not sell **{}**.'.format(ctx.message.author.mention, shop, item))
+        else:
+            await bot.say('{}, your shop does not sell **{}**.'.format(ctx.message.author.mention, item))
 
 # Helper Functions ************************************************************
 
