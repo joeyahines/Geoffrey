@@ -1,5 +1,6 @@
 from unittest import TestCase
 from MinecraftAccountInfoGrabber import *
+from BotErrors import UsernameLookupFailed
 
 
 class TestMinecraftInfoGrabber(TestCase):
@@ -12,3 +13,6 @@ class TestMinecraftInfoGrabber(TestCase):
 
     def test_grab_playername_wrong_case(self):
         self.assertEqual(grab_UUID('zerohd'), 'fe7e84132570458892032b69ff188bc3')
+
+    def test_grab_invalid_player(self):
+        self.assertRaises(UsernameLookupFailed, grab_UUID, 'lsdlkjsljglfjgldkj')

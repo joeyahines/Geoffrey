@@ -44,7 +44,8 @@ async def on_command_error(error, ctx):
     elif isinstance(error.original, NoPermissionError):
         error_str = 'You don\'t have permission for that cool command.'
     elif isinstance(error.original, UsernameLookupFailed):
-        error_str = error.original.__doc__
+        error_str = 'Your user name was not found, either Mojang is having a fucky wucky ' \
+                    'or your nickname is not set correctly. *stares at the Mods*'
     elif isinstance(error.original, PlayerNotFound):
         error_str = 'Make sure to use ?register first you ding dong.'
     elif isinstance(error.original, EntryNameNotUniqueError):
@@ -64,7 +65,7 @@ def update_user_names(bot_commands):
     session = bot_commands.interface.database.Session()
     print("Updating MC usernames...")
     player_list = session.query(Player).all()
-
+    
     for player in player_list:
         player.name = grab_playername(player.mc_uuid)
 
@@ -89,8 +90,9 @@ if __name__ == '__main__':
     for extension in extensions:
         try:
             bot.load_extension(extension)
-        except Exception as e:
+        except:
             print('Failed to load extension {}'.format(extension))
+
     update_user_names(bot_commands)
     bot.run(TOKEN)
 
