@@ -41,10 +41,15 @@ class InvalidDimError(DataBaseError):
 class InvalidTunnelError(DataBaseError):
     """Invalid tunnel name"""
 
-class PlayerInDB(DataBaseError):
+class PlayerInDBError(DataBaseError):
     """Player already registered in database"""
 
 class LocationHasTunnelError(DataBaseError):
     """That location already has a tunnel"""
 
+class NoPermissionError(DataBaseError):
+    """You have no permission to run this command"""
+
+class NotOnServerError(DataBaseError):
+    '''You need to run this command on 24CC'''
 

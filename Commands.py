@@ -25,7 +25,7 @@ class Commands:
         try:
             try:
                 self.interface.find_player(session, player_name)
-                raise PlayerInDB
+                raise PlayerInDBError
             except PlayerNotFound:
                 player = self.interface.add_player(session, player_name, discord_uuid)
                 player_name = player.name
