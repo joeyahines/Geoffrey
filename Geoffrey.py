@@ -108,6 +108,8 @@ if __name__ == '__main__':
         bot.run(bot_config.token)
     except TimeoutError:
         print("Disconnected, is Discord offline?")
+    except:
+        print("Bye")
 
 
 
