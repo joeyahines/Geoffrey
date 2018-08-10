@@ -206,8 +206,8 @@ class Location(SQL_Base):
             raise LocationInitError
 
     def dynmap_link(self):
-        return '<http://24carrotcraft.com:8123/?worldname={}&mapname=surface&zoom=4&x={}&y=65&z={}>'.\
-            format(bot_config.world_name, self.x, self.z)
+        return '<{}/?worldname={}&mapname=surface&zoom=4&x={}&y=65&z={}>'.\
+            format(bot_config.dynmap_url, bot_config.world_name, self.x, self.z)
 
     def pos_to_str(self):
         return '(x= {}, z= {}) in the {}'.format(self.x, self.z, self.dimension.value.title())
