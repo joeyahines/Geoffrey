@@ -222,3 +222,15 @@ class TestCommands(TestCase):
 
         self.assertRaises(LocationLookUpError, self.commands.delete_item, 'wood', None,
                           discord_uuid='143072699567177728')
+
+    def test_me(self):
+        self.commands.register('ZeroHD', '143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
+
+        result = self.commands.me(discord_uuid='143072699567177728')
+
+        if 'test shop' in result:
+            pass
+        else:
+            self.fail()
+

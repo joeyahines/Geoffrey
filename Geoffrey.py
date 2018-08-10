@@ -59,7 +59,7 @@ async def on_command_error(error, ctx):
     else:
         error_str = bad_error_message.format(ctx.invoked_with, error)
 
-    bot.send_message(ctx.message.channel, '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
+    await bot.send_message(ctx.message.channel, '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
                                                                                     error_str))
 
 
@@ -103,8 +103,11 @@ if __name__ == '__main__':
         except Exception as e:
             print('Failed to load extension {}, {}'.format(extension, e))
 
-    bot.loop.create_task(username_update())
-    bot.run(bot_config.token)
+    try:
+        bot.loop.create_task(username_update())
+        bot.run(bot_config.token)
+    except TimeoutError:
+        print("Disconnected, is Discord offline?")
 
 
 

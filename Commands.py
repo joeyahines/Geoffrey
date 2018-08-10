@@ -311,4 +311,20 @@ class Commands:
 
         return shop_str
 
+    def me(self, discord_uuid=None, mc_uuid=None):
+        session = self.interface.database.Session()
+
+        try:
+            player = self.get_player(session, discord_uuid=discord_uuid, mc_uuid=mc_uuid)
+
+            loc_list = self.interface.find_location_by_owner(session, player)
+
+            if len(loc_list) == 0:
+                raise PlayerNotFound
+
+            loc_str = list_to_string(loc_list)
+        finally:
+            session.close()
+
+        return loc_str
 

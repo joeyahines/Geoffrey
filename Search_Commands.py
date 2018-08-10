@@ -122,6 +122,21 @@ class Search_Commands:
         except IndexError:
             await self.bot.say('{}, no locations in the database match **{}**.'.format(ctx.message.author.mention, loc))
 
+    @commands.command(pass_context=True)
+    async def me(self, ctx):
+        '''
+        Displays all your locations in the database
+
+        ?me
+        '''
+
+        try:
+            loc_str = bot_commands.me(discord_uuid=ctx.message.author.id)
+            await self.bot.say('{}, here are your locations in the database: {}'.format(ctx.message.author.mention,
+                                                                                        loc_str))
+        except PlayerNotFound:
+            await self.bot.say('{}, you don\'t have any locations in the database.'.format(ctx.message.author.mention))
+
 
 def setup(bot):
     bot.add_cog(Search_Commands(bot))
