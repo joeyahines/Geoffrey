@@ -32,5 +32,6 @@ class Admin_Commands:
         else:
             raise NoPermissionError
 
+
 def setup(bot):
     bot.add_cog(Admin_Commands(bot))

@@ -3,8 +3,11 @@ from DatabaseModels import *
 
 class DatabaseInterface:
 
-    def __init__(self, db_engine_arg):
-        self.database = GeoffreyDatabase(db_engine_arg)
+    def __init__(self, engine_args=None):
+        if engine_args is None:
+            self.database = GeoffreyDatabase()
+        else:
+            self.database = GeoffreyDatabase(engine_args)
 
     def add_base(self, session, owner, name, x_pos, z_pos, dimension=None):
         base = Base(name, x_pos, z_pos, owner, dimension)

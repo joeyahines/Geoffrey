@@ -1,16 +1,13 @@
 from unittest import TestCase
-from BotConfig import *
 from Commands import *
 from BotErrors import *
+from BotConfig import *
 
 
 class TestCommands(TestCase):
     def setUp(self):
-        config = read_config()
 
-        engine_arg = config['SQL']['test_args']
-
-        self.commands = Commands(engine_arg)
+        self.commands = Commands(bot_config.config['SQL']['test_args'])
         self.session = self.commands.interface.database.Session()
         self.commands.interface.database.clear_all(self.session)
         self.session.close()
@@ -225,5 +222,3 @@ class TestCommands(TestCase):
 
         self.assertRaises(LocationLookUpError, self.commands.delete_item, 'wood', None,
                           discord_uuid='143072699567177728')
-
-

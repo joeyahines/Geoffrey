@@ -1,11 +1,11 @@
 from discord.ext import commands
+from discord import Game
 from Commands import *
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
 from BotConfig import *
-import threading
+import asyncio
 
-command_prefix = '?'
 description = '''
 Geoffrey (pronounced JOFF-ree) started his life as an inside joke none of you will understand.
 At some point, she was to become an airhorn bot. Now, they know where your stuff is.
@@ -20,9 +20,9 @@ If have a suggestion or if something is borked, you can PM my ding dong of a cre
 bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \
                         'headquarters are working VEWY HAWD to fix this! (Error in command {}: {})'
 
-bot = commands.Bot(command_prefix=command_prefix, description=description, case_insensitive=True)
 
 # Bot Commands ******************************************************************'
+bot = commands.Bot(command_prefix=bot_config.prefix, description=description, case_insensitive=True)
 
 
 @bot.event
@@ -30,6 +30,8 @@ async def on_ready():
     print('GeoffreyBot')
     print('Username: ' + bot.user.name)
     print('ID: ' + bot.user.id)
+
+    await bot.change_presence(game=Game(name=bot_config.status))
 
 
 @bot.event
@@ -57,43 +59,54 @@ async def on_command_error(error, ctx):
     else:
         error_str = bad_error_message.format(ctx.invoked_with, error)
 
-    await bot.send_message(ctx.message.channel, '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
-                                                                                          error_str))
+    bot.send_message(ctx.message.channel, '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
+                                                                                    error_str))
 
-def update_user_names(bot_commands):
-    threading.Timer(600, update_user_names, [bot_commands]).start()
-    session = bot_commands.interface.database.Session()
-    print("Updating MC usernames...")
-    player_list = session.query(Player).all()
-    
-    for player in player_list:
-        player.name = grab_playername(player.mc_uuid)
 
-    session.commit()
+async def username_update():
+    session = None
+    await bot.wait_until_ready()
+    while not bot.is_closed:
+        session = bot_commands.interface.database.Session()
+        try:
+            print("Updating MC usernames...")
+            session = bot_commands.interface.database.Session()
+            player_list = session.query(Player).all()
+            for player in player_list:
+                player.name = grab_playername(player.mc_uuid)
 
-    session.close()
+            session.commit()
+
+            await asyncio.sleep(600)
+
+        except UsernameLookupFailed:
+            print("Username lookup error, are Mojang's servers down?")
+            session.rollback()
+        finally:
+            print("Done.")
+            await session.close()
+
+    if session is not None:
+        await session.close()
 
 # Bot Startup ******************************************************************
-
-
-config = read_config()
-
-TOKEN = config['Discord']['Token']
-
-engine_arg = get_engine_arg(config)
-
-bot_commands = Commands(engine_arg)
+bot_commands = Commands()
 
 extensions = ['Add_Commands', 'Delete_Commands', 'Edit_Commands', 'Search_Commands', 'Admin_Commands']
 
 if __name__ == '__main__':
+    bot_commands = Commands()
+
     for extension in extensions:
         try:
             bot.load_extension(extension)
-        except:
-            print('Failed to load extension {}'.format(extension))
+        except Exception as e:
+            print('Failed to load extension {}, {}'.format(extension, e))
 
-    update_user_names(bot_commands)
-    bot.run(TOKEN)
+    bot.loop.create_task(username_update())
+    bot.run(bot_config.token)
+
+
+
 
 

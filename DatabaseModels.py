@@ -5,10 +5,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import expression
 import enum
 from difflib import SequenceMatcher
+from BotConfig import bot_config
 
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
-world_name = 'season3'
 
 
 SQL_Base = declarative_base()
@@ -25,8 +25,8 @@ def check_similarity(a, b):
 
 class GeoffreyDatabase:
 
-    def __init__(self, engine_arg):
-        self.engine = create_engine(engine_arg, echo=True, pool_recycle=3600, pool_pre_ping=True)
+    def __init__(self, engine_args=bot_config.engine_args):
+        self.engine = create_engine(engine_args, echo=True, pool_recycle=3600, pool_pre_ping=True)
         self.Session = sessionmaker(bind=self.engine)
         SQL_Base.metadata.create_all(self.engine)
 
@@ -207,7 +207,7 @@ class Location(SQL_Base):
 
     def dynmap_link(self):
         return '<http://24carrotcraft.com:8123/?worldname={}&mapname=surface&zoom=4&x={}&y=65&z={}>'.\
-            format(world_name, self.x, self.z)
+            format(bot_config.world_name, self.x, self.z)
 
     def pos_to_str(self):
         return '(x= {}, z= {}) in the {}'.format(self.x, self.z, self.dimension.value.title())

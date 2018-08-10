@@ -1,12 +1,9 @@
 from DatabaseInterface import *
-from itertools import zip_longest
-from discord.ext.commands import UserInputError
 
 
 class Commands:
-
-    def __init__(self, db_engine_arg):
-        self.interface = DatabaseInterface(db_engine_arg)
+    def __init__(self, engine_args=None):
+        self.interface = DatabaseInterface(engine_args)
 
     def get_player(self, session, discord_uuid=None, mc_uuid=None):
         if discord_uuid is not None:

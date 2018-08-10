@@ -12,6 +12,9 @@ class Delete_Commands:
     *You must use ?register before using any of these commands!*
     '''
 
+    def __init__(self, bot):
+        self.bot = bot
+
     @commands.command(pass_context=True)
     async def delete(self, ctx, *args):
         '''
