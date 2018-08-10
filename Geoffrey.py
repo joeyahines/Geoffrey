@@ -84,10 +84,10 @@ async def username_update():
             session.rollback()
         finally:
             print("Done.")
-            await session.close()
+            session.close()
 
     if session is not None:
-        await session.close()
+        session.close()
 
 # Bot Startup ******************************************************************
 bot_commands = Commands()
