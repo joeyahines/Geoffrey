@@ -358,13 +358,13 @@ class Commands:
         finally:
             session.close()
 
-    def update_mc_name(self, discord_uuid, mc_name):
+    def update_mc_name(self, discord_uuid):
         session = self.interface.database.Session()
 
         try:
             player = self.interface.find_player_by_discord_uuid(session, discord_uuid)
 
-            player.name = mc_name
+            player.name = grab_playername(player.mc_uuid)
 
             session.commit()
         except Exception as e:

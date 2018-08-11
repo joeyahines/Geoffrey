@@ -135,8 +135,8 @@ class Search_Commands:
 
         try:
             loc_str = bot_commands.me(discord_uuid=ctx.message.author.id)
-            await self.bot.say('{}, here are your locations in the database: {}'.format(ctx.message.author.mention,
-                                                                                        loc_str))
+            await self.bot.say('{}, here are your locations in the database: \n {}'.format(ctx.message.author.mention,
+                                                                                           loc_str))
         except PlayerNotFound:
             await self.bot.say('{}, you don\'t have any locations in the database.'.format(ctx.message.author.mention))
 

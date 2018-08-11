@@ -4,6 +4,17 @@ import configparser
 class Config:
 
     def __init__(self):
+        self.config = ''
+        self.engine_args = ''
+        self.token = ''
+        self.world_name = ''
+        self.status = ''
+        self.prefix = ''
+        self.dynmap_url = ''
+        self.bot_mod = ''
+        self.load_config()
+
+    def load_config(self):
         try:
             self.config = self.read_config()
             self.engine_args = self.read_engine_arg()

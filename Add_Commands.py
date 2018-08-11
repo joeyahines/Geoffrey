@@ -8,7 +8,6 @@ from Geoffrey import bot_commands
 class Add_Commands:
     '''
     Commands for adding things to Geoffrey.
-
     *You must use ?register before using any of these commands!*
     '''
     def __init__(self, bot):
@@ -113,7 +112,6 @@ class Add_Commands:
         '''
         Adds an item to a shop's inventory.
         Quantity for Diamond Price.
-
         ?additem [Item Name] [Quantity] [Price] [Shop name]
         '''
         shop_name = get_name(args)
