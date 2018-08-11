@@ -26,7 +26,7 @@ def check_similarity(a, b):
 class GeoffreyDatabase:
 
     def __init__(self, engine_args=bot_config.engine_args):
-        self.engine = create_engine(engine_args, echo=True, pool_recycle=3600, pool_pre_ping=True)
+        self.engine = create_engine(engine_args, pool_recycle=3600, pool_pre_ping=True)
         self.Session = sessionmaker(bind=self.engine)
         SQL_Base.metadata.create_all(self.engine)
 
