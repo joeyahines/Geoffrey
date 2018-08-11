@@ -234,3 +234,23 @@ class TestCommands(TestCase):
         else:
             self.fail()
 
+    def test_update_mc_uuid(self):
+        self.commands.register('ZeroHD', '143072699567177728')
+
+        self.commands.update_mc_uuid('0', '143072699567177728')
+
+        self.assertRaises(PlayerNotFound, self.commands.add_shop, 0, 0, shop_name='test shop',
+                         mc_uuid='fe7e84132570458892032b69ff188bc3')
+
+    def test_update_mc_name(self):
+        self.commands.register('ZeroHD', '143072699567177728')
+
+        self.commands.update_mc_name('143072699567177728')
+
+    def test_update_discord_uuid(self):
+        self.commands.register('ZeroHD', '143072699567177728')
+
+        self.commands.update_discord_uuid('143072699567177728', '0')
+
+        self.assertRaises(PlayerNotFound, self.commands.add_shop, 0, 0, shop_name='test shop',
+                          discord_uuid='143072699567177728')
