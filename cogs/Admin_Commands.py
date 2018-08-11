@@ -1,7 +1,7 @@
 from discord.ext import commands
 from BotErrors import *
 from BotConfig import bot_config
-from Geoffrey import bot_commands
+from bot import bot_commands
 from discord import Game
 
 

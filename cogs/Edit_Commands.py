@@ -1,7 +1,7 @@
 from discord.ext import commands
 from BotErrors import *
 from DiscordHelperFunctions import *
-from Geoffrey import bot_commands
+from bot import bot_commands
 
 
 class Edit_Commands:
