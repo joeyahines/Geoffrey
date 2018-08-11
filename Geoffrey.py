@@ -28,10 +28,7 @@ def setup_logging():
 
 
 if __name__ == '__main__':
+    print("Starting logging...")
     setup_logging()
+    print("Starting bot...")
     start_bot()
-
-
-
-
-

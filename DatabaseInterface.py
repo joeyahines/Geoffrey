@@ -164,7 +164,7 @@ class DatabaseInterface:
             if len(locations) == limit:
                 loc_string = loc_string + '\n**. . .**'
 
-        expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location == None
+        expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location is None
         tunnels = self.database.query_by_filter(session, Tunnel, expr)
 
         if len(tunnels) > 0:

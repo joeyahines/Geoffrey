@@ -5,9 +5,9 @@ from bot import bot_commands
 
 
 class Search_Commands:
-    '''
+    """
     Commands to find stuff.
-    '''
+    """
 
     def __init__(self, bot):
         self.bot = bot
@@ -15,10 +15,10 @@ class Search_Commands:
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def find(self, ctx, * args):
-        '''
+        """
         Finds all the locations and tunnels matching the search term
             ?find [Search]
-        '''
+        """
         search = get_name(args)
         try:
 
@@ -35,10 +35,10 @@ class Search_Commands:
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def tunnel(self, ctx, player: str):
-        '''
+        """
         Finds all the tunnels a player owns.
             ?tunnel [Player]
-        '''
+        """
         try:
             result = bot_commands.tunnel(player)
 
@@ -51,7 +51,7 @@ class Search_Commands:
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def find_around(self, ctx, x_pos: int, z_pos: int, * args):
-        '''
+        """
         Finds all the locations around a certain point.
         The radius defaults to 200 blocks if no value is given.
         Default dimension is overworld.
@@ -60,7 +60,7 @@ class Search_Commands:
 
         Optional Flags:
         -d [dimension]
-        '''
+        """
         radius = 200
         dimension = 'Overworld'
 
@@ -94,11 +94,11 @@ class Search_Commands:
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def selling(self, ctx, item_name: str):
-        '''
+        """
         Lists all the shops selling an item
 
         ?selling [item]
-        '''
+        """
         try:
             result = bot_commands.selling(item_name)
             await self.bot.say('{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
@@ -108,13 +108,13 @@ class Search_Commands:
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def info(self, ctx, * args):
-        '''
+        """
         Displays info about a location.
 
         If the location is a shop, it displays the shop's inventory.
 
         ?info [Location Name]
-        '''
+        """
         loc = get_name(args)
         try:
 
@@ -129,9 +129,9 @@ class Search_Commands:
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def me(self, ctx):
-        '''
+        """
         Displays all your locations in the database
-        '''
+        """
 
         try:
             loc_str = bot_commands.me(discord_uuid=ctx.message.author.id)

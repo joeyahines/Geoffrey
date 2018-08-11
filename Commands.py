@@ -372,5 +372,3 @@ class Commands:
             raise e
         finally:
             session.close()
-
-

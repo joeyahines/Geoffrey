@@ -56,7 +56,7 @@ class TestGeoffreyDatabase(TestCase):
         self.interface.database.add_object(self.session, self.loc)
         self.interface.database.add_object(self.session, self.owner)
         self.session.commit()
-        self.loc.owner_id
+
         expr = Location.owner == self.owner
         self.interface.database.delete_entry(self.session, Location, expr)
 
@@ -83,7 +83,7 @@ class TestGeoffreyDatabase(TestCase):
 
     def test_add_two_shops(self):
         owner = self.add_player()
-        shop1 = self.add_shop(owner)
+        self.add_shop(owner)
         shop2 = self.interface.add_shop(self.session, owner, 'no u', 1, 3)
 
         loc_list = self.interface.find_location_by_owner(self.session, owner)
@@ -96,7 +96,6 @@ class TestGeoffreyDatabase(TestCase):
 
         tunnel2 = self.interface.find_tunnel_by_owner_name(self.session, 'ZeroHD')[0]
         self.assertEqual(tunnel1, tunnel2)
-
 
     def test_add_item(self):
         owner = self.add_player()
@@ -134,7 +133,7 @@ class TestGeoffreyDatabase(TestCase):
 
     def test_find_location_around(self):
         owner = self.add_player()
-        loc = self.add_loc(owner)
+        self.add_loc(owner)
 
         dim = "o"
 
@@ -172,7 +171,7 @@ class TestGeoffreyDatabase(TestCase):
 
     def test_search_all(self):
         owner = self.add_player()
-        loc = self.add_loc(owner)
+        self.add_loc(owner)
 
         loc_list = self.interface.search_all_fields(self.session, 'ZeroHD')
 
@@ -202,9 +201,9 @@ class TestGeoffreyDatabase(TestCase):
         owner = self.add_player()
 
         self.assertRaises(DatabaseValueError, self.interface.add_base, self.session, owner,
-                                         'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-                                         'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-                                         'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', 0, 0,)
+                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', 0, 0, )
 
     def test_duplicate_name(self):
         owner = self.add_player()
@@ -215,7 +214,7 @@ class TestGeoffreyDatabase(TestCase):
 
     def test_delete_parent(self):
         owner = self.add_player()
-        loc = self.add_shop(owner)
+        self.add_shop(owner)
 
         self.interface.add_item(self.session, owner, 'test', 'dirt', 1, 15)
 
@@ -223,11 +222,3 @@ class TestGeoffreyDatabase(TestCase):
 
         shops = self.interface.find_shop_selling_item(self.session, 'dirt')
         self.assertEqual(len(shops), 0)
-
-
-
-
-
-
-
-

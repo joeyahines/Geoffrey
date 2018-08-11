@@ -112,5 +112,5 @@ def start_bot():
         bot.run(bot_config.token)
     except TimeoutError:
         print("Disconnected, is Discord offline?")
-    except:
-        print("Bye")
+    finally:
+        print("Bot shutting down...")

@@ -1,4 +1,6 @@
 from itertools import zip_longest
+from BotConfig import bot_config
+
 
 def get_name(args):
     if len(args) > 0:
@@ -8,16 +10,18 @@ def get_name(args):
 
     return name
 
+
 def get_nickname(discord_user):
     if discord_user.nick is None:
         name = discord_user.display_name
     else:
         name = discord_user.nick
 
-    if name == 'dootb.in ꙩ ⃤':
-        name = 'aeskdar'
+    if name in bot_config.special_name_list:
+        return bot_config.special_name_list[name]
+    else:
+        return name
 
-    return name
 
 def get_args_dict(args):
     if len(args) != 0:

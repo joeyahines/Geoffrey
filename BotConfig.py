@@ -1,4 +1,5 @@
 import configparser
+import codecs
 
 
 def create_config(config):
@@ -27,7 +28,7 @@ def create_config(config):
 
 def read_config():
     config = configparser.ConfigParser()
-    config.read('GeoffreyConfig.ini')
+    config.read_file(codecs.open("GeoffreyConfig.ini", "r", "utf8"))
 
     if len(config.sections()) == 0:
         create_config(config)
@@ -51,6 +52,7 @@ class Config:
             self.bot_mod = self.config['Discord']['Bot_Mod']
             self.count = int(self.config['Logging']['Count'])
             self.rotation_duration = int(self.config['Logging']['Rotation_Duration'])
+            self.special_name_list = dict(self.config.items('Special Names'))
         except Exception as e:
             print("Invalid config file, missing {}.".format(e))
             quit(1)
