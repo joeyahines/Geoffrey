@@ -12,6 +12,7 @@ class Config:
             self.status = self.config['Discord']['Status']
             self.prefix = self.config['Discord']['Prefix']
             self.dynmap_url = self.config['Minecraft']['dynmap_url']
+            self.bot_mod = self.config['Discord']['bot_mod']
         except:
             print("Invalid config file")
             quit(1)
@@ -30,7 +31,7 @@ class Config:
     def create_config(self, config):
         config['Discord'] = {'Token': '', 'Status': '', 'Prefix': '', }
         config['SQL'] = {'Dialect+Driver': '', 'username': '', 'password': '', 'host': '', 'port': '',
-                              'database':'','test_args':''}
+                              'database': '', 'bot_mod': ''}
         config['Minecraft'] = {'World_Name': '', 'dynmap_url': ''}
         with open('GeoffreyConfig.ini', 'w') as configfile:
             config.write(configfile)

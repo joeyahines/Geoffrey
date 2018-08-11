@@ -15,6 +15,7 @@ class Add_Commands:
         self.bot = bot
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def register(self, ctx):
         '''
         Registers your Discord and Minecraft account with the the database.
@@ -31,6 +32,7 @@ class Add_Commands:
             await self.bot.say('{}, you are already in the database. Ding dong.'.format(ctx.message.author.mention))
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def add_base(self, ctx, x_pos: int, z_pos: int, *args):
         '''
         Adds your base to the database.
@@ -55,6 +57,7 @@ class Add_Commands:
                     ctx.message.author.mention, name))
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def add_shop(self, ctx, x_pos: int, z_pos: int, *args):
         '''
         Adds your shop to the database.
@@ -79,6 +82,7 @@ class Add_Commands:
                     ctx.message.author.mention, name))
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def add_tunnel(self, ctx, tunnel_color: str, tunnel_number: int, *args):
         '''
         Adds your tunnel to the database. If you only have one location, you do not need to specify a location name.
@@ -104,6 +108,7 @@ class Add_Commands:
             await self.bot.say('{}, **{}** is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def add_item(self, ctx, item_name: str, quantity: int, diamond_price: int, *args):
         '''
         Adds an item to a shop's inventory.

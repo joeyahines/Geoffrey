@@ -328,3 +328,49 @@ class Commands:
 
         return loc_str
 
+    def update_mc_uuid(self, mc_uuid, discord_uuid):
+        session = self.interface.database.Session()
+
+        try:
+            player = self.interface.find_player_by_discord_uuid(session, discord_uuid)
+
+            player.mc_uuid = mc_uuid
+
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+
+    def update_discord_uuid(self, old_discord_uuid, new_discord_uuid):
+        session = self.interface.database.Session()
+
+        try:
+            player = self.interface.find_player_by_discord_uuid(session, old_discord_uuid)
+
+            player.discord_uuid = new_discord_uuid
+
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+
+    def update_mc_name(self, discord_uuid, mc_name):
+        session = self.interface.database.Session()
+
+        try:
+            player = self.interface.find_player_by_discord_uuid(session, discord_uuid)
+
+            player.name = mc_name
+
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+
+

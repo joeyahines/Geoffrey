@@ -36,6 +36,9 @@ async def on_ready():
 
 @bot.event
 async def on_command_error(error, ctx):
+    if hasattr(ctx, 'cog'):
+        if "Admin_Commands" in ctx.cog.__str__():
+            return
     if isinstance(error, commands.CommandNotFound):
         error_str = 'Command not found, ding dongs like you can use ?help to see all the commands this bot can do.'
     elif isinstance(error, commands.CommandOnCooldown):

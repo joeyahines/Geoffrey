@@ -4,13 +4,13 @@ from DiscordHelperFunctions import *
 from Geoffrey import bot_commands
 
 
-@commands.cooldown(5, 60, commands.BucketType.user)
 class Edit_Commands:
 
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def edit_pos(self, ctx, x_pos: int, y_pos: int, *args):
         '''
             Edits the position of a location
@@ -27,8 +27,8 @@ class Edit_Commands:
             await self.bot.say('{}, you do not have a location called **{}**.'.format(
                 ctx.message.author.mention, loc))
 
-
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def edit_tunnel(self, ctx, tunnel_color: str, tunnel_number: int, *args):
         '''
             Edits the tunnel of a location
@@ -48,6 +48,7 @@ class Edit_Commands:
             await self.bot.say('{}, **{}** is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def edit_name(self, ctx, new_name: str, current_name: str):
         '''
             Edits the name of a location

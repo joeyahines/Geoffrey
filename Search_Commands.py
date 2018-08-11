@@ -4,7 +4,6 @@ from DiscordHelperFunctions import *
 from Geoffrey import bot_commands
 
 
-@commands.cooldown(5, 60, commands.BucketType.user)
 class Search_Commands:
     '''
     Commands to find stuff.
@@ -14,6 +13,7 @@ class Search_Commands:
         self.bot = bot
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def find(self, ctx, * args):
         '''
         Finds all the locations and tunnels matching the search term
@@ -33,6 +33,7 @@ class Search_Commands:
 
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def tunnel(self, ctx, player: str):
         '''
         Finds all the tunnels a player owns.
@@ -48,6 +49,7 @@ class Search_Commands:
 
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def find_around(self, ctx, x_pos: int, z_pos: int, * args):
         '''
         Finds all the locations around a certain point.
@@ -90,6 +92,7 @@ class Search_Commands:
             await self.bot.say('{}, {} is an invalid dimension.'.format(ctx.message.author.mention, dimension))
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def selling(self, ctx, item_name: str):
         '''
         Lists all the shops selling an item
@@ -103,6 +106,7 @@ class Search_Commands:
             await self.bot.say('{}, no shop sells **{}**.'.format(ctx.message.author.mention, item_name))
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def info(self, ctx, * args):
         '''
         Displays info about a location.
@@ -123,11 +127,10 @@ class Search_Commands:
             await self.bot.say('{}, no locations in the database match **{}**.'.format(ctx.message.author.mention, loc))
 
     @commands.command(pass_context=True)
+    @commands.cooldown(5, 60, commands.BucketType.user)
     async def me(self, ctx):
         '''
         Displays all your locations in the database
-
-        ?me
         '''
 
         try:

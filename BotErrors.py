@@ -53,3 +53,5 @@ class NoPermissionError(DataBaseError):
 class NotOnServerError(DataBaseError):
     '''You need to run this command on 24CC'''
 
+class FuckyWucky:
+    '''You made one.'''
