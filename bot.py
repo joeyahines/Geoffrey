@@ -6,6 +6,9 @@ from discord import Game
 from MinecraftAccountInfoGrabber import *
 from BotConfig import *
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 description = '''
 Geoffrey (pronounced JOFF-ree) started his life as an inside joke none of you will understand.
@@ -38,6 +41,7 @@ async def on_ready():
     print('Username: ' + bot.user.name)
     print('ID: ' + bot.user.id)
 
+    logger.info("Geoffrey Online, ID: %s", bot.user.id)
     await bot.change_presence(game=Game(name=bot_config.status))
 
 
@@ -67,6 +71,7 @@ async def on_command_error(error, ctx):
     elif isinstance(error.original, NotOnServerError):
         error_str = 'Command needs to be run on 24CC. Run this command there whoever you are.'.format()
     else:
+        logger.error("Geoffrey encountered unhandled exception: %s", error)
         error_str = bad_error_message.format(ctx.invoked_with, error)
 
     await bot.send_message(ctx.message.channel, '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
@@ -86,14 +91,15 @@ async def username_update():
                 player.name = grab_playername(player.mc_uuid)
 
             session.commit()
+            print("Done.")
 
             await asyncio.sleep(600)
 
         except UsernameLookupFailed:
+            logger.info("Username lookup error.")
             print("Username lookup error, are Mojang's servers down?")
             session.rollback()
         finally:
-            print("Done.")
             session.close()
 
     if session is not None:
@@ -101,16 +107,21 @@ async def username_update():
 
 
 def start_bot():
+
     for extension in extensions:
         try:
             bot.load_extension(extension)
         except Exception as e:
+            logger.info('Failed to load extension {}, {}'.format(extension, e))
             print('Failed to load extension {}, {}'.format(extension, e))
 
     try:
         bot.loop.create_task(username_update())
+        logger.info('Logging into discord...')
         bot.run(bot_config.token)
     except TimeoutError:
         print("Disconnected, is Discord offline?")
+        logger.info('Disconnected, is Discord offline?')
     finally:
+        logger.info("Bot shutting down...")
         print("Bot shutting down...")
