@@ -21,6 +21,7 @@ def create_config(config):
     config['Logging'] = {'Count': '',
                          'Rotation_Duration': ''
                          }
+    config['Special Names'] = {}
 
     with open('GeoffreyConfig.ini', 'w') as configfile:
         config.write(configfile)
