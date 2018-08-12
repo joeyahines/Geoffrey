@@ -37,12 +37,18 @@ extensions = ['cogs.Add_Commands',
 
 @bot.event
 async def on_ready():
-    print('GeoffreyBot')
-    print('Username: ' + bot.user.name)
-    print('ID: ' + bot.user.id)
-
-    logger.info("Geoffrey Online, ID: %s", bot.user.id)
+    logger.info("%s Online, ID: %s", bot.user.name, bot.user.id)
     await bot.change_presence(game=Game(name=bot_config.status))
+
+
+@bot.event
+async def on_command(command, ctx):
+    if ctx.invoked_subcommand is None:
+        subcommand = ""
+    else:
+        subcommand = ":"+ctx.invoked_subcommand
+
+    logger.info("User %s, used command %s%s with context: %s", ctx.message.author, command, subcommand, ctx.args)
 
 
 @bot.event
@@ -55,8 +61,13 @@ async def on_command_error(error, ctx):
     elif isinstance(error, commands.CommandOnCooldown):
         return
     elif isinstance(error, commands.UserInputError):
-        error_str = 'Invalid syntax for **{}** you ding dong, please read ?help {}.'\
+        error_str = 'Invalid syntax for **{}** you ding dong:'\
             .format(ctx.invoked_with, ctx.invoked_with)
+
+        pages = bot.formatter.format_help_for(ctx, ctx.command)
+        for page in pages:
+            error_str = error_str + '\n' + page
+
     elif isinstance(error.original, NoPermissionError):
         error_str = 'You don\'t have permission for that cool command.'
     elif isinstance(error.original, UsernameLookupFailed):
@@ -84,23 +95,21 @@ async def username_update():
     while not bot.is_closed:
         session = bot_commands.interface.database.Session()
         try:
-            print("Updating MC usernames...")
+            logger.info("Updating MC usernames...")
             session = bot_commands.interface.database.Session()
             player_list = session.query(Player).all()
             for player in player_list:
                 player.name = grab_playername(player.mc_uuid)
 
             session.commit()
-            print("Done.")
-
-            await asyncio.sleep(600)
+            logger.info("Username update done.")
 
         except UsernameLookupFailed:
             logger.info("Username lookup error.")
-            print("Username lookup error, are Mojang's servers down?")
             session.rollback()
         finally:
             session.close()
+            await asyncio.sleep(600)
 
     if session is not None:
         session.close()
@@ -113,15 +122,15 @@ def start_bot():
             bot.load_extension(extension)
         except Exception as e:
             logger.info('Failed to load extension {}, {}'.format(extension, e))
-            print('Failed to load extension {}, {}'.format(extension, e))
 
     try:
         bot.loop.create_task(username_update())
-        logger.info('Logging into discord...')
+        logger.info('Logging into Discord...')
         bot.run(bot_config.token)
-    except TimeoutError:
-        print("Disconnected, is Discord offline?")
-        logger.info('Disconnected, is Discord offline?')
+    except KeyboardInterrupt:
+        logger.info("Bot received keyboard interrupt")
+    except Exception as e:
+        logger.info('Bot encountered the following unhandled exception %s', e)
     finally:
+        bot.loop.stop()
         logger.info("Bot shutting down...")
-        print("Bot shutting down...")

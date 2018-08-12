@@ -8,6 +8,7 @@ import logging
 import logging.handlers as handlers
 import bot
 from BotConfig import bot_config
+from sys import stdout
 
 
 def setup_logging():
@@ -16,8 +17,8 @@ def setup_logging():
     discord_logger.setLevel(logging.INFO)
     sql_logger = logging.getLogger('sqlalchemy.engine')
     sql_logger.setLevel(logging.INFO)
-    bot_logger = logging.getLogger('bot')
-    bot_logger.setLevel(logging.INFO)
+    bot_info_logger = logging.getLogger('bot')
+    bot_info_logger.setLevel(logging.INFO)
 
     handler = handlers.TimedRotatingFileHandler(filename='Geoffrey.log', when='D',
                                                 interval=bot_config.rotation_duration, backupCount=bot_config.count,
@@ -25,9 +26,14 @@ def setup_logging():
 
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 
+    console = logging.StreamHandler(stdout)
+
+    console.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+
     discord_logger.addHandler(handler)
     sql_logger.addHandler(handler)
-    bot_logger.addHandler(handler)
+    bot_info_logger.addHandler(handler)
+    bot_info_logger.addHandler(console)
 
 
 if __name__ == '__main__':
