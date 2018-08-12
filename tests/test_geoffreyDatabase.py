@@ -1,8 +1,6 @@
 from unittest import TestCase
-from Commands import *
-from BotErrors import *
-from MinecraftAccountInfoGrabber import *
-from BotConfig import bot_config
+
+from DatabaseInterface import *
 
 
 class TestGeoffreyDatabase(TestCase):

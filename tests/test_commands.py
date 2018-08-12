@@ -1,7 +1,6 @@
 from unittest import TestCase
+
 from Commands import *
-from BotErrors import *
-from BotConfig import *
 
 
 class TestCommands(TestCase):

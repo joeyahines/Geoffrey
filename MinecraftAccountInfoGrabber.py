@@ -1,5 +1,7 @@
-import requests
 from json import JSONDecodeError
+
+import requests
+
 from BotErrors import UsernameLookupFailed
 
 uuid_lookup_url = 'https://api.mojang.com/users/profiles/minecraft/{}'

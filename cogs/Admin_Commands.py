@@ -1,8 +1,9 @@
-from discord.ext import commands
-from BotErrors import *
-from BotConfig import bot_config
-from bot import bot_commands
 from discord import Game
+from discord.ext import commands
+
+from BotConfig import bot_config
+from BotErrors import *
+from bot import bot_commands
 
 
 def check_mod(user):

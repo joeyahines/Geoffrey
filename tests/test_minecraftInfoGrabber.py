@@ -1,6 +1,6 @@
 from unittest import TestCase
+
 from MinecraftAccountInfoGrabber import *
-from BotErrors import UsernameLookupFailed
 
 
 class TestMinecraftInfoGrabber(TestCase):

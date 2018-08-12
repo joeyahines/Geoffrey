@@ -1,5 +1,5 @@
-import configparser
 import codecs
+import configparser
 
 
 def create_config(config):

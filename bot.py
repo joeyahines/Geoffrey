@@ -1,12 +1,15 @@
-from BotErrors import *
-from DatabaseModels import Player
-from Commands import Commands
-from discord.ext import commands
-from discord import Game
-from MinecraftAccountInfoGrabber import *
-from BotConfig import *
 import asyncio
 import logging
+
+from discord import Game
+from discord.ext import commands
+from discord.utils import oauth_url
+
+from BotConfig import *
+from BotErrors import *
+from Commands import Commands
+from DatabaseModels import Player
+from MinecraftAccountInfoGrabber import *
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +41,9 @@ extensions = ['cogs.Add_Commands',
 @bot.event
 async def on_ready():
     logger.info("%s Online, ID: %s", bot.user.name, bot.user.id)
+    info = await bot.application_info()
+    url = oauth_url(info.id)
+    logger.info("Bot url: %s", url)
     await bot.change_presence(game=Game(name=bot_config.status))
 
 

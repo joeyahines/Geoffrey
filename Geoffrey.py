@@ -6,9 +6,10 @@ Created by: Joey Hines (ZeroHD)
 """
 import logging
 import logging.handlers as handlers
+from sys import stdout
+
 import bot
 from BotConfig import bot_config
-from sys import stdout
 
 
 def setup_logging():

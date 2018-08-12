@@ -1,15 +1,15 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, create_engine, exists
-from sqlalchemy.orm import relationship, column_property, sessionmaker
-from sqlalchemy.exc import IntegrityError, DataError
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import expression
 import enum
 from difflib import SequenceMatcher
-from BotConfig import bot_config
 
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, create_engine, exists
+from sqlalchemy.exc import IntegrityError, DataError
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, column_property, sessionmaker
+from sqlalchemy.sql import expression
+
+from BotConfig import bot_config
 from BotErrors import *
 from MinecraftAccountInfoGrabber import *
-
 
 SQL_Base = declarative_base()
 

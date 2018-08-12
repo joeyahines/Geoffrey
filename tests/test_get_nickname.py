@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from DiscordHelperFunctions import get_nickname
 
 
