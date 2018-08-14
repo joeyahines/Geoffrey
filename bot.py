@@ -122,14 +122,13 @@ async def username_update():
 
 
 def start_bot():
-
-    for extension in extensions:
-        try:
-            bot.load_extension(extension)
-        except Exception as e:
-            logger.info('Failed to load extension {}, {}'.format(extension, e))
-
     try:
+        for extension in extensions:
+            try:
+                bot.load_extension(extension)
+            except Exception as e:
+                logger.info('Failed to load extension {}'.format(extension))
+                raise e
         bot.loop.create_task(username_update())
         logger.info('Logging into Discord...')
         bot.run(bot_config.token)

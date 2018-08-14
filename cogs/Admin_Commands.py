@@ -9,7 +9,7 @@ from bot import bot_commands
 def check_mod(user):
     try:
         for role in user.roles:
-            if role.id == bot_config.bot_mod:
+            if role.id in bot_config.bot_mod:
                 return True
     except AttributeError:
         raise NotOnServerError

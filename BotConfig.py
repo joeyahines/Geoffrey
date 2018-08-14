@@ -50,7 +50,7 @@ class Config:
             self.status = self.config['Discord']['Status']
             self.prefix = self.config['Discord']['Prefix']
             self.dynmap_url = self.config['Minecraft']['Dynmap_Url']
-            self.bot_mod = self.config['Discord']['Bot_Mod']
+            self.bot_mod = self.config['Discord']['Bot_Mod'].split(',')
             self.count = int(self.config['Logging']['Count'])
             self.rotation_duration = int(self.config['Logging']['Rotation_Duration'])
             self.special_name_list = dict(self.config.items('Special Names'))
