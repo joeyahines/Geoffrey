@@ -210,20 +210,21 @@ class Location(SQL_Base):
             format(bot_config.dynmap_url, bot_config.world_name, self.x, self.z)
 
     def pos_to_str(self):
-        return '(x= {}, z= {}) in the {}'.format(self.x, self.z, self.dimension.value.title())
+        pos_str = '**(x= {}, z= {})** **{}**'.format(self.x, self.z, self.dimension.value.title())
+        if self.tunnel is not None:
+            return pos_str + ', **{}**'.format(self.tunnel)
+        else:
+            return pos_str
 
     def info_str(self):
-        return "Name: **{}**, Type: **{}**, Owner: **{}** Position: **{}**".format(self.name, self.type,
-                                                                                   self.owner.name, self.pos_to_str())
+        return "**{}** @ {}, Owner: **{}**, Type: **{}**".format(self.name, self.pos_to_str(), self.owner.name,
+                                                                    self.type)
 
     def full_str(self):
         return self.__str__() + '\n' + self.dynmap_link()
 
     def __str__(self):
-        if self.tunnel is not None:
-            return "{}, Tunnel: **{}**".format(self.info_str(), self.tunnel)
-        else:
-            return self.info_str()
+        return self.info_str()
 
 
 class Base(Location):
@@ -286,9 +287,9 @@ class ItemListing(SQL_Base):
         self.shop = shop
 
     def listing_str(self):
-        return 'Item: **{}**, Price: **{}** for **{}**D'.format(self.name, self.amount, self.price)
+        return '**{}** **{}** for **{}D**'.format(self.amount, self.name, self.price)
 
     def __str__(self):
-        return 'Shop: **{}**, {}'.format(self.shop.name, self.listing_str())
+        return '**{}**, selling {}'.format(self.shop.name, self.listing_str())
 
 
