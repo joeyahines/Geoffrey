@@ -36,8 +36,7 @@ class Add_Commands:
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def add_base(self, ctx, x_pos: int, z_pos: int, *args):
         """
-        Adds your base to the database.
-            The name is optional.
+        Adds your base to the database. The base name is optional if this your first base.
             ?add_base [X Coordinate] [Z Coordinate] [Base Name]
         """
 
@@ -62,8 +61,7 @@ class Add_Commands:
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def add_shop(self, ctx, x_pos: int, z_pos: int, *args):
         """
-        Adds your shop to the database.
-            The name is optional.
+        Adds your shop to the database. The name is shop optional if this your first shop.
             ?add_shop [X Coordinate] [Z Coordinate] [Shop Name]
         """
 
@@ -116,9 +114,9 @@ class Add_Commands:
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def add_item(self, ctx, item_name: str, quantity: int, diamond_price: int, *args):
         """
-        Adds an item to a shop's inventory.
-        Quantity for Diamond Price.
-        ?additem [Item Name] [Quantity] [Price] [Shop name]
+        Adds an item to a shop's inventory. If you have one shop, the shop name is not required.
+        Quantity for Diamond Price. eg. 32 Dirt for 1D
+            ?additem [Item Name] [Quantity] [Price] [Shop name]
         """
         shop_name = get_name(args)
         try:

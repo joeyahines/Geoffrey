@@ -63,7 +63,7 @@ async def on_command_error(error, ctx):
         if "Admin_Commands" in ctx.cog.__str__():
             return
     if isinstance(error, commands.CommandNotFound):
-        error_str = 'Command not found, ding dongs like you can use ?help to see all the commands this bot can do.'
+        return
     elif isinstance(error, commands.CommandOnCooldown):
         return
     elif isinstance(error, commands.UserInputError):

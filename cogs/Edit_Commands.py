@@ -6,7 +6,9 @@ from bot import bot_commands
 
 
 class Edit_Commands:
-
+    """
+    Commands for editing your stuff in Geoffrey.
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -14,8 +16,7 @@ class Edit_Commands:
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def edit_pos(self, ctx, x_pos: int, y_pos: int, *args):
         """
-            Edits the position of a location
-
+        Edits the position of a location
             ?edit_pos [X Coordinate] [Z Coordinate] [Location Name]
         """
         loc = get_name(args)
@@ -32,8 +33,7 @@ class Edit_Commands:
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def edit_tunnel(self, ctx, tunnel_color: str, tunnel_number: int, *args):
         """
-            Edits the tunnel of a location
-
+        Edits the tunnel of a location
             ?edit_tunnel [Tunnel Color] [Tunnel Number] [Location Name]
         """
         loc = get_name(args)
@@ -53,9 +53,8 @@ class Edit_Commands:
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def edit_name(self, ctx, new_name: str, current_name: str):
         """
-            Edits the name of a location
-
-            IF A NAME HAS SPACES IN IT YOU NEED TO WRAP IT IN QUOTATION MARKS. ie "Cool Shop 123"
+        Edits the name of a location
+         IF A NAME HAS SPACES IN IT YOU NEED TO WRAP IT IN QUOTATION MARKS. eg. "Cool Shop 123"
             ?edit_name [New Name] [Current Name]
         """
         try:
