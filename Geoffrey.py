@@ -15,9 +15,9 @@ from BotConfig import bot_config
 def setup_logging():
 
     discord_logger = logging.getLogger('discord')
-    discord_logger.setLevel(logging.INFO)
+    discord_logger.setLevel(logging.WARNING)
     sql_logger = logging.getLogger('sqlalchemy.engine')
-    sql_logger.setLevel(logging.INFO)
+    sql_logger.setLevel(logging.WARNING)
     bot_info_logger = logging.getLogger('bot')
     bot_info_logger.setLevel(logging.INFO)
 
