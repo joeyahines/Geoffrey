@@ -15,7 +15,7 @@ class Search_Commands:
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
-    async def find(self, ctx, * args):
+    async def find(self, ctx, *args):
         """
         Finds all the locations and tunnels matching the search term
             ?find [Search]
@@ -28,10 +28,11 @@ class Search_Commands:
 
             result = bot_commands.find(search)
 
-            await self.bot.say('{}, The following entries match **{}**:\n{}'.format(ctx.message.author.mention, search, result))
+            await self.bot.say(
+                '{}, The following entries match **{}**:\n{}'.format(ctx.message.author.mention, search, result))
         except LocationLookUpError:
-            await self.bot.say('{}, no matches to **{}** were found in the database.'.format(ctx.message.author.mention, search))
-
+            await self.bot.say(
+                '{}, no matches to **{}** were found in the database.'.format(ctx.message.author.mention, search))
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
@@ -43,15 +44,15 @@ class Search_Commands:
         try:
             result = bot_commands.tunnel(player)
 
-            await self.bot.say('{}, **{}** owns the following tunnels: \n{}'.format(ctx.message.author.mention, player, result))
+            await self.bot.say(
+                '{}, **{}** owns the following tunnels: \n{}'.format(ctx.message.author.mention, player, result))
         except LocationLookUpError:
             await self.bot.say('{}, no tunnels for **{}** were found in the database.'
-                          .format(ctx.message.author.mention, player))
-
+                               .format(ctx.message.author.mention, player))
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
-    async def find_around(self, ctx, x_pos: int, z_pos: int, * args):
+    async def find_around(self, ctx, x_pos: int, z_pos: int, *args):
         """
         Finds all the locations around a certain point.
         The radius defaults to 200 blocks if no value is given.
@@ -84,10 +85,11 @@ class Search_Commands:
                     ctx.message.author.mention, radius, base_string))
             else:
                 await self.bot.say('{}, there are no locations within {} blocks of that point'
-                              .format(ctx.message.author.mention, radius))
+                                   .format(ctx.message.author.mention, radius))
         except ValueError:
-            await self.bot.say('{}, invalid radius, the radius must be a whole number.'.format(ctx.message.author.mention,
-                                                                                          radius))
+            await self.bot.say(
+                '{}, invalid radius, the radius must be a whole number.'.format(ctx.message.author.mention,
+                                                                                radius))
         except InvalidDimError:
             await self.bot.say('{}, {} is an invalid dimension.'.format(ctx.message.author.mention, dimension))
 
@@ -100,13 +102,14 @@ class Search_Commands:
         """
         try:
             result = bot_commands.selling(item_name)
-            await self.bot.say('{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
+            await self.bot.say(
+                '{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
         except ItemNotFound:
             await self.bot.say('{}, no shop sells **{}**.'.format(ctx.message.author.mention, item_name))
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
-    async def info(self, ctx, * args):
+    async def info(self, ctx, *args):
         """
         Displays info about a location.
         If the location is a shop, it displays the shop's inventory.
