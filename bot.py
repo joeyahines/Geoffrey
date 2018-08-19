@@ -11,6 +11,8 @@ from Commands import Commands
 from DatabaseModels import Player
 from MinecraftAccountInfoGrabber import *
 
+from pymysql.err import OperationalError
+
 logger = logging.getLogger(__name__)
 
 description = '''
@@ -87,6 +89,8 @@ async def on_command_error(error, ctx):
         error_str = 'Use a shorter name or a smaller value, dong ding.'
     elif isinstance(error.original, NotOnServerError):
         error_str = 'Command needs to be run on 24CC. Run this command there whoever you are.'.format()
+    elif isinstance(error.original, OperationalError):
+        error_str = 'Database connection issue, looks like some admin has to fix something.'.format()
     else:
         logger.error("Geoffrey encountered unhandled exception: %s", error)
         error_str = bad_error_message.format(ctx.invoked_with, error)
@@ -113,12 +117,11 @@ async def username_update():
         except UsernameLookupFailed:
             logger.info("Username lookup error.")
             session.rollback()
+        except OperationalError:
+            logger.info("MySQL connection error")
         finally:
             session.close()
             await asyncio.sleep(600)
-
-    if session is not None:
-        session.close()
 
 
 def start_bot():
