@@ -6,8 +6,4 @@ setup(
     packages=['geoffrey'],
     install_requires=['discord.py', 'SQLAlchemy', 'pymysql'],
     long_description=open('README.txt').read(),
-    entry_points={
-        'console_scripts':
-            ['geoffrey = geoffrey.Geoffrey:main',
-             ]}
 )
