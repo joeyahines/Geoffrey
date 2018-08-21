@@ -1,6 +1,6 @@
 from itertools import zip_longest
 
-from BotConfig import bot_config
+from geoffrey.BotConfig import bot_config
 
 
 def get_name(args):

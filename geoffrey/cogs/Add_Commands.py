@@ -1,8 +1,8 @@
 from discord.ext import commands
 
-from BotErrors import *
-from DiscordHelperFunctions import *
-from bot import bot_commands
+from geoffrey.BotErrors import *
+from geoffrey.DiscordHelperFunctions import *
+from geoffrey.bot import bot_commands
 
 
 @commands.cooldown(5, 60, commands.BucketType.user)

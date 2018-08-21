@@ -2,7 +2,7 @@ from json import JSONDecodeError
 
 import requests
 
-from BotErrors import UsernameLookupFailed
+from geoffrey.BotErrors import UsernameLookupFailed
 
 uuid_lookup_url = 'https://api.mojang.com/users/profiles/minecraft/{}'
 username_lookup_url = 'https://api.mojang.com/user/profiles/{}/names'

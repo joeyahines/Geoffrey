@@ -1,4 +1,4 @@
-from DatabaseInterface import *
+from geoffrey.DatabaseInterface import *
 
 
 class Commands:

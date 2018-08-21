@@ -1,4 +1,4 @@
-from DatabaseModels import *
+from geoffrey.DatabaseModels import *
 
 
 class DatabaseInterface:

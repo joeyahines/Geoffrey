@@ -8,8 +8,8 @@ import logging
 import logging.handlers as handlers
 from sys import stdout
 
-import bot
-from BotConfig import bot_config
+from geoffrey import bot
+from geoffrey.BotConfig import bot_config
 
 
 def setup_logging():

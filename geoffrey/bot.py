@@ -6,11 +6,11 @@ from discord.ext import commands
 from discord.utils import oauth_url
 from sqlalchemy.exc import OperationalError
 
-from BotConfig import bot_config
-from BotErrors import *
-from Commands import Commands
-from DatabaseModels import Player
-from MinecraftAccountInfoGrabber import *
+from geoffrey.BotConfig import bot_config
+from geoffrey.BotErrors import *
+from geoffrey.Commands import Commands
+from geoffrey.DatabaseModels import Player
+from geoffrey.MinecraftAccountInfoGrabber import *
 
 logger = logging.getLogger(__name__)
 

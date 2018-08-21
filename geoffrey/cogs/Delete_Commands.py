@@ -1,8 +1,8 @@
 from discord.ext import commands
 
-from BotErrors import *
-from DiscordHelperFunctions import *
-from bot import bot_commands
+from geoffrey.BotErrors import *
+from geoffrey.DiscordHelperFunctions import *
+from geoffrey.bot import bot_commands
 
 
 class Delete_Commands:
