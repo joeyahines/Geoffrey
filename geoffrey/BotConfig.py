@@ -1,5 +1,6 @@
 import codecs
 import configparser
+import os
 
 
 def create_config(config):
@@ -30,7 +31,8 @@ def create_config(config):
 
 def read_config():
     config = configparser.ConfigParser()
-    config.read_file(codecs.open("GeoffreyConfig.ini", "r", "utf8"))
+    path = os.path.dirname(os.path.abspath(__file__))
+    config.read_file(codecs.open("{}/GeoffreyConfig.ini".format(path), "r", "utf8"))
 
     if len(config.sections()) == 0:
         create_config(config)
