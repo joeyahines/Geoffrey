@@ -18,10 +18,14 @@ def create_config(config):
                      'Database': ''
                      }
     config['Minecraft'] = {'Dynmap_Url': '',
-                           'World_Name': ''
+                           'World_Name': '',
+                           'North_Tunnel': 'North',
+                           "East_Tunnel": 'South',
+                           "South_Tunnel": 'East',
+                           "West_Tunnel": 'West'
                            }
-    config['Logging'] = {'Count': '',
-                         'Rotation_Duration': ''
+    config['Logging'] = {'Count': '7',
+                         'Rotation_Duration': '1'
                          }
     config['Special Names'] = {}
 
@@ -48,13 +52,21 @@ class Config:
         try:
             self.config = read_config()
             self.engine_args = self.read_engine_arg()
+
             self.token = self.config['Discord']['Token']
             self.world_name = self.config['Minecraft']['World_Name']
             self.status = self.config['Discord']['Status']
             self.prefix = self.config['Discord']['Prefix']
-            self.dynmap_url = self.config['Minecraft']['Dynmap_Url']
             self.bot_mod = self.config['Discord']['Bot_Mod'].split(',')
             self.error_users = self.config['Discord']['Error_Users'].split(',')
+
+            self.dynmap_url = self.config['Minecraft']['Dynmap_Url']
+            self.north_tunnel = self.config['Minecraft']['North_Tunnel']
+            self.east_tunnel = self.config['Minecraft']['East_Tunnel']
+            self.south_tunnel = self.config['Minecraft']['South_Tunnel']
+            self.west_tunnel = self.config['Minecraft']['West_Tunnel']
+
+
             self.count = int(self.config['Logging']['Count'])
             self.rotation_duration = int(self.config['Logging']['Rotation_Duration'])
             self.special_name_list = dict(self.config.items('Special Names'))

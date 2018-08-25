@@ -83,10 +83,10 @@ class GeoffreyDatabase:
 
 
 class TunnelDirection(enum.Enum):
-    North = 'green'
-    East = 'blue'
-    South = 'red'
-    West = 'yellow'
+    North = bot_config.north_tunnel
+    East = bot_config.east_tunnel
+    South = bot_config.south_tunnel
+    West = bot_config.west_tunnel
 
     def str_to_tunnel_dir(arg):
         arg = arg.lower()
@@ -210,7 +210,7 @@ class Location(SQL_Base):
             format(bot_config.dynmap_url, bot_config.world_name, self.x, self.z)
 
     def pos_to_str(self):
-        pos_str = '**(x= {}, z= {})** **{}**'.format(self.x, self.z, self.dimension.value.title())
+        pos_str = '**(x= {}, z= {})** {}'.format(self.x, self.z, self.dimension.value.title())
         if self.tunnel is not None:
             return pos_str + ', **{}**'.format(self.tunnel)
         else:

@@ -18,7 +18,7 @@ def setup_logging():
     discord_logger.setLevel(logging.INFO)
     sql_logger = logging.getLogger('sqlalchemy.engine')
     sql_logger.setLevel(logging.INFO)
-    bot_info_logger = logging.getLogger('bot')
+    bot_info_logger = logging.getLogger('geoffrey.bot')
     bot_info_logger.setLevel(logging.INFO)
 
     handler = handlers.TimedRotatingFileHandler(filename='Geoffrey.log', when='D',
