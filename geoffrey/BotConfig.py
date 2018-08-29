@@ -3,12 +3,12 @@ import configparser
 import os
 
 
-def create_config(config):
+def create_config(config, path):
     config['Discord'] = {'Token': '',
                          'Status': '',
                          'Prefix': '?',
-                         'Bot_Mod': ''
-                         'Error_Users: '''
+                         'Bot_Mod': '',
+                         'Error_Users': ''
                          }
     config['SQL'] = {'Dialect+Driver': 'mysql+mysqldb',
                      'Username': '',
@@ -29,7 +29,7 @@ def create_config(config):
                          }
     config['Special Names'] = {}
 
-    with open('GeoffreyConfig.ini', 'w') as configfile:
+    with open('{}/GeoffreyConfig.ini'.format(path), 'w') as configfile:
         config.write(configfile)
 
 
@@ -39,7 +39,7 @@ def read_config():
     config.read_file(codecs.open("{}/GeoffreyConfig.ini".format(path), "r", "utf8"))
 
     if len(config.sections()) == 0:
-        create_config(config)
+        create_config(config, path)
         print("GeoffreyConfig.ini generated.")
         quit(0)
 
@@ -85,6 +85,5 @@ class Config:
         engine_args = '{}://{}:{}@{}:{}/{}?charset=utf8mb4&use_unicode=1'
 
         return engine_args.format(driver, username, password, host, port, database_name)
-
 
 bot_config = Config()

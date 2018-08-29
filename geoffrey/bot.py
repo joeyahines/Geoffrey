@@ -6,6 +6,10 @@ from discord.ext import commands
 from discord.utils import oauth_url
 from sqlalchemy.exc import OperationalError
 
+import logging.handlers as handlers
+from sys import stdout
+
+
 from geoffrey.BotConfig import bot_config
 from geoffrey.BotErrors import *
 from geoffrey.Commands import Commands
@@ -134,9 +138,34 @@ async def username_update():
             session.close()
             await asyncio.sleep(600)
 
+def setup_logging():
+
+    discord_logger = logging.getLogger('discord')
+    discord_logger.setLevel(logging.INFO)
+    sql_logger = logging.getLogger('sqlalchemy.engine')
+    sql_logger.setLevel(logging.INFO)
+    bot_info_logger = logging.getLogger('geoffrey.bot')
+    bot_info_logger.setLevel(logging.INFO)
+
+    handler = handlers.TimedRotatingFileHandler(filename='Geoffrey.log', when='D',
+                                                interval=bot_config.rotation_duration, backupCount=bot_config.count,
+                                                encoding='utf-8')
+
+    handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+
+    console = logging.StreamHandler(stdout)
+
+    console.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+
+    discord_logger.addHandler(handler)
+    sql_logger.addHandler(handler)
+    bot_info_logger.addHandler(handler)
+    bot_info_logger.addHandler(console)
 
 def start_bot():
     try:
+
+        setup_logging()
         Commands()
         for extension in extensions:
             try:
