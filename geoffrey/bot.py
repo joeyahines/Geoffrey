@@ -32,11 +32,11 @@ If have a suggestion or if something is borked, you can PM my ding dong of a cre
 bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \
                     'headquarters are working VEWY HAWD to fix this! (Error in command {})'
 
-extensions = ['cogs.Add_Commands',
-              'cogs.Delete_Commands',
-              'cogs.Edit_Commands',
-              'cogs.Search_Commands',
-              'cogs.Admin_Commands']
+extensions = ['geoffrey.cogs.Add_Commands',
+              'geoffrey.cogs.Delete_Commands',
+              'geoffrey.cogs.Edit_Commands',
+              'geoffrey.cogs.Search_Commands',
+              'geoffrey.cogs.Admin_Commands']
 
 bot = commands.Bot(command_prefix=bot_config.prefix, description=description, case_insensitive=True)
 
