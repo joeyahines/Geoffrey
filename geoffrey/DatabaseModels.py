@@ -121,7 +121,7 @@ class Dimension(enum.Enum):
 
 
 class Player(SQL_Base):
-    __tablename__ = 'Players'
+    __tablename__ = 'geoffrey_players'
     id = Column(Integer, primary_key=True, autoincrement=True)
     mc_uuid = Column(String(128))
     discord_uuid = Column(String(128))
@@ -140,7 +140,7 @@ class Player(SQL_Base):
 
 
 class Tunnel(SQL_Base):
-    __tablename__ = 'Tunnels'
+    __tablename__ = 'geoffrey_tunnels'
     id = Column(Integer, primary_key=True, autoincrement=True)
     tunnel_number = Column(Integer)
     tunnel_direction = Column(Enum(TunnelDirection))
@@ -171,7 +171,7 @@ class Tunnel(SQL_Base):
 
 
 class Location(SQL_Base):
-    __tablename__ = 'Locations'
+    __tablename__ = 'geoffrey_locations'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(128), unique=True)
@@ -228,7 +228,7 @@ class Location(SQL_Base):
 
 
 class Base(Location):
-    __tablename__ = 'Bases'
+    __tablename__ = 'geoffrey_bases'
     base_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'), primary_key=True)
     name = column_property(Column(String(128)), Location.name)
 
@@ -238,7 +238,7 @@ class Base(Location):
 
 
 class Shop(Location):
-    __tablename__ = 'Shops'
+    __tablename__ = 'geoffrey_shops'
     shop_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'), primary_key=True)
     name = column_property(Column(String(128)), Location.name)
     inventory = relationship('ItemListing', back_populates='shop', cascade='all, delete-orphan', lazy='dynamic')
@@ -270,7 +270,7 @@ class Shop(Location):
 
 
 class ItemListing(SQL_Base):
-    __tablename__ = 'Items'
+    __tablename__ = 'geoffrey_items'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(128))
