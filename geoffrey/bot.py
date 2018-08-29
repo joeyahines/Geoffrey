@@ -52,7 +52,7 @@ async def on_ready():
     info = await bot.application_info()
     url = oauth_url(info.id)
     logger.info("Bot url: %s", url)
-    await bot.change_presence(game=Game(name=bot_config.status))
+    await bot.change_presence(activity=Game(bot_config.status))
 
 
 @bot.event
