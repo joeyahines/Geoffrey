@@ -66,7 +66,6 @@ class Config:
             self.south_tunnel = self.config['Minecraft']['South_Tunnel']
             self.west_tunnel = self.config['Minecraft']['West_Tunnel']
 
-
             self.count = int(self.config['Logging']['Count'])
             self.rotation_duration = int(self.config['Logging']['Rotation_Duration'])
             self.special_name_list = dict(self.config.items('Special Names'))
@@ -85,5 +84,6 @@ class Config:
         engine_args = '{}://{}:{}@{}:{}/{}?charset=utf8mb4&use_unicode=1'
 
         return engine_args.format(driver, username, password, host, port, database_name)
+
 
 bot_config = Config()

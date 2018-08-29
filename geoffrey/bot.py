@@ -67,11 +67,27 @@ async def on_command(command, ctx):
 
 @bot.event
 async def on_command_error(error, ctx):
+    error_str = ''
     if hasattr(ctx, 'cog'):
         if "Admin_Commands" in ctx.cog.__str__():
             return
-    if isinstance(error, commands.CommandNotFound):
-        return
+    if hasattr(error, 'original'):
+        if isinstance(error.original, NoPermissionError):
+            error_str = 'You don\'t have permission for that cool command.'
+        elif isinstance(error.original, UsernameLookupFailed):
+            error_str = 'Your user name was not found, either Mojang is having a fucky wucky ' \
+                        'or your nickname is not set correctly. *stares at the Mods*'
+        elif isinstance(error.original, PlayerNotFound):
+            error_str = 'Make sure to use ?register first you ding dong.'
+        elif isinstance(error.original, EntryNameNotUniqueError):
+            error_str = 'An entry in the database already has that name you ding dong.'
+        elif isinstance(error.original, DatabaseValueError):
+            error_str = 'Use a shorter name or a smaller value, dong ding.'
+        elif isinstance(error.original, NotOnServerError):
+            error_str = 'Command needs to be run on 24CC. Run this command there whoever you are.'.format()
+        elif isinstance(error.original, OperationalError):
+            await send_error_message('Error connecting to the MySQL server, is it offline?')
+            error_str = 'Database connection issue, looks like some admin has to fix something.'.format()
     elif isinstance(error, commands.CommandOnCooldown):
         return
     elif isinstance(error, commands.UserInputError):
@@ -81,24 +97,10 @@ async def on_command_error(error, ctx):
         pages = bot.formatter.format_help_for(ctx, ctx.command)
         for page in pages:
             error_str = error_str + '\n' + page
+    elif isinstance(error, commands.CommandNotFound):
+        return
 
-    elif isinstance(error.original, NoPermissionError):
-        error_str = 'You don\'t have permission for that cool command.'
-    elif isinstance(error.original, UsernameLookupFailed):
-        error_str = 'Your user name was not found, either Mojang is having a fucky wucky ' \
-                    'or your nickname is not set correctly. *stares at the Mods*'
-    elif isinstance(error.original, PlayerNotFound):
-        error_str = 'Make sure to use ?register first you ding dong.'
-    elif isinstance(error.original, EntryNameNotUniqueError):
-        error_str = 'An entry in the database already has that name you ding dong.'
-    elif isinstance(error.original, DatabaseValueError):
-        error_str = 'Use a shorter name or a smaller value, dong ding.'
-    elif isinstance(error.original, NotOnServerError):
-        error_str = 'Command needs to be run on 24CC. Run this command there whoever you are.'.format()
-    elif isinstance(error.original, OperationalError):
-        await send_error_message('Error connecting to the MySQL server, is it offline?')
-        error_str = 'Database connection issue, looks like some admin has to fix something.'.format()
-    else:
+    if error_str is None:
         await send_error_message('Geoffrey encountered unhandled exception: {}. Context:'.format(error, ctx.args))
 
         logger.error("Geoffrey encountered unhandled exception: %s", error)
@@ -162,9 +164,9 @@ def setup_logging():
     bot_info_logger.addHandler(handler)
     bot_info_logger.addHandler(console)
 
+
 def start_bot():
     try:
-
         setup_logging()
         Commands()
         for extension in extensions:
