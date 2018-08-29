@@ -144,9 +144,9 @@ class Tunnel(SQL_Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     tunnel_number = Column(Integer)
     tunnel_direction = Column(Enum(TunnelDirection))
-    owner_id = Column(Integer, ForeignKey('Players.id'))
+    owner_id = Column(Integer, ForeignKey('geoffrey_players.id'))
     owner = relationship("Player", back_populates="tunnels", cascade="save-update, merge, delete")
-    location_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'))
+    location_id = Column(Integer, ForeignKey('geoffrey_locations.id', ondelete='CASCADE'))
     location = relationship("Location", back_populates="tunnel", lazy="joined")
 
     def __init__(self, owner, tunnel_color, tunnel_number, location=None):
@@ -181,8 +181,9 @@ class Location(SQL_Base):
     tunnel = relationship("Tunnel",  uselist=False, cascade="all, delete-orphan")
     dimension = Column(Enum(Dimension))
 
-    owner_id = Column(Integer, ForeignKey('Players.id', ondelete='CASCADE'))
-    owner = relationship("Player", back_populates="locations", cascade="all, delete-orphan", single_parent=True)
+    owner_id = Column(Integer, ForeignKey('geoffrey_players.id', ondelete='CASCADE'))
+    owner = relationship("Player", back_populates="locations", cascade="all, delete-orphan",
+                         single_parent=True)
     type = Column(String(128))
 
     __mapper_args__ = {
@@ -229,7 +230,7 @@ class Location(SQL_Base):
 
 class Base(Location):
     __tablename__ = 'geoffrey_bases'
-    base_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'), primary_key=True)
+    base_id = Column(Integer, ForeignKey('geoffrey_locations.id', ondelete='CASCADE'), primary_key=True)
     name = column_property(Column(String(128)), Location.name)
 
     __mapper_args__ = {
@@ -239,7 +240,7 @@ class Base(Location):
 
 class Shop(Location):
     __tablename__ = 'geoffrey_shops'
-    shop_id = Column(Integer, ForeignKey('Locations.id', ondelete='CASCADE'), primary_key=True)
+    shop_id = Column(Integer, ForeignKey('geoffrey_locations.id', ondelete='CASCADE'), primary_key=True)
     name = column_property(Column(String(128)), Location.name)
     inventory = relationship('ItemListing', back_populates='shop', cascade='all, delete-orphan', lazy='dynamic')
     __mapper_args__ = {
@@ -277,7 +278,7 @@ class ItemListing(SQL_Base):
     price = Column(Integer)
     amount = Column(Integer)
 
-    shop_id = Column(Integer, ForeignKey('Shops.shop_id', ondelete='CASCADE'))
+    shop_id = Column(Integer, ForeignKey('geoffrey_shops.shop_id', ondelete='CASCADE'))
     shop = relationship("Shop", back_populates="inventory", single_parent=True)
 
     def __init__(self, name, price, amount, shop):
