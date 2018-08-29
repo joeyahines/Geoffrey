@@ -122,7 +122,7 @@ class Admin_Commands:
         """
         Updates "playing [game]" status of the bot.
         """
-        await self.bot.change_presence(game=Game(name=status))
+        await self.bot.change_presence(activity=Game(status))
         await self.bot.say('{}, status has been changed'.format(ctx.message.author.mention))
 
 
