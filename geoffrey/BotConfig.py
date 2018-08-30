@@ -1,6 +1,5 @@
 import codecs
 import configparser
-import os
 
 
 def create_config(config, path):
@@ -35,9 +34,9 @@ def create_config(config, path):
 
 def read_config(path):
     config = configparser.ConfigParser()
-    config.read_file(codecs.open(path, "r", "utf8"))
-
-    if len(config.sections()) == 0:
+    try:
+        config.read_file(codecs.open(path, "r", "utf8"))
+    except FileNotFoundError:
         create_config(config, path)
         print("Config generated.")
         quit(0)
