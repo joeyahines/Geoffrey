@@ -2,7 +2,6 @@ from discord.ext import commands
 
 from geoffrey.BotErrors import *
 from geoffrey.DiscordHelperFunctions import *
-from geoffrey.bot import bot_commands, bot_config
 
 
 class Search_Commands:
@@ -26,7 +25,7 @@ class Search_Commands:
             if search is None:
                 raise commands.UserInputError
 
-            result = bot_commands.find(search)
+            result = self.bot.bot_commands.find(search)
 
             await self.bot.say(
                 '{}, The following entries match **{}**:\n{}'.format(ctx.message.author.mention, search, result))
@@ -42,7 +41,7 @@ class Search_Commands:
             ?tunnel [Player]
         """
         try:
-            result = bot_commands.tunnel(player)
+            result = self.bot.bot_commands.tunnel(player)
 
             await self.bot.say(
                 '{}, **{}** owns the following tunnels: \n{}'.format(ctx.message.author.mention, player, result))
@@ -78,7 +77,7 @@ class Search_Commands:
                         if args[1] == '-d':
                             dimension = args[2]
 
-            base_string = bot_commands.find_around(x_pos, z_pos, radius, dimension)
+            base_string = self.bot.bot_commands.find_around(x_pos, z_pos, radius, dimension)
 
             if len(base_string) != 0:
                 await self.bot.say('{}, the following locations(s) within **{}** blocks of that point: \n {}'.format(
@@ -101,7 +100,7 @@ class Search_Commands:
             ?selling [item]
         """
         try:
-            result = bot_commands.selling(item_name)
+            result = self.bot.bot_commands.selling(item_name)
             await self.bot.say(
                 '{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
         except ItemNotFound:
@@ -121,7 +120,7 @@ class Search_Commands:
             if loc is None:
                 raise commands.UserInputError
 
-            info_str = bot_commands.info(loc)
+            info_str = self.bot.bot_commands.info(loc)
             await self.bot.say(info_str)
         except IndexError:
             await self.bot.say('{}, no locations in the database match **{}**.'.format(ctx.message.author.mention, loc))
@@ -134,7 +133,7 @@ class Search_Commands:
         """
 
         try:
-            loc_str = bot_commands.me(discord_uuid=ctx.message.author.id)
+            loc_str = self.bot.bot_commands.me(discord_uuid=ctx.message.author.id)
             await self.bot.say('{}, here are your locations in the database: \n {}'.format(ctx.message.author.mention,
                                                                                            loc_str))
         except PlayerNotFound:

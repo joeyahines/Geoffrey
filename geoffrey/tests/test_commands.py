@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 
 from Commands import *
@@ -6,7 +7,8 @@ from BotConfig import get_config
 
 class TestCommands(TestCase):
     def setUp(self):
-        self.bot_config = get_config()
+        path = os.path.dirname(os.path.abspath(__file__))
+        self.bot_config = get_config('{}/GeoffreyConfig.ini'.format(path))
         self.commands = Commands(self.bot_config, True)
         self.session = self.commands.interface.database.Session()
         self.commands.interface.database.clear_all(self.session)
@@ -50,13 +52,13 @@ class TestCommands(TestCase):
         self.commands.register('ZeroHD', '143072699567177728')
         self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
 
-        tunnel2 = self.commands.add_tunnel(self.bot_config.east_tunnel, 50, location_name='test_shop',
+        tunnel2 = self.commands.add_tunnel("East", 50, location_name='test_shop',
                                            discord_uuid='143072699567177728')
 
-        if self.bot_config.east_tunnel not in tunnel2:
+        if "East" not in tunnel2:
             self.fail()
 
-        self.assertRaises(LocationHasTunnelError, self.commands.add_tunnel, self.bot_config.east_tunnel, 50,
+        self.assertRaises(LocationHasTunnelError, self.commands.add_tunnel, "East", 50,
                           location_name='test_shop', discord_uuid='143072699567177728')
 
     def test_find(self):
@@ -127,11 +129,11 @@ class TestCommands(TestCase):
         self.commands.register('ZeroHD', '143072699567177728')
         self.commands.add_shop(0, 0, shop_name='frick', discord_uuid='143072699567177728')
 
-        self.commands.add_tunnel(self.bot_config.north_tunnel, 50, location_name='frick', discord_uuid='143072699567177728')
+        self.commands.add_tunnel("West", 50, location_name='frick', discord_uuid='143072699567177728')
 
         result = self.commands.info('frick')
 
-        if self.bot_config.north_tunnel in result:
+        if "West" in result:
             pass
         else:
             self.fail()
@@ -140,11 +142,11 @@ class TestCommands(TestCase):
         self.commands.register('ZeroHD', '143072699567177728')
         self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
 
-        self.commands.add_tunnel(self.bot_config.south_tunnel, 50, None, discord_uuid='143072699567177728')
+        self.commands.add_tunnel("soUTH", 50, None, discord_uuid='143072699567177728')
 
         result = self.commands.tunnel('ZeroHD')
 
-        if self.bot_config.south_tunnel in result:
+        if "South" in result:
             pass
         else:
             self.fail()
@@ -191,11 +193,11 @@ class TestCommands(TestCase):
         self.commands.register('ZeroHD', '143072699567177728')
         self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
 
-        self.commands.edit_tunnel(self.bot_config.east_tunnel, 500, 'test shop', discord_uuid='143072699567177728')
+        self.commands.edit_tunnel("West", 500, 'test shop', discord_uuid='143072699567177728')
 
         result = self.commands.info('test shop')
 
-        if self.bot_config.east_tunnel in result:
+        if "West" in result:
             pass
         else:
             self.fail()

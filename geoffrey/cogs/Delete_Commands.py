@@ -2,7 +2,6 @@ from discord.ext import commands
 
 from geoffrey.BotErrors import *
 from geoffrey.DiscordHelperFunctions import *
-from geoffrey.bot import bot_commands, bot_config
 
 
 class Delete_Commands:
@@ -26,7 +25,7 @@ class Delete_Commands:
             if loc is None:
                 raise commands.UserInputError
 
-            bot_commands.delete(loc, discord_uuid=ctx.message.author.id)
+            self.bot.bot_commands.delete(loc, discord_uuid=ctx.message.author.id)
             await self.bot.say(
                 '{}, your location named **{}** has been deleted.'.format(ctx.message.author.mention, loc))
         except (DeleteEntryError, PlayerNotFound):
@@ -42,7 +41,7 @@ class Delete_Commands:
 
         shop = get_name(args)
         try:
-            bot_commands.delete_item(item, shop, discord_uuid=ctx.message.author.id)
+            self.bot.bot_commands.delete_item(item, shop, discord_uuid=ctx.message.author.id)
 
             await self.bot.say('{}, **{}** has been removed from the inventory of **{}**.'.
                                format(ctx.message.author.mention, item, shop))

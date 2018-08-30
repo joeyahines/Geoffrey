@@ -18,10 +18,6 @@ def create_config(config, path):
                      }
     config['Minecraft'] = {'Dynmap_Url': '',
                            'World_Name': '',
-                           'North_Tunnel': 'North',
-                           "East_Tunnel": 'South',
-                           "South_Tunnel": 'East',
-                           "West_Tunnel": 'West'
                            }
     config['Logging'] = {'Count': '7',
                          'Rotation_Duration': '1'
@@ -59,10 +55,6 @@ class Config:
             self.error_users = self.config['Discord']['Error_Users'].split(',')
 
             self.dynmap_url = self.config['Minecraft']['Dynmap_Url']
-            self.north_tunnel = self.config['Minecraft']['North_Tunnel']
-            self.east_tunnel = self.config['Minecraft']['East_Tunnel']
-            self.south_tunnel = self.config['Minecraft']['South_Tunnel']
-            self.west_tunnel = self.config['Minecraft']['West_Tunnel']
 
             self.count = int(self.config['Logging']['Count'])
             self.rotation_duration = int(self.config['Logging']['Rotation_Duration'])

@@ -2,7 +2,6 @@ from discord.ext import commands
 
 from geoffrey.BotErrors import *
 from geoffrey.DiscordHelperFunctions import *
-from geoffrey.bot import bot_commands, bot_config
 
 
 class Edit_Commands:
@@ -21,7 +20,7 @@ class Edit_Commands:
         """
         loc = get_name(args)
         try:
-            loc_str = bot_commands.edit_pos(x_pos, y_pos, loc, discord_uuid=ctx.message.author.id)
+            loc_str = self.bot.bot_commands.edit_pos(x_pos, y_pos, loc, discord_uuid=ctx.message.author.id)
 
             await self.bot.say(
                 '{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
@@ -38,7 +37,7 @@ class Edit_Commands:
         """
         loc = get_name(args)
         try:
-            loc_str = bot_commands.edit_tunnel(tunnel_color, tunnel_number, loc, discord_uuid=ctx.message.author.id)
+            loc_str = self.bot.bot_commands.edit_tunnel(tunnel_color, tunnel_number, loc, discord_uuid=ctx.message.author.id)
 
             await self.bot.say(
                 '{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
@@ -58,7 +57,7 @@ class Edit_Commands:
             ?edit_name [New Name] [Current Name]
         """
         try:
-            loc_str = bot_commands.edit_name(new_name, current_name, discord_uuid=ctx.message.author.id)
+            loc_str = self.bot.bot_commands.edit_name(new_name, current_name, discord_uuid=ctx.message.author.id)
 
             await self.bot.say(
                 '{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))

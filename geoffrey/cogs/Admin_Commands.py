@@ -2,13 +2,12 @@ from discord import Game
 from discord.ext import commands
 
 from geoffrey.BotErrors import *
-from geoffrey.bot import bot_commands, bot_config
 
 
-def check_mod(user):
+def check_mod(user, admin_users):
     try:
         for role in user.roles:
-            if role.id in bot_config.bot_mod:
+            if role.id in admin_users:
                 return True
     except AttributeError:
         raise NotOnServerError
@@ -39,7 +38,7 @@ class Admin_Commands:
         """
         Checks if the bot is alive.
         """
-        if check_mod(ctx.message.author):
+        if check_mod(ctx.message.author, self.bot.admin_users):
             await self.bot.say('I\'m here you ding dong')
         else:
             raise NoPermissionError
@@ -49,7 +48,7 @@ class Admin_Commands:
         """
         Bot moderation tools.
         """
-        if check_mod(ctx.message.author):
+        if check_mod(ctx.message.author, self.bot.admin_users):
             if ctx.invoked_subcommand is None:
                 await self.bot.say('{}, invalid sub-command for command **mod**.'.format(ctx.message.author.mention))
         else:
@@ -60,7 +59,7 @@ class Admin_Commands:
         """
         Deletes a location in the database.
         """
-        bot_commands.delete(location_name, discord_uuid=discord_uuid)
+        self.bot.bot_commands.delete(location_name, discord_uuid=discord_uuid)
         await self.bot.say('{}, **{}** has been deleted.'.format(ctx.message.author.mention, location_name))
 
     @delete.error
@@ -72,7 +71,7 @@ class Admin_Commands:
         """
         Edits the name of a location in the database.
         """
-        bot_commands.edit_name(new_name, current_name, discord_uuid=discord_uuid)
+        self.bot.bot_commands.edit_name(new_name, current_name, discord_uuid=discord_uuid)
         await self.bot.say('{}, **{}** has been rename to **{}**.'.format(ctx.message.author.mention, current_name,
                                                                           new_name))
 
@@ -85,7 +84,7 @@ class Admin_Commands:
         """
         Updates a user's MC UUID.
         """
-        bot_commands.update_mc_uuid(discord_uuid, mc_uuid)
+        self.bot.bot_commands.update_mc_uuid(discord_uuid, mc_uuid)
         await self.bot.say('{}, **{}** has been updated.'.format(ctx.message.author.mention, discord_uuid))
 
     @update_mc_uuid.error
@@ -97,7 +96,7 @@ class Admin_Commands:
         """
         Updates a user's Discord UUID.
         """
-        bot_commands.update_mc_uuid(current_discord_uuid, new_discord_uuid)
+        self.bot.bot_commands.update_mc_uuid(current_discord_uuid, new_discord_uuid)
         await self.bot.say('{}, user **{}** has been updated.'.format(ctx.message.author.mention, current_discord_uuid))
 
     @update_discord_uuid.error
@@ -109,7 +108,7 @@ class Admin_Commands:
         """
         Updates a user's MC name to the current name on the MC UUID.
         """
-        bot_commands.update_mc_name(discord_uuid)
+        self.bot.bot_commands.update_mc_name(discord_uuid)
         await self.bot.say('{}, user **{}**\'s MC name has update.'.format(ctx.message.author.mention, discord_uuid))
 
     @update_mc_name.error
@@ -121,7 +120,7 @@ class Admin_Commands:
         """
         Updates "playing [game]" status of the bot.
         """
-        await self.bot.change_presence(activity=Game(status))
+        await self.bot.change_presence(game=Game(name=status))
         await self.bot.say('{}, status has been changed'.format(ctx.message.author.mention))
 
 

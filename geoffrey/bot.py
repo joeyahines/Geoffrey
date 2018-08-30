@@ -37,93 +37,95 @@ extensions = ['geoffrey.cogs.Add_Commands',
               'geoffrey.cogs.Search_Commands',
               'geoffrey.cogs.Admin_Commands']
 
-bot_config = None
-bot_commands = None
 
-bot = commands.Bot(command_prefix='?', description=description, case_insensitive=True)
+class GeoffreyBot(commands.Bot):
+    def __init__(self, config):
+        super().__init__(command_prefix=config.prefix, description=description, pm_help=True, case_insensitive=True)
+        self.error_users = config.error_users
+        self.admin_users = config.bot_mod
+        self.bot_commands = Commands(config)
 
+        for extension in extensions:
+            try:
+                self.load_extension(extension)
+            except Exception as e:
+                logger.info('Failed to load extension {}'.format(extension))
+                raise e
 
-@bot.event
-async def on_ready():
-    logger.info("%s Online, ID: %s", bot.user.name, bot.user.id)
-    info = await bot.application_info()
-    url = oauth_url(info.id)
-    logger.info("Bot url: %s", url)
-    await bot.change_presence(game=Game(name="Geoffrey"))
+    async def on_ready(self):
+        logger.info("%s Online, ID: %s", self.user.name, self.user.id)
+        info = await self.application_info()
+        url = oauth_url(info.id)
+        logger.info("Bot url: %s", url)
+        await self.change_presence(game=Game(name="Geoffrey"))
 
+    async def on_command(self, command, ctx):
+        if ctx.invoked_subcommand is None:
+            subcommand = ""
+        else:
+            subcommand = ":" + ctx.invoked_subcommand
 
-@bot.event
-async def on_command(command, ctx):
-    if ctx.invoked_subcommand is None:
-        subcommand = ""
-    else:
-        subcommand = ":" + ctx.invoked_subcommand
+        logger.info("User %s, used command %s%s with context: %s", ctx.message.author, command, subcommand,
+                    ctx.args)
 
-    logger.info("User %s, used command %s%s with context: %s", ctx.message.author, command, subcommand,
-                ctx.args)
-
-
-@bot.event
-async def on_command_error(error, ctx):
-    error_str = ''
-    if hasattr(ctx, 'cog'):
-        if "Admin_Commands" in ctx.cog.__str__():
+    async def on_command_error(self, error, ctx):
+        error_str = ''
+        if hasattr(ctx, 'cog'):
+            if "Admin_Commands" in ctx.cog.__str__():
+                return
+        if hasattr(error, 'original'):
+            if isinstance(error.original, NoPermissionError):
+                error_str = 'You don\'t have permission for that cool command.'
+            elif isinstance(error.original, UsernameLookupFailed):
+                error_str = 'Your user name was not found, either Mojang is having a fucky wucky ' \
+                            'or your nickname is not set correctly. *stares at the Mods*'
+            elif isinstance(error.original, PlayerNotFound):
+                error_str = 'Make sure to use ?register first you ding dong.'
+            elif isinstance(error.original, EntryNameNotUniqueError):
+                error_str = 'An entry in the database already has that name you ding dong.'
+            elif isinstance(error.original, DatabaseValueError):
+                error_str = 'Use a shorter name or a smaller value, dong ding.'
+            elif isinstance(error.original, NotOnServerError):
+                error_str = 'Command needs to be run on 24CC. Run this command there whoever you are.'.format()
+            elif isinstance(error.original, OperationalError):
+                await self.send_error_message('Error connecting to the MySQL server, is it offline?')
+                error_str = 'Database connection issue, looks like some admin has to fix something.'.format()
+        elif isinstance(error, commands.CommandOnCooldown):
             return
-    if hasattr(error, 'original'):
-        if isinstance(error.original, NoPermissionError):
-            error_str = 'You don\'t have permission for that cool command.'
-        elif isinstance(error.original, UsernameLookupFailed):
-            error_str = 'Your user name was not found, either Mojang is having a fucky wucky ' \
-                        'or your nickname is not set correctly. *stares at the Mods*'
-        elif isinstance(error.original, PlayerNotFound):
-            error_str = 'Make sure to use ?register first you ding dong.'
-        elif isinstance(error.original, EntryNameNotUniqueError):
-            error_str = 'An entry in the database already has that name you ding dong.'
-        elif isinstance(error.original, DatabaseValueError):
-            error_str = 'Use a shorter name or a smaller value, dong ding.'
-        elif isinstance(error.original, NotOnServerError):
-            error_str = 'Command needs to be run on 24CC. Run this command there whoever you are.'.format()
-        elif isinstance(error.original, OperationalError):
-            await send_error_message('Error connecting to the MySQL server, is it offline?')
-            error_str = 'Database connection issue, looks like some admin has to fix something.'.format()
-    elif isinstance(error, commands.CommandOnCooldown):
-        return
-    elif isinstance(error, commands.UserInputError):
-        error_str = 'Invalid syntax for **{}** you ding dong:' \
-            .format(ctx.invoked_with, ctx.invoked_with)
+        elif isinstance(error, commands.UserInputError):
+            error_str = 'Invalid syntax for **{}** you ding dong:' \
+                .format(ctx.invoked_with, ctx.invoked_with)
 
-        pages = bot.formatter.format_help_for(ctx, ctx.command)
-        for page in pages:
-            error_str = error_str + '\n' + page
-    elif isinstance(error, commands.CommandNotFound):
-        return
+            pages = self.formatter.format_help_for(ctx, ctx.command)
+            for page in pages:
+                error_str = error_str + '\n' + page
+        elif isinstance(error, commands.CommandNotFound):
+            return
 
-    if error_str is None:
-        await send_error_message(
-            'Geoffrey encountered unhandled exception: {}. Context:'.format(error, ctx.args))
+        if error_str is '':
+            await self.send_error_message(
+                'Geoffrey encountered unhandled exception: {}. Context:'.format(error, ctx.args))
 
-        logger.error("Geoffrey encountered unhandled exception: %s", error)
-        error_str = bad_error_message.format(ctx.invoked_with)
+            logger.error("Geoffrey encountered unhandled exception: %s", error)
+            error_str = bad_error_message.format(ctx.invoked_with)
 
-    await bot.send_message(ctx.message.channel,
-                           '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
-                                                                     error_str))
+        await self.send_message(ctx.message.channel,
+                               '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
+                                                                         error_str))
+
+    async def send_error_message(self, msg):
+        for user_id in self.error_users:
+            user = await self.get_user_info(user_id)
+            await self.send_message(user, msg)
 
 
-async def send_error_message(msg):
-    for user_id in bot_config.error_users:
-        user = await bot.get_user_info(user_id)
-        await bot.send_message(user, msg)
-
-
-
-async def username_update():
+async def username_update(bot):
     await bot.wait_until_ready()
     while not bot.is_closed:
-        session = bot_commands.interface.database.Session()
+        session = bot.bot_commands.interface.database.Session()
         try:
             logger.info("Updating MC usernames...")
-            session = bot_commands.interface.database.Session()
+            session = bot.bot_commands.interface.database.Session()
             player_list = session.query(Player).all()
             for player in player_list:
                 player.name = grab_playername(player.mc_uuid)
@@ -135,7 +137,7 @@ async def username_update():
             logger.info("Username lookup error.")
             session.rollback()
         except OperationalError:
-            await send_error_message('Error connecting to the MySQL server, is it offline?')
+            await bot.send_error_message('Error connecting to the MySQL server, is it offline?')
             logger.info("MySQL connection error")
         finally:
             session.close()
@@ -169,20 +171,13 @@ def setup_logging(config):
 
 def start_bot(config_path="{}/GeoffreyConfig.ini".format(path.dirname(path.abspath(__file__)))):
     try:
-        global bot_config, bot_commands
         bot_config = get_config(config_path)
+
+        bot = GeoffreyBot(bot_config)
+
         setup_logging(bot_config)
 
-        bot_commands = Commands(bot_config)
-
-        for extension in extensions:
-            try:
-                bot.load_extension(extension)
-            except Exception as e:
-                logger.info('Failed to load extension {}'.format(extension))
-                raise e
-
-        logger.info('Logging into Discord...')
+        bot.loop.create_task(username_update(bot))
         bot.run(bot_config.token)
 
     except KeyboardInterrupt:

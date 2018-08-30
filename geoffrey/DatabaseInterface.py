@@ -16,7 +16,7 @@ class DatabaseInterface:
         self.database.add_object(session, shop)
         return shop
 
-    def add_tunnel(self, session, owner, color, number, location_name, config):
+    def add_tunnel(self, session, owner, color, number, location_name):
         tunnels = self.find_tunnel_by_owner(session, owner)
         if location_name is None:
             if len(tunnels):
@@ -33,7 +33,7 @@ class DatabaseInterface:
             except IndexError:
                 raise LocationLookUpError
 
-        tunnel = Tunnel(owner, color, number, config, location)
+        tunnel = Tunnel(owner, color, number, location)
         self.database.add_object(session, tunnel)
 
         return tunnel

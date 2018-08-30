@@ -2,7 +2,6 @@ from discord.ext import commands
 
 from geoffrey.BotErrors import *
 from geoffrey.DiscordHelperFunctions import *
-from geoffrey.bot import bot_commands, bot_config
 
 
 @commands.cooldown(5, 60, commands.BucketType.user)
@@ -25,7 +24,7 @@ class Add_Commands:
 
         try:
             player_name = get_nickname(ctx.message.author, bot_config)
-            bot_commands.register(player_name, ctx.message.author.id)
+            self.bot.bot_commands.register(player_name, ctx.message.author.id)
             await self.bot.say('{}, you have been added to the database.'.format(ctx.message.author.mention))
         except AttributeError:
             raise NotOnServerError
@@ -43,7 +42,7 @@ class Add_Commands:
         name = get_name(args)
 
         try:
-            base = bot_commands.add_base(x_pos, z_pos, base_name=name, discord_uuid=ctx.message.author.id)
+            base = self.bot.bot_commands.add_base(x_pos, z_pos, base_name=name, discord_uuid=ctx.message.author.id)
             await self.bot.say(
                 '{}, your base has been added to the database: \n\n{}'.format(ctx.message.author.mention, base))
         except LocationInitError:
@@ -68,7 +67,7 @@ class Add_Commands:
         name = get_name(args)
 
         try:
-            shop = bot_commands.add_shop(x_pos, z_pos, shop_name=name, discord_uuid=ctx.message.author.id)
+            shop = self.bot.bot_commands.add_shop(x_pos, z_pos, shop_name=name, discord_uuid=ctx.message.author.id)
             await self.bot.say(
                 '{}, your shop has been added to the database: \n\n{}'.format(ctx.message.author.mention, shop))
         except LocationInitError:
@@ -93,7 +92,7 @@ class Add_Commands:
 
         loc_name = get_name(args)
         try:
-            bot_commands.add_tunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id,
+            self.bot.bot_commands.add_tunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id,
                                     location_name=loc_name)
             await self.bot.say('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
         except LocationLookUpError:
@@ -120,7 +119,7 @@ class Add_Commands:
         """
         shop_name = get_name(args)
         try:
-            bot_commands.add_item(item_name, quantity, diamond_price, shop_name=shop_name,
+            self.bot.bot_commands.add_item(item_name, quantity, diamond_price, shop_name=shop_name,
                                   discord_uuid=ctx.message.author.id)
             await self.bot.say(
                 '{}, **{}** has been added to the inventory of your shop.'.format(ctx.message.author.mention,

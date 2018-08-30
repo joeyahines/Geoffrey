@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 
 from DatabaseInterface import *
@@ -5,14 +6,15 @@ from BotConfig import *
 
 class TestGeoffreyDatabase(TestCase):
     def setUp(self):
-        self.config = get_config()
-        self.interface = DatabaseInterface(self.config, debug=True)
+        path = os.path.dirname(os.path.abspath(__file__))
+        self.bot_config = get_config('{}/GeoffreyConfig.ini'.format(path))
 
+        self.interface = DatabaseInterface(self.bot_config, True)
         self.session = self.interface.database.Session()
         self.interface.database.clear_all(self.session)
         self.owner = Player('ZeroHD', '143072699567177728')
         self.loc = Location('test', 1, 3, self.owner, dimension='Nether')
-        self.tunnel = Tunnel(self.owner, self.config.west_tunnel, 105, self.config, self.loc)
+        self.tunnel = Tunnel(self.owner, "west", 105, self.loc)
 
     def tearDown(self):
         self.session.commit()
@@ -91,7 +93,7 @@ class TestGeoffreyDatabase(TestCase):
 
     def test_add_tunnel(self):
         player = self.add_player()
-        tunnel1 = self.interface.add_tunnel(self.session, player, self.config.south_tunnel, 155, None, self.config)
+        tunnel1 = self.interface.add_tunnel(self.session, player, "South", 155, None)
 
         tunnel2 = self.interface.find_tunnel_by_owner_name(self.session, 'ZeroHD')[0]
         self.assertEqual(tunnel1, tunnel2)

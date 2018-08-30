@@ -88,8 +88,7 @@ class Commands:
 
                 location_name = location_list[0].name
 
-            tunnel = self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, location_name,
-                                               self.bot_config)
+            tunnel = self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, location_name)
             tunnel_info = tunnel.__str__()
 
         finally:
@@ -233,7 +232,7 @@ class Commands:
                 location.tunnel.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_color)
                 location.tunnel.tunnel_number = tunnel_number
             else:
-                self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, loc_name, self.bot_config)
+                self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, loc_name)
 
             loc_str = location.__str__()
 

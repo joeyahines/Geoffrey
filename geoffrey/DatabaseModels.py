@@ -16,7 +16,7 @@ SQL_Base = declarative_base()
 def check_similarity(a, b):
     ratio = SequenceMatcher(None, a, b).ratio()
 
-    if (ratio > 0.6) or (a[0] == b[0]):
+    if (ratio > 0.80) or (a[0] == b[0]):
         return True
     else:
         return False
@@ -85,21 +85,22 @@ class GeoffreyDatabase:
 
 
 class TunnelDirection(enum.Enum):
-    North = "North"
-    East = "East"
-    South = "South"
-    West = "West"
+    North = "north"
+    East = "east"
+    South = "south"
+    West = "west"
 
-    def str_to_tunnel_dir(bot_config, arg):
+
+    def str_to_tunnel_dir(arg):
         arg = arg.lower()
 
-        if check_similarity(bot_config.north_tunnel, arg):
+        if check_similarity(TunnelDirection.North.value, arg):
             return TunnelDirection.North
-        elif check_similarity(bot_config.east_tunnel, arg):
+        elif check_similarity(TunnelDirection.East.value, arg):
             return TunnelDirection.East
-        elif check_similarity(bot_config.south_tunnel, arg):
+        elif check_similarity(TunnelDirection.South.value, arg):
             return TunnelDirection.South
-        elif check_similarity(bot_config.west_tunnel, arg):
+        elif check_similarity(TunnelDirection.West.value, arg):
             return TunnelDirection.West
         else:
             raise InvalidTunnelError
@@ -151,11 +152,11 @@ class Tunnel(SQL_Base):
     location_id = Column(Integer, ForeignKey('geoffrey_locations.id', ondelete='CASCADE'))
     location = relationship("Location", back_populates="tunnel", lazy="joined")
 
-    def __init__(self, owner, tunnel_color, tunnel_number, config, location=None):
+    def __init__(self, owner, tunnel_color, tunnel_number, location=None):
         try:
             self.owner = owner
             self.location = location
-            self.tunnel_direction = TunnelDirection.str_to_tunnel_dir(config, tunnel_color)
+            self.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_color)
             self.tunnel_number = tunnel_number
         except (ValueError, IndexError):
             raise TunnelInitError
