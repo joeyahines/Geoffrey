@@ -3,11 +3,8 @@ from geoffrey.DatabaseModels import *
 
 class DatabaseInterface:
 
-    def __init__(self, engine_args=None):
-        if engine_args is None:
-            self.database = GeoffreyDatabase()
-        else:
-            self.database = GeoffreyDatabase(engine_args)
+    def __init__(self, bot_config, debug=False):
+            self.database = GeoffreyDatabase(bot_config, debug)
 
     def add_base(self, session, owner, name, x_pos, z_pos, dimension=None):
         base = Base(name, x_pos, z_pos, owner, dimension)
@@ -19,7 +16,7 @@ class DatabaseInterface:
         self.database.add_object(session, shop)
         return shop
 
-    def add_tunnel(self, session, owner, color, number, location_name):
+    def add_tunnel(self, session, owner, color, number, location_name, config):
         tunnels = self.find_tunnel_by_owner(session, owner)
         if location_name is None:
             if len(tunnels):
@@ -36,7 +33,7 @@ class DatabaseInterface:
             except IndexError:
                 raise LocationLookUpError
 
-        tunnel = Tunnel(owner, color, number, location)
+        tunnel = Tunnel(owner, color, number, config, location)
         self.database.add_object(session, tunnel)
 
         return tunnel

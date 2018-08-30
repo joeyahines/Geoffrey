@@ -1,6 +1,5 @@
 import codecs
 import configparser
-import os
 
 
 def create_config(config, path):
@@ -29,18 +28,17 @@ def create_config(config, path):
                          }
     config['Special Names'] = {}
 
-    with open('{}/GeoffreyConfig.ini'.format(path), 'w') as configfile:
+    with open(path, 'w') as configfile:
         config.write(configfile)
 
 
-def read_config():
+def read_config(path):
     config = configparser.ConfigParser()
-    path = os.path.dirname(os.path.abspath(__file__))
-    config.read_file(codecs.open("{}/GeoffreyConfig.ini".format(path), "r", "utf8"))
-
-    if len(config.sections()) == 0:
+    try:
+        config.read_file(codecs.open(path, "r", "utf8"))
+    except FileNotFoundError:
         create_config(config, path)
-        print("GeoffreyConfig.ini generated.")
+        print("Config generated.")
         quit(0)
 
     return config
@@ -48,9 +46,9 @@ def read_config():
 
 class Config:
 
-    def __init__(self):
+    def __init__(self, path):
         try:
-            self.config = read_config()
+            self.config = read_config(path)
             self.engine_args = self.read_engine_arg()
 
             self.token = self.config['Discord']['Token']
@@ -86,4 +84,6 @@ class Config:
         return engine_args.format(driver, username, password, host, port, database_name)
 
 
-bot_config = Config()
+def get_config(config_path):
+    return Config(config_path)
+

@@ -2,8 +2,9 @@ from geoffrey.DatabaseInterface import *
 
 
 class Commands:
-    def __init__(self, engine_args=None):
-        self.interface = DatabaseInterface(engine_args)
+    def __init__(self, bot_config, debug=False):
+        self.bot_config = bot_config
+        self.interface = DatabaseInterface(bot_config, debug)
 
     def get_player(self, session, discord_uuid=None, mc_uuid=None):
         if discord_uuid is not None:
@@ -87,7 +88,8 @@ class Commands:
 
                 location_name = location_list[0].name
 
-            tunnel = self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, location_name)
+            tunnel = self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, location_name,
+                                               self.bot_config)
             tunnel_info = tunnel.__str__()
 
         finally:
@@ -159,7 +161,7 @@ class Commands:
     def info(self, location_name):
         session = self.interface.database.Session()
         try:
-            loc = self.interface.find_location_by_name(session, location_name)[0].full_str()
+            loc = self.interface.find_location_by_name(session, location_name)[0].full_str(self.bot_config)
         finally:
             session.close()
 
@@ -231,7 +233,7 @@ class Commands:
                 location.tunnel.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_color)
                 location.tunnel.tunnel_number = tunnel_number
             else:
-                self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, loc_name)
+                self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, loc_name, self.bot_config)
 
             loc_str = location.__str__()
 
@@ -305,7 +307,7 @@ class Commands:
             expr = (ItemListing.name == item) & (ItemListing.shop == shop)
             self.interface.database.delete_entry(session, ItemListing, expr)
 
-            shop_str = shop.full_str()
+            shop_str = shop.full_str(self.bot_config)
         finally:
             session.close()
 

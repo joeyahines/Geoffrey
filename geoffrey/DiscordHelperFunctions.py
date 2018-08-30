@@ -1,7 +1,5 @@
 from itertools import zip_longest
 
-from geoffrey.BotConfig import bot_config
-
 
 def get_name(args):
     if len(args) > 0:
@@ -12,7 +10,7 @@ def get_name(args):
     return name
 
 
-def get_nickname(discord_user):
+def get_nickname(discord_user, bot_config):
     if discord_user.nick is None:
         name = discord_user.display_name
     else:

@@ -5,12 +5,11 @@ from discord import Game
 from discord.ext import commands
 from discord.utils import oauth_url
 from sqlalchemy.exc import OperationalError
-
 import logging.handlers as handlers
 from sys import stdout
+from os import path
 
-
-from geoffrey.BotConfig import bot_config
+from geoffrey.BotConfig import *
 from geoffrey.BotErrors import *
 from geoffrey.Commands import Commands
 from geoffrey.DatabaseModels import Player
@@ -38,12 +37,10 @@ extensions = ['geoffrey.cogs.Add_Commands',
               'geoffrey.cogs.Search_Commands',
               'geoffrey.cogs.Admin_Commands']
 
-bot = commands.Bot(command_prefix=bot_config.prefix, description=description, case_insensitive=True)
+bot_config = None
+bot_commands = None
 
-try:
-    bot_commands = Commands()
-except OperationalError:
-    logger.info('Could not connect to MySQL server.')
+bot = commands.Bot(command_prefix='?', description=description, case_insensitive=True)
 
 
 @bot.event
@@ -52,7 +49,7 @@ async def on_ready():
     info = await bot.application_info()
     url = oauth_url(info.id)
     logger.info("Bot url: %s", url)
-    await bot.change_presence(activity=Game(bot_config.status))
+    await bot.change_presence(game=Game(name="Geoffrey"))
 
 
 @bot.event
@@ -62,7 +59,8 @@ async def on_command(command, ctx):
     else:
         subcommand = ":" + ctx.invoked_subcommand
 
-    logger.info("User %s, used command %s%s with context: %s", ctx.message.author, command, subcommand, ctx.args)
+    logger.info("User %s, used command %s%s with context: %s", ctx.message.author, command, subcommand,
+                ctx.args)
 
 
 @bot.event
@@ -101,19 +99,22 @@ async def on_command_error(error, ctx):
         return
 
     if error_str is None:
-        await send_error_message('Geoffrey encountered unhandled exception: {}. Context:'.format(error, ctx.args))
+        await send_error_message(
+            'Geoffrey encountered unhandled exception: {}. Context:'.format(error, ctx.args))
 
         logger.error("Geoffrey encountered unhandled exception: %s", error)
         error_str = bad_error_message.format(ctx.invoked_with)
 
-    await bot.send_message(ctx.message.channel, '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
-                                                                                          error_str))
+    await bot.send_message(ctx.message.channel,
+                           '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
+                                                                     error_str))
 
 
 async def send_error_message(msg):
     for user_id in bot_config.error_users:
         user = await bot.get_user_info(user_id)
         await bot.send_message(user, msg)
+
 
 
 async def username_update():
@@ -140,7 +141,8 @@ async def username_update():
             session.close()
             await asyncio.sleep(600)
 
-def setup_logging():
+
+def setup_logging(config):
 
     discord_logger = logging.getLogger('discord')
     discord_logger.setLevel(logging.INFO)
@@ -150,7 +152,7 @@ def setup_logging():
     bot_info_logger.setLevel(logging.INFO)
 
     handler = handlers.TimedRotatingFileHandler(filename='Geoffrey.log', when='D',
-                                                interval=bot_config.rotation_duration, backupCount=bot_config.count,
+                                                interval=config.rotation_duration, backupCount=config.count,
                                                 encoding='utf-8')
 
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
@@ -165,19 +167,24 @@ def setup_logging():
     bot_info_logger.addHandler(console)
 
 
-def start_bot():
+def start_bot(config_path="{}/GeoffreyConfig.ini".format(path.dirname(path.abspath(__file__)))):
     try:
-        setup_logging()
-        Commands()
+        global bot_config, bot_commands
+        bot_config = get_config(config_path)
+        setup_logging(bot_config)
+
+        bot_commands = Commands(bot_config)
+
         for extension in extensions:
             try:
                 bot.load_extension(extension)
             except Exception as e:
                 logger.info('Failed to load extension {}'.format(extension))
                 raise e
-        bot.loop.create_task(username_update())
+
         logger.info('Logging into Discord...')
         bot.run(bot_config.token)
+
     except KeyboardInterrupt:
         logger.info("Bot received keyboard interrupt")
     except Exception as e:

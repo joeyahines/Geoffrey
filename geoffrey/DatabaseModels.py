@@ -7,7 +7,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, column_property, sessionmaker
 from sqlalchemy.sql import expression
 
-from geoffrey.BotConfig import bot_config
 from geoffrey.BotErrors import *
 from geoffrey.MinecraftAccountInfoGrabber import *
 
@@ -25,8 +24,11 @@ def check_similarity(a, b):
 
 class GeoffreyDatabase:
 
-    def __init__(self, engine_args=bot_config.engine_args):
-        self.engine = create_engine(engine_args, pool_recycle=3600, pool_pre_ping=True)
+    def __init__(self, bot_config, debug):
+        if not debug:
+            self.engine = create_engine(bot_config.engine_args, pool_recycle=3600, pool_pre_ping=True)
+        else:
+            self.engine = create_engine(bot_config.config['SQL']['test_args'], pool_recycle=3600, pool_pre_ping=True)
         self.Session = sessionmaker(bind=self.engine)
         SQL_Base.metadata.create_all(self.engine)
 
@@ -83,21 +85,21 @@ class GeoffreyDatabase:
 
 
 class TunnelDirection(enum.Enum):
-    North = bot_config.north_tunnel
-    East = bot_config.east_tunnel
-    South = bot_config.south_tunnel
-    West = bot_config.west_tunnel
+    North = "North"
+    East = "East"
+    South = "South"
+    West = "West"
 
-    def str_to_tunnel_dir(arg):
+    def str_to_tunnel_dir(bot_config, arg):
         arg = arg.lower()
 
-        if check_similarity(TunnelDirection.North.value, arg):
+        if check_similarity(bot_config.north_tunnel, arg):
             return TunnelDirection.North
-        elif check_similarity(TunnelDirection.East.value, arg):
+        elif check_similarity(bot_config.east_tunnel, arg):
             return TunnelDirection.East
-        elif check_similarity(TunnelDirection.South.value, arg):
+        elif check_similarity(bot_config.south_tunnel, arg):
             return TunnelDirection.South
-        elif check_similarity(TunnelDirection.West.value, arg):
+        elif check_similarity(bot_config.west_tunnel, arg):
             return TunnelDirection.West
         else:
             raise InvalidTunnelError
@@ -149,11 +151,11 @@ class Tunnel(SQL_Base):
     location_id = Column(Integer, ForeignKey('geoffrey_locations.id', ondelete='CASCADE'))
     location = relationship("Location", back_populates="tunnel", lazy="joined")
 
-    def __init__(self, owner, tunnel_color, tunnel_number, location=None):
+    def __init__(self, owner, tunnel_color, tunnel_number, config, location=None):
         try:
             self.owner = owner
             self.location = location
-            self.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_color)
+            self.tunnel_direction = TunnelDirection.str_to_tunnel_dir(config, tunnel_color)
             self.tunnel_number = tunnel_number
         except (ValueError, IndexError):
             raise TunnelInitError
@@ -206,7 +208,7 @@ class Location(SQL_Base):
         except (ValueError, IndexError):
             raise LocationInitError
 
-    def dynmap_link(self):
+    def dynmap_link(self, bot_config):
         return '<{}/?worldname={}&mapname=surface&zoom=4&x={}&y=65&z={}>'.\
             format(bot_config.dynmap_url, bot_config.world_name, self.x, self.z)
 
@@ -221,8 +223,8 @@ class Location(SQL_Base):
         return "**{}** @ {}, Owner: **{}**, Type: **{}**".format(self.name, self.pos_to_str(), self.owner.name,
                                                                     self.type)
 
-    def full_str(self):
-        return self.__str__() + '\n' + self.dynmap_link()
+    def full_str(self, bot_config):
+        return self.__str__() + '\n' + self.dynmap_link(bot_config)
 
     def __str__(self):
         return self.info_str()
@@ -260,8 +262,8 @@ class Shop(Location):
         else:
             return ''
 
-    def full_str(self):
-        return Location.full_str(self) + self.inv_to_str()
+    def full_str(self, bot_config):
+        return Location.full_str(self, bot_config) + self.inv_to_str()
 
     def __str__(self):
         return Location.__str__(self)

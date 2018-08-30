@@ -2,7 +2,7 @@ from discord.ext import commands
 
 from geoffrey.BotErrors import *
 from geoffrey.DiscordHelperFunctions import *
-from geoffrey.bot import bot_commands
+from geoffrey.bot import bot_commands, bot_config
 
 
 class Search_Commands:

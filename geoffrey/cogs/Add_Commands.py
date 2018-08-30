@@ -2,7 +2,7 @@ from discord.ext import commands
 
 from geoffrey.BotErrors import *
 from geoffrey.DiscordHelperFunctions import *
-from geoffrey.bot import bot_commands
+from geoffrey.bot import bot_commands, bot_config
 
 
 @commands.cooldown(5, 60, commands.BucketType.user)
@@ -24,7 +24,7 @@ class Add_Commands:
         """
 
         try:
-            player_name = get_nickname(ctx.message.author)
+            player_name = get_nickname(ctx.message.author, bot_config)
             bot_commands.register(player_name, ctx.message.author.id)
             await self.bot.say('{}, you have been added to the database.'.format(ctx.message.author.mention))
         except AttributeError:
