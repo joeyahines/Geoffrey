@@ -45,6 +45,7 @@ class GeoffreyBot(commands.Bot):
         self.admin_users = config.bot_mod
         self.special_users = config.special_name_list
         self.bot_commands = Commands(config)
+        self.default_status = config.status
 
         for extension in extensions:
             try:
@@ -58,7 +59,7 @@ class GeoffreyBot(commands.Bot):
         info = await self.application_info()
         url = oauth_url(info.id)
         logger.info("Bot url: %s", url)
-        await self.change_presence(game=Game(name="Geoffrey"))
+        await self.change_presence(game=Game(name=self.default_status))
 
     async def on_command(self, command, ctx):
         if ctx.invoked_subcommand is None:
