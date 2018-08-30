@@ -6,15 +6,16 @@ class DatabaseInterface:
     def __init__(self, bot_config, debug=False):
         self.database = GeoffreyDatabase(bot_config, debug)
 
-    def add_base(self, session, owner, name, x_pos, z_pos, dimension=None):
-        base = Base(name, x_pos, z_pos, owner, dimension)
-        self.database.add_object(session, base)
-        return base
+    def add_loc(self, session, owner, name, x_pos, z_pos, dimension=None, loc_type=Location):
+        if loc_type == Base:
+            loc = Base(name, x_pos, z_pos, owner, dimension)
+        elif loc_type == Shop:
+            loc = Shop(name, x_pos, z_pos, owner, dimension)
+        else:
+            loc = Location(name, x_pos, z_pos, owner, dimension)
 
-    def add_shop(self, session, owner, name, x_pos, z_pos, dimension=None):
-        shop = Shop(name, x_pos, z_pos, owner, dimension)
-        self.database.add_object(session, shop)
-        return shop
+        self.database.add_object(session, loc)
+        return loc
 
     def add_tunnel(self, session, owner, color, number, location_name):
         tunnels = self.find_tunnel_by_owner(session, owner)
@@ -40,7 +41,7 @@ class DatabaseInterface:
 
     def add_item(self, session, owner, shop_name, item_name, price, amount):
         try:
-            shop = self.find_shop_by_name_and_owner(session, owner, shop_name)
+            shop = self.find_location_by_name_and_owner(session, owner, shop_name, loc_type=Shop)
 
             item = ItemListing(item_name, price, amount, shop[0])
             self.database.add_object(session, item)
@@ -63,39 +64,27 @@ class DatabaseInterface:
 
         return player
 
-    def find_location_by_name(self, session, name):
-        expr = Location.name.ilike('%{}%'.format(name))
-        return self.database.query_by_filter(session, Location, expr)
+    def find_location_by_name(self, session, name, loc_type=Location):
+        expr = loc_type.name.ilike('%{}%'.format(name))
+        return self.database.query_by_filter(session, loc_type, expr)
 
-    def find_shop_by_name(self, session, name):
-        expr = Location.name.ilike('%{}%'.format(name))
-        return self.database.query_by_filter(session, Shop, expr)
+    def find_location_by_owner(self, session, owner, loc_type=Location):
+        expr = loc_type.owner == owner
+        return self.database.query_by_filter(session, loc_type, expr)
 
-    def find_location_by_owner(self, session, owner):
-        expr = Location.owner == owner
-        return self.database.query_by_filter(session, Location, expr)
+    def find_location_by_owner_name(self, session, owner_name, loc_type=Location):
+        expr = loc_type.owner.has(Player.name.ilike(owner_name))
+        return self.database.query_by_filter(session, loc_type, expr)
 
-    def find_shop_by_owner(self, session, owner):
-        expr = Shop.owner == owner
-        return self.database.query_by_filter(session, Shop, expr)
+    def find_location_by_name_and_owner(self, session, owner, name, loc_type=Location):
+        expr = (loc_type.owner == owner) & (loc_type.name.ilike(name))
+        return self.database.query_by_filter(session, loc_type, expr)
 
-    def find_location_by_owner_name(self, session, owner_name):
-        expr = Location.owner.has(Player.name.ilike(owner_name))
-        return self.database.query_by_filter(session, Location, expr)
-
-    def find_shop_by_name_and_owner(self, session, owner, name):
-        expr = (Shop.owner == owner) & (Shop.name.ilike(name))
-        return self.database.query_by_filter(session, Shop, expr)
-
-    def find_location_by_name_and_owner(self, session, owner, name):
-        expr = (Location.owner == owner) & (Location.name.ilike(name))
-        return self.database.query_by_filter(session, Location, expr)
-
-    def find_location_around(self, session, x_pos, z_pos, radius, dimension):
+    def find_location_around(self, session, x_pos, z_pos, radius, dimension, loc_type=Location):
         dimension_obj = Dimension.str_to_dimension(dimension)
-        expr = (Location.x < x_pos + radius + 1) & (Location.x > x_pos - radius - 1) & \
-               (Location.z < z_pos + radius + 1) \
-               & (Location.z > z_pos - radius - 1) & (Location.dimension == dimension_obj)
+        expr = (loc_type.x < x_pos + radius + 1) & (loc_type.x > x_pos - radius - 1) & \
+               (loc_type.z < z_pos + radius + 1) \
+               & (loc_type.z > z_pos - radius - 1) & (loc_type.dimension == dimension_obj)
 
         return list_to_string(self.database.query_by_filter(session, Location, expr))
 

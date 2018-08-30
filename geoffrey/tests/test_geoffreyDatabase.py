@@ -4,6 +4,7 @@ from unittest import TestCase
 from DatabaseInterface import *
 from BotConfig import *
 
+
 class TestGeoffreyDatabase(TestCase):
     def setUp(self):
         path = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +22,7 @@ class TestGeoffreyDatabase(TestCase):
         self.session.close()
 
     def add_shop(self, player):
-        shop = self.interface.add_shop(self.session, player, 'test', 1, 3, "nether")
+        shop = self.interface.add_loc(self.session, player, 'test', 1, 3, "nether", loc_type=Shop)
         return shop
 
     def add_player(self):
@@ -29,7 +30,7 @@ class TestGeoffreyDatabase(TestCase):
         return player
 
     def add_loc(self, player):
-        loc = self.interface.add_base(self.session, player, 'test', 0, 0)
+        loc = self.interface.add_loc(self.session, player, 'test', 0, 0, loc_type=Base)
         return loc
 
     def test_add_object(self):
@@ -79,13 +80,13 @@ class TestGeoffreyDatabase(TestCase):
 
         self.assertEqual(type(shop), Shop)
 
-        shop_list = self.interface.find_shop_by_name(self.session, 'test')
+        shop_list = self.interface.find_location_by_name(self.session, 'test', loc_type=Shop)
         self.assertEqual(shop_list[0].dimension, shop.dimension)
 
     def test_add_two_shops(self):
         owner = self.add_player()
         self.add_shop(owner)
-        shop2 = self.interface.add_shop(self.session, owner, 'no u', 1, 3)
+        shop2 = self.interface.add_loc(self.session, owner, 'no u', 1, 3, loc_type=Shop)
 
         loc_list = self.interface.find_location_by_owner(self.session, owner)
 
@@ -186,7 +187,7 @@ class TestGeoffreyDatabase(TestCase):
 
         self.assertEqual(loc_list[0].id, loc.id)
 
-        self.interface.add_shop(self.session, owner, 'testshop', 1, 3, 'neThEr')
+        self.interface.add_loc(self.session, owner, 'testshop', 1, 3, 'neThEr', loc_type=Shop)
 
         self.interface.add_item(self.session, owner, 'testshop', 'dirts', 1, 15)
 
@@ -201,17 +202,17 @@ class TestGeoffreyDatabase(TestCase):
     def test_big_input(self):
         owner = self.add_player()
 
-        self.assertRaises(DatabaseValueError, self.interface.add_base, self.session, owner,
+        self.assertRaises(DatabaseValueError, self.interface.add_loc, self.session, owner,
                           'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
                           'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
-                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', 0, 0, )
+                          'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', 0, 0, Shop)
 
     def test_duplicate_name(self):
         owner = self.add_player()
         self.add_loc(owner)
 
-        self.assertRaises(EntryNameNotUniqueError, self.interface.add_base, self.session,
-                          owner, 'test', 0, 0, 0)
+        self.assertRaises(EntryNameNotUniqueError, self.interface.add_loc, self.session,
+                          owner, 'test', 0, 0, Shop)
 
     def test_delete_parent(self):
         owner = self.add_player()

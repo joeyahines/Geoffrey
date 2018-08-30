@@ -31,7 +31,9 @@ def create_config(config, path):
 def read_config(path):
     config = configparser.ConfigParser()
     try:
-        config.read_file(codecs.open(path, "r", "utf8"))
+        file = codecs.open(path, "r", "utf8")
+        config.read_file(file)
+        file.close()
     except FileNotFoundError:
         create_config(config, path)
         print("Config generated.")
