@@ -5,10 +5,9 @@ from discord import Game
 from discord.ext import commands
 from discord.utils import oauth_url
 from sqlalchemy.exc import OperationalError
-
 import logging.handlers as handlers
 from sys import stdout
-
+from os import path
 
 from geoffrey.BotConfig import *
 from geoffrey.BotErrors import *
@@ -168,7 +167,7 @@ def setup_logging(config):
     bot_info_logger.addHandler(console)
 
 
-def start_bot(config_path="{}/GeoffreyConfig.ini".format(os.path.dirname(os.path.abspath(__file__)))):
+def start_bot(config_path="{}/GeoffreyConfig.ini".format(path.dirname(path.abspath(__file__)))):
     try:
         global bot_config, bot_commands
         bot_config = get_config(config_path)
