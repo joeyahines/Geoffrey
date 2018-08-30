@@ -10,14 +10,14 @@ def get_name(args):
     return name
 
 
-def get_nickname(discord_user, bot_config):
+def get_nickname(discord_user, special_users):
     if discord_user.nick is None:
         name = discord_user.display_name
     else:
         name = discord_user.nick
 
-    if name in bot_config.special_name_list:
-        return bot_config.special_name_list[name]
+    if name in special_users:
+        return special_users[name]
     else:
         return name
 

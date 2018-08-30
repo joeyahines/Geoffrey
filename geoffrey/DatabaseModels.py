@@ -59,7 +59,7 @@ class GeoffreyDatabase:
         filter_value = self.combine_filter(args)
         return session.query(obj_type).filter(filter_value).limit(limit).all()
 
-    def delete_entry(self, session, obj_type, * args):
+    def delete_entry(self, session, obj_type, *args):
 
         filter_value = self.combine_filter(args)
         entry = session.query(obj_type).filter(filter_value)
@@ -77,7 +77,7 @@ class GeoffreyDatabase:
         s = ''
 
         for obj in obj_list:
-                s = s + '\n' + obj.id
+            s = s + '\n' + obj.id
         return s
 
     def combine_filter(self, filter_value):
@@ -89,7 +89,6 @@ class TunnelDirection(enum.Enum):
     East = "east"
     South = "south"
     West = "west"
-
 
     def str_to_tunnel_dir(arg):
         arg = arg.lower()
@@ -181,7 +180,7 @@ class Location(SQL_Base):
     x = Column(Integer)
     z = Column(Integer)
 
-    tunnel = relationship("Tunnel",  uselist=False, cascade="all, delete-orphan")
+    tunnel = relationship("Tunnel", uselist=False, cascade="all, delete-orphan")
     dimension = Column(Enum(Dimension))
 
     owner_id = Column(Integer, ForeignKey('geoffrey_players.id', ondelete='CASCADE'))
@@ -210,7 +209,7 @@ class Location(SQL_Base):
             raise LocationInitError
 
     def dynmap_link(self, bot_config):
-        return '<{}/?worldname={}&mapname=surface&zoom=4&x={}&y=65&z={}>'.\
+        return '<{}/?worldname={}&mapname=surface&zoom=4&x={}&y=65&z={}>'. \
             format(bot_config.dynmap_url, bot_config.world_name, self.x, self.z)
 
     def pos_to_str(self):
@@ -222,7 +221,7 @@ class Location(SQL_Base):
 
     def info_str(self):
         return "**{}** @ {}, Owner: **{}**, Type: **{}**".format(self.name, self.pos_to_str(), self.owner.name,
-                                                                    self.type)
+                                                                 self.type)
 
     def full_str(self, bot_config):
         return self.__str__() + '\n' + self.dynmap_link(bot_config)

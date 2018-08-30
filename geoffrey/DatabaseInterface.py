@@ -4,7 +4,7 @@ from geoffrey.DatabaseModels import *
 class DatabaseInterface:
 
     def __init__(self, bot_config, debug=False):
-            self.database = GeoffreyDatabase(bot_config, debug)
+        self.database = GeoffreyDatabase(bot_config, debug)
 
     def add_base(self, session, owner, name, x_pos, z_pos, dimension=None):
         base = Base(name, x_pos, z_pos, owner, dimension)
@@ -93,7 +93,8 @@ class DatabaseInterface:
 
     def find_location_around(self, session, x_pos, z_pos, radius, dimension):
         dimension_obj = Dimension.str_to_dimension(dimension)
-        expr = (Location.x < x_pos + radius + 1) & (Location.x > x_pos - radius - 1) & (Location.z < z_pos + radius + 1) \
+        expr = (Location.x < x_pos + radius + 1) & (Location.x > x_pos - radius - 1) & \
+               (Location.z < z_pos + radius + 1) \
                & (Location.z > z_pos - radius - 1) & (Location.dimension == dimension_obj)
 
         return list_to_string(self.database.query_by_filter(session, Location, expr))

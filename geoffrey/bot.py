@@ -43,6 +43,7 @@ class GeoffreyBot(commands.Bot):
         super().__init__(command_prefix=config.prefix, description=description, pm_help=True, case_insensitive=True)
         self.error_users = config.error_users
         self.admin_users = config.bot_mod
+        self.special_users = config.special_name_list
         self.bot_commands = Commands(config)
 
         for extension in extensions:
@@ -109,9 +110,8 @@ class GeoffreyBot(commands.Bot):
             logger.error("Geoffrey encountered unhandled exception: %s", error)
             error_str = bad_error_message.format(ctx.invoked_with)
 
-        await self.send_message(ctx.message.channel,
-                               '{} **Error Running Command:** {}'.format(ctx.message.author.mention,
-                                                                         error_str))
+        await self.send_message(ctx.message.channel, '{} **Error Running Command:** {}'.format(
+            ctx.message.author.mention, error_str))
 
     async def send_error_message(self, msg):
         for user_id in self.error_users:
@@ -170,6 +170,7 @@ def setup_logging(config):
 
 
 def start_bot(config_path="{}/GeoffreyConfig.ini".format(path.dirname(path.abspath(__file__)))):
+    bot = None
     try:
         bot_config = get_config(config_path)
 
@@ -185,5 +186,6 @@ def start_bot(config_path="{}/GeoffreyConfig.ini".format(path.dirname(path.abspa
     except Exception as e:
         logger.info('Bot encountered the following unhandled exception %s', e)
     finally:
-        bot.loop.stop()
+        if bot is not None:
+            bot.loop.stop()
         logger.info("Bot shutting down...")

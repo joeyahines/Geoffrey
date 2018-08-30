@@ -23,7 +23,7 @@ class Add_Commands:
         """
 
         try:
-            player_name = get_nickname(ctx.message.author, bot_config)
+            player_name = get_nickname(ctx.message.author, self.bot.special_users)
             self.bot.bot_commands.register(player_name, ctx.message.author.id)
             await self.bot.say('{}, you have been added to the database.'.format(ctx.message.author.mention))
         except AttributeError:

@@ -78,4 +78,3 @@ class Config:
 
 def get_config(config_path):
     return Config(config_path)
-
