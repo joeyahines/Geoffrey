@@ -13,7 +13,7 @@ class TestGeoffreyDatabase(TestCase):
         self.interface = DatabaseInterface(self.bot_config, True)
         self.session = self.interface.database.Session()
         self.interface.database.clear_all(self.session)
-        self.owner = Player('ZeroHD', '143072699567177728')
+        self.owner = Player('BirbHD', '143072699567177728')
         self.loc = Location('test', 1, 3, self.owner, dimension='Nether')
         self.tunnel = Tunnel(self.owner, "west", 105, self.loc)
 
@@ -26,7 +26,7 @@ class TestGeoffreyDatabase(TestCase):
         return shop
 
     def add_player(self):
-        player = self.interface.add_player(self.session, 'ZeroHD', discord_uuid='143072699567177728')
+        player = self.interface.add_player(self.session, 'BirbHD', discord_uuid='143072699567177728')
         return player
 
     def add_loc(self, player):
@@ -38,7 +38,7 @@ class TestGeoffreyDatabase(TestCase):
         self.interface.database.add_object(self.session, self.owner)
         self.interface.database.add_object(self.session, self.tunnel)
 
-        uuid = grab_UUID('ZeroHD')
+        uuid = grab_UUID('BirbHD')
         expr = Player.mc_uuid == uuid
         p = self.interface.database.query_by_filter(self.session, Player, expr)[0]
 
@@ -62,9 +62,9 @@ class TestGeoffreyDatabase(TestCase):
         expr = Location.owner == self.owner
         self.interface.database.delete_entry(self.session, Location, expr)
 
-        expr = Player.name == 'ZeroHD'
+        expr = Player.name == 'BirbHD'
         player = self.interface.database.query_by_filter(self.session, Player, expr)[0]
-        self.assertEqual(player.name, 'ZeroHD')
+        self.assertEqual(player.name, 'BirbHD')
 
         expr = Location.owner == player
 
@@ -96,7 +96,7 @@ class TestGeoffreyDatabase(TestCase):
         player = self.add_player()
         tunnel1 = self.interface.add_tunnel(self.session, player, "South", 155, None)
 
-        tunnel2 = self.interface.find_tunnel_by_owner_name(self.session, 'ZeroHD')[0]
+        tunnel2 = self.interface.find_tunnel_by_owner_name(self.session, 'BirbHD')[0]
         self.assertEqual(tunnel1, tunnel2)
 
     def test_add_item(self):
@@ -175,7 +175,7 @@ class TestGeoffreyDatabase(TestCase):
         owner = self.add_player()
         self.add_loc(owner)
 
-        loc_list = self.interface.search_all_fields(self.session, 'ZeroHD')
+        loc_list = self.interface.search_all_fields(self.session, 'BirbHD')
 
         self.assertGreater(len(loc_list), 0)
 
@@ -183,7 +183,7 @@ class TestGeoffreyDatabase(TestCase):
         owner = self.add_player()
         loc = self.add_loc(owner)
 
-        loc_list = self.interface.find_location_by_owner_name(self.session, 'zerohd')
+        loc_list = self.interface.find_location_by_owner_name(self.session, 'BirbHD')
 
         self.assertEqual(loc_list[0].id, loc.id)
 

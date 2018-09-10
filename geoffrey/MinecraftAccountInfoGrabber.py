@@ -1,4 +1,4 @@
-from json import JSONDecodeError
+from simplejson.errors import JSONDecodeError
 
 import requests
 
