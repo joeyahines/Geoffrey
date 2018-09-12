@@ -19,7 +19,8 @@ def create_config(config, path):
     config['Minecraft'] = {'Dynmap_Url': '',
                            'World_Name': '',
                            }
-    config['Logging'] = {'Count': '7',
+    config['Logging'] = {'Log_Path': '',
+                         'Count': '7',
                          'Rotation_Duration': '1'
                          }
     config['Special Names'] = {}
@@ -58,6 +59,7 @@ class Config:
 
             self.dynmap_url = self.config['Minecraft']['Dynmap_Url']
 
+            self.log_path = self.config['Logging']['log_path']
             self.count = int(self.config['Logging']['Count'])
             self.rotation_duration = int(self.config['Logging']['Rotation_Duration'])
             self.special_name_list = dict(self.config.items('Special Names'))

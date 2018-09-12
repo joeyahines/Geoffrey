@@ -107,9 +107,9 @@ class GeoffreyBot(commands.Bot):
         if error_str is '':
             await self.send_error_message(
                 'Geoffrey encountered unhandled exception: {}. Context:'.format(error, ctx.args))
-
-            logger.error("Geoffrey encountered unhandled exception: %s", error)
             error_str = bad_error_message.format(ctx.invoked_with)
+
+        logger.error("Geoffrey encountered exception: %s", error)
 
         await self.send_message(ctx.message.channel, '{} **Error Running Command:** {}'.format(
             ctx.message.author.mention, error_str))
@@ -146,16 +146,16 @@ async def username_update(bot):
 
 
 def setup_logging(config):
-
     discord_logger = logging.getLogger('discord')
     discord_logger.setLevel(logging.INFO)
     sql_logger = logging.getLogger('sqlalchemy.engine')
     sql_logger.setLevel(logging.INFO)
     bot_info_logger = logging.getLogger('geoffrey.bot')
     bot_info_logger.setLevel(logging.INFO)
+    log_path = path.abspath(config.log_path)
 
-    handler = handlers.TimedRotatingFileHandler(filename="{}/Geoffrey.log".format(path.dirname(path.abspath(__file__))), 
-                                                when='D', interval=config.rotation_duration, backupCount=config.count,
+    handler = handlers.TimedRotatingFileHandler(filename="{}/Geoffrey.log".format(log_path), when='D',
+                                                interval=config.rotation_duration, backupCount=config.count,
                                                 encoding='utf-8')
 
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))

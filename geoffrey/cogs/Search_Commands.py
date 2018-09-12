@@ -131,7 +131,6 @@ class Search_Commands:
         """
         Displays all your locations in the database
         """
-
         try:
             loc_str = self.bot.bot_commands.me(discord_uuid=ctx.message.author.id)
             await self.bot.say('{}, here are your locations in the database: \n {}'.format(ctx.message.author.mention,
