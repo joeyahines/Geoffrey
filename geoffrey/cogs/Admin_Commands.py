@@ -2,6 +2,7 @@ from discord import Game
 from discord.ext import commands
 
 from geoffrey.BotErrors import *
+from geoffrey.DiscordHelperFunctions import get_name
 
 
 def check_mod(user, admin_users):
@@ -116,10 +117,11 @@ class Admin_Commands:
         await self.error(ctx, error)
 
     @mod.command(pass_context=True)
-    async def status(self, ctx, status: str):
+    async def status(self, ctx, *args):
         """
         Updates "playing [game]" status of the bot.
         """
+        status = get_name(args)
         await self.bot.change_presence(activity=Game(status))
         await ctx.send('{}, status has been changed'.format(ctx.message.author.mention))
 

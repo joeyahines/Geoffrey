@@ -215,7 +215,7 @@ class Location(SQL_Base):
     def pos_to_str(self):
         pos_str = '**(x= {}, z= {})** {}'.format(self.x, self.z, self.dimension.value.title())
         if self.tunnel is not None:
-            return pos_str + ', **{}**'.format(self.tunnel)
+            return pos_str + ', Tunnel: **{}**'.format(self.tunnel)
         else:
             return pos_str
 

@@ -87,7 +87,8 @@ class Add_Commands:
     async def add_tunnel(self, ctx, tunnel_color: str, tunnel_number: int, *args):
         """
         Adds your tunnel to the database. If you only have one location, you do not need to specify a location name.
-            ?tunnel [Tunnel Color] [Tunnel Number] [Location Name]
+            Directions: North South East West
+            ?tunnel [Tunnel Direction] [Tunnel Number] [Location Name]
         """
 
         loc_name = get_name(args)
