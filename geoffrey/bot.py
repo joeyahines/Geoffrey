@@ -59,7 +59,7 @@ class GeoffreyBot(commands.Bot):
         info = await self.application_info()
         url = oauth_url(info.id)
         logger.info("Bot url: %s", url)
-        await self.change_presence(game=Game(name=self.default_status))
+        await self.change_presence(activity=Game(self.default_status))
 
     async def on_command(self, command, ctx):
         if ctx.invoked_subcommand is None:
