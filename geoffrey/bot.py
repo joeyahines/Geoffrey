@@ -26,6 +26,12 @@ Please respect Geoffrey, the bot is very sensitive.
 If have a suggestion or if something is borked, you can PM my ding dong of a creator ZeroHD.
 
 *You must use ?register before adding things to Geoffrey*
+
+Basic Use Case:
+Adding your first first base:
+?add_base 500 300
+Adding your second base:
+?add_base 500 900 Cool Base Name
 '''
 
 bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \
