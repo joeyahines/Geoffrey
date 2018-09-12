@@ -154,8 +154,8 @@ def setup_logging(config):
     bot_info_logger = logging.getLogger('geoffrey.bot')
     bot_info_logger.setLevel(logging.INFO)
 
-    handler = handlers.TimedRotatingFileHandler(filename='Geoffrey.log', when='D',
-                                                interval=config.rotation_duration, backupCount=config.count,
+    handler = handlers.TimedRotatingFileHandler(filename="{}/Geoffrey.log".format(path.dirname(path.abspath(__file__))), 
+                                                when='D', interval=config.rotation_duration, backupCount=config.count,
                                                 encoding='utf-8')
 
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
