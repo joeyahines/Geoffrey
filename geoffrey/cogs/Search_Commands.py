@@ -27,10 +27,10 @@ class Search_Commands:
 
             result = self.bot.bot_commands.find(search)
 
-            await self.bot.say(
+            await ctx.send(
                 '{}, The following entries match **{}**:\n{}'.format(ctx.message.author.mention, search, result))
         except LocationLookUpError:
-            await self.bot.say(
+            await ctx.send(
                 '{}, no matches to **{}** were found in the database.'.format(ctx.message.author.mention, search))
 
     @commands.command(pass_context=True)
@@ -43,10 +43,10 @@ class Search_Commands:
         try:
             result = self.bot.bot_commands.tunnel(player)
 
-            await self.bot.say(
+            await ctx.send(
                 '{}, **{}** owns the following tunnels: \n{}'.format(ctx.message.author.mention, player, result))
         except LocationLookUpError:
-            await self.bot.say('{}, no tunnels for **{}** were found in the database.'
+            await ctx.send('{}, no tunnels for **{}** were found in the database.'
                                .format(ctx.message.author.mention, player))
 
     @commands.command(pass_context=True)
@@ -80,17 +80,17 @@ class Search_Commands:
             base_string = self.bot.bot_commands.find_around(x_pos, z_pos, radius, dimension)
 
             if len(base_string) != 0:
-                await self.bot.say('{}, the following locations(s) within **{}** blocks of that point: \n {}'.format(
+                await ctx.send('{}, the following locations(s) within **{}** blocks of that point: \n {}'.format(
                     ctx.message.author.mention, radius, base_string))
             else:
-                await self.bot.say('{}, there are no locations within {} blocks of that point'
+                await ctx.send('{}, there are no locations within {} blocks of that point'
                                    .format(ctx.message.author.mention, radius))
         except ValueError:
-            await self.bot.say(
+            await ctx.send(
                 '{}, invalid radius, the radius must be a whole number.'.format(ctx.message.author.mention,
                                                                                 radius))
         except InvalidDimError:
-            await self.bot.say('{}, {} is an invalid dimension.'.format(ctx.message.author.mention, dimension))
+            await ctx.send('{}, {} is an invalid dimension.'.format(ctx.message.author.mention, dimension))
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
@@ -101,10 +101,10 @@ class Search_Commands:
         """
         try:
             result = self.bot.bot_commands.selling(item_name)
-            await self.bot.say(
+            await ctx.send(
                 '{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
         except ItemNotFound:
-            await self.bot.say('{}, no shop sells **{}**.'.format(ctx.message.author.mention, item_name))
+            await ctx.send('{}, no shop sells **{}**.'.format(ctx.message.author.mention, item_name))
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
@@ -121,9 +121,9 @@ class Search_Commands:
                 raise commands.UserInputError
 
             info_str = self.bot.bot_commands.info(loc)
-            await self.bot.say(info_str)
+            await ctx.send(info_str)
         except IndexError:
-            await self.bot.say('{}, no locations in the database match **{}**.'.format(ctx.message.author.mention, loc))
+            await ctx.send('{}, no locations in the database match **{}**.'.format(ctx.message.author.mention, loc))
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
@@ -133,10 +133,10 @@ class Search_Commands:
         """
         try:
             loc_str = self.bot.bot_commands.me(discord_uuid=ctx.message.author.id)
-            await self.bot.say('{}, here are your locations in the database: \n {}'.format(ctx.message.author.mention,
+            await ctx.send('{}, here are your locations in the database: \n {}'.format(ctx.message.author.mention,
                                                                                            loc_str))
         except PlayerNotFound:
-            await self.bot.say('{}, you don\'t have any locations in the database.'.format(ctx.message.author.mention))
+            await ctx.send('{}, you don\'t have any locations in the database.'.format(ctx.message.author.mention))
 
 
 def setup(bot):

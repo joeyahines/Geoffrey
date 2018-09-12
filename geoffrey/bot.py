@@ -61,16 +61,16 @@ class GeoffreyBot(commands.Bot):
         logger.info("Bot url: %s", url)
         await self.change_presence(activity=Game(self.default_status))
 
-    async def on_command(self, command, ctx):
+    async def on_command(self, ctx):
         if ctx.invoked_subcommand is None:
             subcommand = ""
         else:
-            subcommand = ":" + ctx.invoked_subcommand
+            subcommand = ":" + ctx.invoked_subcommand.__str__()
 
-        logger.info("User %s, used command %s%s with context: %s", ctx.message.author, command, subcommand,
+        logger.info("User %s, used command %s%s with context: %s", ctx.message.author, ctx.command, subcommand,
                     ctx.args)
 
-    async def on_command_error(self, error, ctx):
+    async def on_command_error(self, ctx, error):
         error_str = ''
         if hasattr(ctx, 'cog'):
             if "Admin_Commands" in ctx.cog.__str__():
@@ -98,7 +98,7 @@ class GeoffreyBot(commands.Bot):
             error_str = 'Invalid syntax for **{}** you ding dong:' \
                 .format(ctx.invoked_with, ctx.invoked_with)
 
-            pages = self.formatter.format_help_for(ctx, ctx.command)
+            pages = await self.formatter.format_help_for(ctx, ctx.command)
             for page in pages:
                 error_str = error_str + '\n' + page
         elif isinstance(error, commands.CommandNotFound):
@@ -111,13 +111,13 @@ class GeoffreyBot(commands.Bot):
 
         logger.error("Geoffrey encountered exception: %s", error)
 
-        await self.send_message(ctx.message.channel, '{} **Error Running Command:** {}'.format(
+        await ctx.message.channel.send('{} **Error Running Command:** {}'.format(
             ctx.message.author.mention, error_str))
 
     async def send_error_message(self, msg):
         for user_id in self.error_users:
             user = await self.get_user_info(user_id)
-            await self.send_message(user, msg)
+            await user.send(msg)
 
 
 async def username_update(bot):

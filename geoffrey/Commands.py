@@ -306,7 +306,7 @@ class Commands:
             expr = (ItemListing.name == item) & (ItemListing.shop == shop)
             self.interface.database.delete_entry(session, ItemListing, expr)
 
-            shop_str = shop.full_str(self.bot_config)
+            shop_str = shop.name
         finally:
             session.close()
 

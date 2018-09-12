@@ -25,11 +25,11 @@ class Add_Commands:
         try:
             player_name = get_nickname(ctx.message.author, self.bot.special_users)
             self.bot.bot_commands.register(player_name, ctx.message.author.id)
-            await self.bot.say('{}, you have been added to the database.'.format(ctx.message.author.mention))
+            await ctx.send('{}, you have been added to the database.'.format(ctx.message.author.mention))
         except AttributeError:
             raise NotOnServerError
         except PlayerInDBError:
-            await self.bot.say('{}, you are already in the database. Ding dong.'.format(ctx.message.author.mention))
+            await ctx.send('{}, you are already in the database. Ding dong.'.format(ctx.message.author.mention))
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
@@ -43,16 +43,16 @@ class Add_Commands:
 
         try:
             base = self.bot.bot_commands.add_base(x_pos, z_pos, base_name=name, discord_uuid=ctx.message.author.id)
-            await self.bot.say(
+            await ctx.send(
                 '{}, your base has been added to the database: \n\n{}'.format(ctx.message.author.mention, base))
         except LocationInitError:
             raise commands.UserInputError
         except EntryNameNotUniqueError:
             if name is None:
-                await self.bot.say('{}, you already have one base in the database, you need to specify a base'
+                await ctx.send('{}, you already have one base in the database, you need to specify a base'
                                    ' name'.format(ctx.message.author.mention))
             else:
-                await self.bot.say(
+                await ctx.send(
                     '{}, a base called **{}** already exists. You need to specify a different name.'.format(
                         ctx.message.author.mention, name))
 
@@ -68,17 +68,17 @@ class Add_Commands:
 
         try:
             shop = self.bot.bot_commands.add_shop(x_pos, z_pos, shop_name=name, discord_uuid=ctx.message.author.id)
-            await self.bot.say(
+            await ctx.send(
                 '{}, your shop has been added to the database: \n\n{}'.format(ctx.message.author.mention, shop))
         except LocationInitError:
             raise commands.UserInputError
         except EntryNameNotUniqueError:
             if name is None:
-                await self.bot.say(
+                await ctx.send(
                     '{}, you already have one shop in the database, you need to specify a shop name'.format(
                         ctx.message.author.mention))
             else:
-                await self.bot.say(
+                await ctx.send(
                     '{}, a shop called **{}** already exists. You need to specify a different name.'.format(
                         ctx.message.author.mention, name))
 
@@ -94,19 +94,19 @@ class Add_Commands:
         try:
             self.bot.bot_commands.add_tunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id,
                                     location_name=loc_name)
-            await self.bot.say('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
+            await ctx.send('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
         except LocationLookUpError:
-            await self.bot.say('{}, you do not have a location called **{}**.'.format(
+            await ctx.send('{}, you do not have a location called **{}**.'.format(
                 ctx.message.author.mention, loc_name))
         except LocationHasTunnelError:
-            await self.bot.say('{}, **{}** already has a tunnel.'.format(ctx.message.author.mention, loc_name))
+            await ctx.send('{}, **{}** already has a tunnel.'.format(ctx.message.author.mention, loc_name))
         except TunnelInitError:
-            await self.bot.say('{}, invalid tunnel color.'.format(ctx.message.author.mention))
+            await ctx.send('{}, invalid tunnel color.'.format(ctx.message.author.mention))
         except EntryNameNotUniqueError:
-            await self.bot.say('{}, you have more than one location, you need to specify a location.'
+            await ctx.send('{}, you have more than one location, you need to specify a location.'
                                .format(ctx.message.author.mention))
         except InvalidTunnelError:
-            await self.bot.say(
+            await ctx.send(
                 '{}, **{}** is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
 
     @commands.command(pass_context=True)
@@ -115,22 +115,22 @@ class Add_Commands:
         """
         Adds an item to a shop's inventory. If you have one shop, the shop name is not required.
         Quantity for Diamond Price. eg. 32 Dirt for 1D
-            ?additem [Item Name] [Quantity] [Price] [Shop name]
+            ?add_item [Item Name] [Quantity] [Price] [Shop name]
         """
         shop_name = get_name(args)
         try:
             self.bot.bot_commands.add_item(item_name, quantity, diamond_price, shop_name=shop_name,
                                   discord_uuid=ctx.message.author.id)
-            await self.bot.say(
+            await ctx.send(
                 '{}, **{}** has been added to the inventory of your shop.'.format(ctx.message.author.mention,
                                                                                   item_name))
         except PlayerNotFound:
-            await self.bot.say('{}, you don\'t have any shops in the database.'.format(ctx.message.author.mention))
+            await ctx.send('{}, you don\'t have any shops in the database.'.format(ctx.message.author.mention))
         except LocationInitError:
-            await self.bot.say('{}, you have more than one shop in the database, please specify a shop name.'
+            await ctx.send('{}, you have more than one shop in the database, please specify a shop name.'
                                .format(ctx.message.author.mention))
         except LocationLookUpError:
-            await self.bot.say(
+            await ctx.send(
                 '{}, you don\'t have any shops named **{}** in the database.'.format(ctx.message.author.mention,
                                                                                      shop_name))
 

@@ -22,10 +22,10 @@ class Edit_Commands:
         try:
             loc_str = self.bot.bot_commands.edit_pos(x_pos, y_pos, loc, discord_uuid=ctx.message.author.id)
 
-            await self.bot.say(
+            await ctx.send(
                 '{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
         except LocationLookUpError:
-            await self.bot.say('{}, you do not have a location called **{}**.'.format(
+            await ctx.send('{}, you do not have a location called **{}**.'.format(
                 ctx.message.author.mention, loc))
 
     @commands.command(pass_context=True)
@@ -40,13 +40,13 @@ class Edit_Commands:
             loc_str = self.bot.bot_commands.edit_tunnel(tunnel_color, tunnel_number, loc,
                                                         discord_uuid=ctx.message.author.id)
 
-            await self.bot.say(
+            await ctx.send(
                 '{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
         except LocationLookUpError:
-            await self.bot.say('{}, you do not have a location called **{}**.'.format(
+            await ctx.send('{}, you do not have a location called **{}**.'.format(
                 ctx.message.author.mention, loc))
         except InvalidTunnelError:
-            await self.bot.say(
+            await ctx.send(
                 '{}, **{}** is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
 
     @commands.command(pass_context=True)
@@ -60,10 +60,10 @@ class Edit_Commands:
         try:
             loc_str = self.bot.bot_commands.edit_name(new_name, current_name, discord_uuid=ctx.message.author.id)
 
-            await self.bot.say(
+            await ctx.send(
                 '{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
         except LocationLookUpError:
-            await self.bot.say('{}, you do not have a location called **{}**.'.format(
+            await ctx.send('{}, you do not have a location called **{}**.'.format(
                 ctx.message.author.mention, current_name))
 
 
