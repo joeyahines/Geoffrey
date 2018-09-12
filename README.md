@@ -1,16 +1,16 @@
-#Geoffrey: A Discord Bot for Minecraft Servers
+# Geoffrey: A Discord Bot for Minecraft Servers
 Geoffrey was created to be an information source for base and shop locations on Minecraft severs. The bot mainly tracks
 base, shop, and tunnel locations. This allows for users to quickly find each other's builds and find shops selling
 goods.
 
 Geoffrey can be used on a Discord server or in a private message with the bot.
 
-##Information
+## Information
 Geoffrey was written in python and uses the [Discord.py rewrite](https://discordpy.readthedocs.io/en/rewrite/)
  to interface with Discord and [SQLAlchemy](https://docs.sqlalchemy.org/en/latest/) for database
 access.
 
-##Use Case
+## Use Case
 Say I am a new user and I want to add my base to the database. I would first register with Geoffrey:
 ```
 ?register
