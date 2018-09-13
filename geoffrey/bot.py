@@ -29,11 +29,9 @@ If have a suggestion or if something is borked, you can PM my ding dong of a cre
 
 *You must use ?register before adding things to Geoffrey*
 
-Basic Use Case:
-Adding your first first base:
-?add_base 500 300
-Adding your second base:
-?add_base 500 900 Cool Base Name
+For a better a explanation on how this bot works go the following link:
+https://github.com/joeyahines/Geoffrey/blob/master/README.md
+
 '''
 
 bad_error_message = 'OOPSIE WOOPSIE!! Uwu We made a fucky wucky!! A wittle fucko boingo! The admins at our ' \

@@ -120,7 +120,7 @@ class Add_Commands:
         """
         Adds an item to a shop's inventory. If you have one shop, the shop name is not required
 
-        Quantity for Diamond Price. eg. 32 Dirt for 1D
+        Quantity for Diamond Price. eg. 32 Dirt for 1D. If the item name has spaces in wrap in in quotes eg "Silk Touch"
             ?add_item [Item Name] [Quantity] [Price] [Shop name]
         """
         shop_name = get_name(args)
