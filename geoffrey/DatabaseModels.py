@@ -26,9 +26,9 @@ class GeoffreyDatabase:
 
     def __init__(self, bot_config, debug):
         if not debug:
-            self.engine = create_engine(bot_config.engine_args, pool_recycle=3600, pool_pre_ping=True)
+            self.engine = create_engine(bot_config.engine_args, pool_recycle=3600)
         else:
-            self.engine = create_engine(bot_config.config['SQL']['test_args'], pool_recycle=3600, pool_pre_ping=True)
+            self.engine = create_engine(bot_config.config['SQL']['test_args'], pool_recycle=3600)
         self.Session = sessionmaker(bind=self.engine)
         SQL_Base.metadata.create_all(self.engine)
 
