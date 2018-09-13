@@ -100,6 +100,9 @@ class Add_Commands:
         except LocationLookUpError:
             await ctx.send('{}, you do not have a location called **{}**.'.format(
                 ctx.message.author.mention, loc_name))
+        except NoLocationsInDatabase:
+            await ctx.send('{}, you do not have a location in the database.'.format(
+                ctx.message.author.mention, loc_name))
         except LocationHasTunnelError:
             await ctx.send('{}, **{}** already has a tunnel.'.format(ctx.message.author.mention, loc_name))
         except TunnelInitError:

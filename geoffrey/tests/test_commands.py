@@ -140,6 +140,10 @@ class TestCommands(TestCase):
 
     def test_tunnel(self):
         self.commands.register('BirbHD', '143072699567177728')
+
+        self.assertRaises(NoLocationsInDatabase, self.commands.add_tunnel, "soUTH", 50, None,
+                          discord_uuid='143072699567177728')
+
         self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
 
         self.commands.add_tunnel("soUTH", 50, None, discord_uuid='143072699567177728')

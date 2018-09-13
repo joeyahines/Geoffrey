@@ -83,6 +83,8 @@ class Commands:
             if location_name is None:
                 location_list = self.interface.find_location_by_owner(session, player)
 
+                if len(location_list) == 0:
+                    raise NoLocationsInDatabase
                 if len(location_list) > 1:
                     raise EntryNameNotUniqueError
 
