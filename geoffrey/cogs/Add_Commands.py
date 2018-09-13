@@ -25,7 +25,8 @@ class Add_Commands:
         try:
             player_name = get_nickname(ctx.message.author, self.bot.special_users)
             self.bot.bot_commands.register(player_name, ctx.message.author.id)
-            await ctx.send('{}, you have been added to the database.'.format(ctx.message.author.mention))
+            await ctx.send('{}, you have been added to the database. Use ?help to see all the commands this bot can do.'
+                           .format(ctx.message.author.mention))
         except AttributeError:
             raise NotOnServerError
         except PlayerInDBError:
