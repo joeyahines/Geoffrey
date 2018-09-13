@@ -6,13 +6,13 @@ from MinecraftAccountInfoGrabber import *
 class TestMinecraftInfoGrabber(TestCase):
 
     def test_handle_data(self):
-        self.assertEqual(grab_UUID('BirbHD'), 'fe7e84132570458892032b69ff188bc3')
+        self.assertEqual(grab_UUID('YMCA'), '5c084bd60c6a417ba084e2c5a382d0e1')
 
     def test_grab_playername(self):
-        self.assertEqual(grab_playername('01c29c443f8d4ab490a56919407a5bd2'), 'CoolBirb123')
+        self.assertEqual(grab_playername('5c084bd60c6a417ba084e2c5a382d0e1'), 'YMCA')
 
     def test_grab_playername_wrong_case(self):
-        self.assertEqual(grab_UUID('birbhd'), 'fe7e84132570458892032b69ff188bc3')
+        self.assertEqual(grab_UUID('ymca'), '5c084bd60c6a417ba084e2c5a382d0e1')
 
     def test_grab_invalid_player(self):
         self.assertRaises(UsernameLookupFailed, grab_UUID, 'lsdlkjsljglfjgldkj')

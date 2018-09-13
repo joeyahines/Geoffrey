@@ -54,6 +54,7 @@ class GeoffreyDatabase:
             raise DatabaseValueError
         except:
             session.rollback()
+            raise Exception
 
     def query_by_filter(self, session, obj_type, *args, limit=10):
         filter_value = self.combine_filter(args)

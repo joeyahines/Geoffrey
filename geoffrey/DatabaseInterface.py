@@ -57,7 +57,6 @@ class DatabaseInterface:
             mc_uuid = grab_UUID(player_name)
             try:
                 player = self.find_player_by_mc_uuid(session, mc_uuid)
-                player.name = player_name
             except PlayerNotFound:
                 player = Player(player_name, discord_uuid)
                 self.database.add_object(session, player)
