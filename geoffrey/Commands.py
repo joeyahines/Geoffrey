@@ -134,6 +134,8 @@ class Commands:
             if shop_name is None:
                 if len(shop_list) == 1:
                     shop_name = shop_list[0].name
+                elif len(shop_list) == 0:
+                    raise NoLocationsInDatabase
                 else:
                     raise LocationInitError
 
@@ -301,7 +303,10 @@ class Commands:
                     shop = shop_list[0]
 
             else:
-                shop = self.interface.find_location_by_name_and_owner(session, player, shop_name, loc_type=Shop)[0]
+                try:
+                    shop = self.interface.find_location_by_name_and_owner(session, player, shop_name, loc_type=Shop)[0]
+                except IndexError:
+                    raise LocationLookUpError
 
             expr = (ItemListing.name == item) & (ItemListing.shop == shop)
             self.interface.database.delete_entry(session, ItemListing, expr)
@@ -329,7 +334,7 @@ class Commands:
 
         return loc_str
 
-    def update_mc_uuid(self, mc_uuid, discord_uuid):
+    def update_mc_uuid(self, discord_uuid, mc_uuid):
         session = self.interface.database.Session()
 
         try:

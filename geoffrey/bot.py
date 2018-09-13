@@ -23,7 +23,9 @@ At some point, she was to become an airhorn bot. Now, they know where your stuff
 
 Please respect Geoffrey, the bot is very sensitive.
 
-If have a suggestion or if something is borked, you can PM my ding dong of a creator ZeroHD.
+All commands must be prefaced with '?'
+
+If have a suggestion or if something is borked, you can PM my ding dong of a creator BirbHD.
 
 *You must use ?register before adding things to Geoffrey*
 

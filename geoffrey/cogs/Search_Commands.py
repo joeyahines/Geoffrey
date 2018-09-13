@@ -16,7 +16,7 @@ class Search_Commands:
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def find(self, ctx, *args):
         """
-        Finds all the locations and tunnels matching the search term
+        Finds all the locations matching the search term
             ?find [Search]
         """
         search = get_name(args)
@@ -37,7 +37,7 @@ class Search_Commands:
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def tunnel(self, ctx, player: str):
         """
-        Finds all the tunnels a player owns.
+        Finds all the tunnels a player owns
             ?tunnel [Player]
         """
         try:
@@ -47,15 +47,16 @@ class Search_Commands:
                 '{}, **{}** owns the following tunnels: \n{}'.format(ctx.message.author.mention, player, result))
         except LocationLookUpError:
             await ctx.send('{}, no tunnels for **{}** were found in the database.'
-                               .format(ctx.message.author.mention, player))
+                           .format(ctx.message.author.mention, player))
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def find_around(self, ctx, x_pos: int, z_pos: int, *args):
         """
         Finds all the locations around a certain point.
-        The radius defaults to 200 blocks if no value is given.
-        Default dimension is overworld.
+        The radius defaults to 200 blocks if no value is given
+
+        Default dimension is the overworld
             ?find_around [X Coordinate] [Z Coordinate] [Radius] [Optional Flags]
 
             Optional Flags:
@@ -84,7 +85,7 @@ class Search_Commands:
                     ctx.message.author.mention, radius, base_string))
             else:
                 await ctx.send('{}, there are no locations within {} blocks of that point'
-                                   .format(ctx.message.author.mention, radius))
+                               .format(ctx.message.author.mention, radius))
         except ValueError:
             await ctx.send(
                 '{}, invalid radius, the radius must be a whole number.'.format(ctx.message.author.mention,
@@ -111,7 +112,7 @@ class Search_Commands:
     async def info(self, ctx, *args):
         """
         Displays info about a location.
-        If the location is a shop, it displays the shop's inventory.
+        If the location is a shop, it displays the shop's inventory
             ?info [Location Name]
         """
         loc = get_name(args)
@@ -134,7 +135,7 @@ class Search_Commands:
         try:
             loc_str = self.bot.bot_commands.me(discord_uuid=ctx.message.author.id)
             await ctx.send('{}, here are your locations in the database: \n {}'.format(ctx.message.author.mention,
-                                                                                           loc_str))
+                                                                                       loc_str))
         except PlayerNotFound:
             await ctx.send('{}, you don\'t have any locations in the database.'.format(ctx.message.author.mention))
 

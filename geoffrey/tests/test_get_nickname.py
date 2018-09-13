@@ -1,6 +1,4 @@
 from unittest import TestCase
-from BotConfig import get_config
-import os
 
 from DiscordHelperFunctions import get_nickname
 

@@ -8,6 +8,7 @@ class Edit_Commands:
     """
     Commands for editing your stuff in Geoffrey.
     """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -54,7 +55,7 @@ class Edit_Commands:
     async def edit_name(self, ctx, new_name: str, current_name: str):
         """
         Edits the name of a location
-         IF A NAME HAS SPACES IN IT YOU NEED TO WRAP IT IN QUOTATION MARKS. eg. "Cool Shop 123"
+        IF A NAME HAS SPACES IN IT YOU NEED TO WRAP IT IN QUOTATION MARKS. eg. "Cool Shop 123"
             ?edit_name [New Name] [Current Name]
         """
         try:

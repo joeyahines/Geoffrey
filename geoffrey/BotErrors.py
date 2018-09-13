@@ -71,5 +71,9 @@ class NotOnServerError(DataBaseError):
     """You need to run this command on 24CC"""
 
 
+class NoLocationsInDatabase(DataBaseError):
+    """This player has no locations in the database"""
+
+
 class FuckyWucky:
     """You made one."""

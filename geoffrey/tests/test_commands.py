@@ -209,12 +209,10 @@ class TestCommands(TestCase):
         self.commands.add_item('dirt', 5, 5, shop_name='test shop', discord_uuid='143072699567177728')
         self.commands.add_item('wood', 5, 5, shop_name='test shop', discord_uuid='143072699567177728')
 
-        result = self.commands.delete_item('dirt', None, discord_uuid='143072699567177728')
+        self.commands.delete_item('dirt', None, discord_uuid='143072699567177728')
 
-        if ('dirt' not in result) & ('wood' in result):
-            pass
-        else:
-            self.fail()
+        self.assertRaises(ItemNotFound, self.commands.selling, 'dirt')
+
 
         self.commands.add_shop(0, 0, shop_name='test shop2', discord_uuid='143072699567177728')
         self.assertRaises(EntryNameNotUniqueError, self.commands.delete_item, 'wood', None,
