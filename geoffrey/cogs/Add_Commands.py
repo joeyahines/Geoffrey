@@ -84,17 +84,17 @@ class Add_Commands:
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
-    async def add_tunnel(self, ctx, tunnel_color: str, tunnel_number: int, *args):
+    async def add_tunnel(self, ctx, tunnel_direction: str, tunnel_number: int, *args):
         """
         Adds your tunnel to the database. If you only have one location, you do not need to specify a location name
 
-            Directions: North South East West
+        Directions: North South East West
             ?tunnel [Tunnel Direction] [Tunnel Number] [Location Name]
         """
 
         loc_name = get_name(args)
         try:
-            self.bot.bot_commands.add_tunnel(tunnel_color, tunnel_number, discord_uuid=ctx.message.author.id,
+            self.bot.bot_commands.add_tunnel(tunnel_direction, tunnel_number, discord_uuid=ctx.message.author.id,
                                              location_name=loc_name)
             await ctx.send('{}, your tunnel has been added to the database'.format(ctx.message.author.mention))
         except LocationLookUpError:
@@ -103,13 +103,13 @@ class Add_Commands:
         except LocationHasTunnelError:
             await ctx.send('{}, **{}** already has a tunnel.'.format(ctx.message.author.mention, loc_name))
         except TunnelInitError:
-            await ctx.send('{}, invalid tunnel name.'.format(ctx.message.author.mention))
+            await ctx.send('{}, invalid tunnel direction.'.format(ctx.message.author.mention))
         except EntryNameNotUniqueError:
             await ctx.send('{}, you have more than one location, you need to specify a location.'
                            .format(ctx.message.author.mention))
         except InvalidTunnelError:
             await ctx.send(
-                '{}, **{}** is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
+                '{}, **{}** is an invalid tunnel direction.'.format(ctx.message.author.mention, tunnel_direction))
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)

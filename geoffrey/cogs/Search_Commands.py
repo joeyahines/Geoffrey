@@ -98,6 +98,7 @@ class Search_Commands:
     async def selling(self, ctx, item_name: str):
         """
         Lists all the shops selling an item
+
             ?selling [item]
         """
         try:
@@ -112,6 +113,7 @@ class Search_Commands:
     async def info(self, ctx, *args):
         """
         Displays info about a location.
+
         If the location is a shop, it displays the shop's inventory
             ?info [Location Name]
         """

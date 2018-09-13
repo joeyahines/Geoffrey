@@ -74,7 +74,7 @@ class Commands:
 
         return shop_name
 
-    def add_tunnel(self, tunnel_color, tunnel_number, location_name=None, discord_uuid=None, mc_uuid=None):
+    def add_tunnel(self, tunnel_direction, tunnel_number, location_name=None, discord_uuid=None, mc_uuid=None):
 
         session = self.interface.database.Session()
         try:
@@ -88,7 +88,7 @@ class Commands:
 
                 location_name = location_list[0].name
 
-            tunnel = self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, location_name)
+            tunnel = self.interface.add_tunnel(session, player, tunnel_direction, tunnel_number, location_name)
             tunnel_info = tunnel.__str__()
 
         finally:
@@ -223,7 +223,7 @@ class Commands:
 
         return loc_str
 
-    def edit_tunnel(self, tunnel_color, tunnel_number, loc_name, discord_uuid=None, mc_uuid=None):
+    def edit_tunnel(self, tunnel_direction, tunnel_number, loc_name, discord_uuid=None, mc_uuid=None):
         session = self.interface.database.Session()
 
         try:
@@ -231,10 +231,10 @@ class Commands:
             location = self.interface.find_location_by_name_and_owner(session, player, loc_name)[0]
 
             if location.tunnel is not None:
-                location.tunnel.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_color)
+                location.tunnel.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_direction)
                 location.tunnel.tunnel_number = tunnel_number
             else:
-                self.interface.add_tunnel(session, player, tunnel_color, tunnel_number, loc_name)
+                self.interface.add_tunnel(session, player, tunnel_direction, tunnel_number, loc_name)
 
             loc_str = location.__str__()
 

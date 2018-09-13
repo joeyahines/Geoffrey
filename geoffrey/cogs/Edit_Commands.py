@@ -17,6 +17,7 @@ class Edit_Commands:
     async def edit_pos(self, ctx, x_pos: int, y_pos: int, *args):
         """
         Edits the position of a location
+
             ?edit_pos [X Coordinate] [Z Coordinate] [Location Name]
         """
         loc = get_name(args)
@@ -31,14 +32,16 @@ class Edit_Commands:
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
-    async def edit_tunnel(self, ctx, tunnel_color: str, tunnel_number: int, *args):
+    async def edit_tunnel(self, ctx, tunnel_direction: str, tunnel_number: int, *args):
         """
         Edits the tunnel of a location
-            ?edit_tunnel [Tunnel Color] [Tunnel Number] [Location Name]
+
+        Directions: North South East West
+            ?edit_tunnel [Tunnel Direction] [Tunnel Number] [Location Name]
         """
         loc = get_name(args)
         try:
-            loc_str = self.bot.bot_commands.edit_tunnel(tunnel_color, tunnel_number, loc,
+            loc_str = self.bot.bot_commands.edit_tunnel(tunnel_direction, tunnel_number, loc,
                                                         discord_uuid=ctx.message.author.id)
 
             await ctx.send(
@@ -48,13 +51,14 @@ class Edit_Commands:
                 ctx.message.author.mention, loc))
         except InvalidTunnelError:
             await ctx.send(
-                '{}, **{}** is an invalid tunnel color.'.format(ctx.message.author.mention, tunnel_color))
+                '{}, **{}** is an invalid tunnel direction.'.format(ctx.message.author.mention, tunnel_direction))
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def edit_name(self, ctx, new_name: str, current_name: str):
         """
         Edits the name of a location
+
         IF A NAME HAS SPACES IN IT YOU NEED TO WRAP IT IN QUOTATION MARKS. eg. "Cool Shop 123"
             ?edit_name [New Name] [Current Name]
         """

@@ -18,6 +18,7 @@ class Delete_Commands:
     async def delete(self, ctx, *args):
         """
         Deletes a location from the database
+
             ?delete [Location name]
         """
         loc = get_name(args)
@@ -34,7 +35,7 @@ class Delete_Commands:
     @commands.command(pass_context=True)
     async def delete_item(self, ctx, item: str, *args):
         """
-            Deletes an item listing from a shop inventory
+        Deletes an item listing from a shop inventory
 
             ?delete_name [Item] [Shop Name]
         """
