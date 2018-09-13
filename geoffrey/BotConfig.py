@@ -9,7 +9,7 @@ def create_config(config, path):
                          'Bot_Mod': '',
                          'Error_Users': ''
                          }
-    config['SQL'] = {'Dialect+Driver': 'mysql+mysqldb',
+    config['SQL'] = {'Dialect+Driver': 'mysql+pymysql',
                      'Username': '',
                      'Password': '',
                      'Host': '',
