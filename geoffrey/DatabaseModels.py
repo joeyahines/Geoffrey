@@ -151,11 +151,11 @@ class Tunnel(SQL_Base):
     location_id = Column(Integer, ForeignKey('geoffrey_locations.id', ondelete='CASCADE'))
     location = relationship("Location", back_populates="tunnel", lazy="joined")
 
-    def __init__(self, owner, tunnel_color, tunnel_number, location=None):
+    def __init__(self, owner, tunnel_direction, tunnel_number, location=None):
         try:
             self.owner = owner
             self.location = location
-            self.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_color)
+            self.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_direction)
             self.tunnel_number = tunnel_number
         except (ValueError, IndexError):
             raise TunnelInitError
