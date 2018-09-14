@@ -95,12 +95,13 @@ class Search_Commands:
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
-    async def selling(self, ctx, item_name: str):
+    async def selling(self, ctx, *args):
         """
         Lists all the shops selling an item
 
             ?selling [item]
         """
+        item_name = get_name(args)
         try:
             result = self.bot.bot_commands.selling(item_name)
             await ctx.send(
