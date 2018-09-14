@@ -380,3 +380,36 @@ class Commands:
             raise e
         finally:
             session.close()
+
+    def add_player(self, discord_uuid, mc_name):
+        session = self.interface.database.Session()
+
+        try:
+            self.interface.find_player_by_discord_uuid(session, discord_uuid)
+            out = "is already in database."
+        except PlayerNotFound:
+            player = Player(mc_name, discord_id=discord_uuid)
+            self.interface.database.add_object(session, player)
+
+            player = self.interface.find_player_by_discord_uuid(session, discord_uuid)
+            out = "has been added to the database with id {}".format(player.id)
+
+        finally:
+            session.close()
+
+        return out
+
+    def find_player(self, discord_uuid):
+        session = self.interface.database.Session()
+
+        try:
+            player = self.interface.find_player_by_discord_uuid(session, discord_uuid)
+            id = player.id
+            username = player.name
+            discord_uuid = player.discord_uuid
+            minecraft_uuid = player.mc_uuid
+
+        finally:
+            session.close()
+
+        return id, username, discord_uuid, minecraft_uuid

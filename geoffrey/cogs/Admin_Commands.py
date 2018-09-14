@@ -129,6 +129,32 @@ class Admin_Commands:
         await self.bot.change_presence(activity=Game(status))
         await ctx.send('{}, status has been changed'.format(ctx.message.author.mention))
 
+    @mod.command(pass_context=True)
+    async def add_player(self, ctx, discord_uuid: str, mc_name: str):
+        """
+        Manually add a player to the database
+        """
+        str = self.bot.bot_commands.add_player(discord_uuid, mc_name)
+        await ctx.send('{}, user **{}** {}.'
+                       .format(ctx.message.author.mention, mc_name, str))
+
+    @add_player.error
+    async def add_player_error(self, ctx, error):
+        await self.error(ctx, error)
+
+    @mod.command(pass_context=True)
+    async def find_player(self, ctx, discord_uuid: str):
+        """
+        Finds a player in the database
+        """
+        id, username, discord_uuid, minecraft_uuid = self.bot.bot_commands.find_player(discord_uuid)
+        await ctx.send('Username: {}, id: {}, Discord UUID: {}, Minecraft UUID: {}'
+                       .format(username, id, discord_uuid, minecraft_uuid))
+
+    @find_player.error
+    async def find_player_error(self, ctx, error):
+        await self.error(ctx, error)
+
 
 def setup(bot):
     bot.add_cog(Admin_Commands(bot))

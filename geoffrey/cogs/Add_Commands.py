@@ -61,7 +61,7 @@ class Add_Commands:
     @commands.cooldown(5, 60, commands.BucketType.user)
     async def add_shop(self, ctx, x_pos: int, z_pos: int, *args):
         """
-        Adds your shop to the database. The name is shop optional if this your first shop
+        Adds your shop to the database. The name is optional if this your first shop
             ?add_shop [X Coordinate] [Z Coordinate] [Shop Name]
         """
 
