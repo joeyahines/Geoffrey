@@ -44,7 +44,7 @@ class Search_Commands:
             result = self.bot.bot_commands.tunnel(player)
 
             await ctx.send(
-                '{}, **{}** owns the following tunnels: \n{}'.format(ctx.message.author.mention, player, result))
+                '{}, **{}** owns the following tunnel(s): \n{}'.format(ctx.message.author.mention, player, result))
         except LocationLookUpError:
             await ctx.send('{}, no tunnels for **{}** were found in the database.'
                            .format(ctx.message.author.mention, player))
@@ -105,7 +105,7 @@ class Search_Commands:
         try:
             result = self.bot.bot_commands.selling(item_name)
             await ctx.send(
-                '{}, the following shops sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
+                '{}, the following shop(s) sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
         except ItemNotFound:
             await ctx.send('{}, no shop sells **{}**.'.format(ctx.message.author.mention, item_name))
 
@@ -137,8 +137,8 @@ class Search_Commands:
         """
         try:
             loc_str = self.bot.bot_commands.me(discord_uuid=ctx.message.author.id)
-            await ctx.send('{}, here are your locations in the database: \n {}'.format(ctx.message.author.mention,
-                                                                                       loc_str))
+            await ctx.send('{}, here are your location(s) in the database: \n {}'.format(ctx.message.author.mention,
+                                                                                         loc_str))
         except PlayerNotFound:
             await ctx.send('{}, you don\'t have any locations in the database.'.format(ctx.message.author.mention))
 

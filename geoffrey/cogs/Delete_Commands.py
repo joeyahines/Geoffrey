@@ -37,6 +37,7 @@ class Delete_Commands:
         """
         Deletes an item listing from a shop inventory
 
+            The item name must be wrapped in quotes if it has a space in it
             ?delete_name [Item] [Shop Name]
         """
 
