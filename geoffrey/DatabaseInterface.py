@@ -52,7 +52,8 @@ class DatabaseInterface:
 
     def add_player(self, session, player_name, discord_uuid=None):
         try:
-            player = self.find_player(session, player_name)
+            self.find_player(session, player_name)
+            raise PlayerInDBError
         except PlayerNotFound:
             mc_uuid = grab_UUID(player_name)
             try:
