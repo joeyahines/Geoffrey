@@ -81,7 +81,7 @@ class Search_Commands:
             base_string = self.bot.bot_commands.find_around(x_pos, z_pos, radius, dimension)
 
             if len(base_string) != 0:
-                await ctx.send('{}, the following locations(s) within **{}** blocks of that point: \n {}'.format(
+                await ctx.send('{}, the following locations(s) are within **{}** blocks of that point: \n {}'.format(
                     ctx.message.author.mention, radius, base_string))
             else:
                 await ctx.send('{}, there are no locations within {} blocks of that point'
