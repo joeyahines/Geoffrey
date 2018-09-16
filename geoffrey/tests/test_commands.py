@@ -260,30 +260,3 @@ class TestCommands(TestCase):
 
         self.assertRaises(PlayerNotFound, self.commands.add_shop, 0, 0, shop_name='test shop',
                           discord_uuid='143072699567177728')
-
-    def test_register_and_add(self):
-
-        for i in range(0, 1000):
-
-            time.sleep(10)
-            self.commands.register('BirbHD', '143072699567177728')
-            time.sleep(10)
-            self.commands.add_base(0, 0, "tmpB" + str(i), discord_uuid='143072699567177728')
-
-            time.sleep(15)
-            self.commands.register('YMCA', '151081244824698880')
-            time.sleep(10)
-
-            try:
-                self.commands.add_tunnel("North", i, discord_uuid='151081244824698880')
-            except:
-                False
-
-            time.sleep(1)
-            self.commands.add_base(0, 0, "tmpY" + str(i), discord_uuid='151081244824698880')
-
-            if "YMCA" not in self.commands.find("YMCA"):
-                self.fail()
-
-            self.session = self.commands.interface.database.Session()
-            self.commands.interface.database.clear_all(self.session)

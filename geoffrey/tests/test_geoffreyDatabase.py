@@ -13,7 +13,7 @@ class TestGeoffreyDatabase(TestCase):
         self.interface = DatabaseInterface(self.bot_config, True)
         self.session = self.interface.database.Session()
         self.interface.database.clear_all(self.session)
-        self.owner = Player('YMCA', '151081244824698880')
+        self.owner = Player('BirbHD', '143072699567177728')
         self.loc = Location('test', 1, 3, self.owner, dimension='Nether')
         self.tunnel = Tunnel(self.owner, "west", 105, self.loc)
 
@@ -38,7 +38,7 @@ class TestGeoffreyDatabase(TestCase):
         self.interface.database.add_object(self.session, self.owner)
         self.interface.database.add_object(self.session, self.tunnel)
 
-        uuid = grab_UUID('YMCA')
+        uuid = grab_UUID('BirbHD')
         expr = Player.mc_uuid == uuid
         p = self.interface.database.query_by_filter(self.session, Player, expr)[0]
 
@@ -62,9 +62,9 @@ class TestGeoffreyDatabase(TestCase):
         expr = Location.owner == self.owner
         self.interface.database.delete_entry(self.session, Location, expr)
 
-        expr = Player.name == 'YMCA'
+        expr = Player.name == 'BirbHD'
         player = self.interface.database.query_by_filter(self.session, Player, expr)[0]
-        self.assertEqual(player.name, 'YMCA')
+        self.assertEqual(player.name, 'BirbHD')
 
         expr = Location.owner == player
 
