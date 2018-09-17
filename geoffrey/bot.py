@@ -76,7 +76,7 @@ class GeoffreyBot(commands.Bot):
         logger.info("User %s, used command %s%s with context: %s", ctx.message.author, ctx.command, subcommand,
                     ctx.args)
 
-        if ctx.invoked_with == 'help':
+        if ctx.invoked_with.lower() == 'help':
             await ctx.send("{}, I sent you some help in the DMs.".format(ctx.message.author.mention))
 
     async def on_command_error(self, ctx, error):
