@@ -102,7 +102,11 @@ class Search_Commands:
             ?selling [item]
         """
         item_name = get_name(args)
+
+        if item_name is None:
+            raise commands.UserInputError
         try:
+
             result = self.bot.bot_commands.selling(item_name)
             await ctx.send(
                 '{}, the following shop(s) sell **{}**: \n{}'.format(ctx.message.author.mention, item_name, result))
