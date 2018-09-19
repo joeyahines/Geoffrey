@@ -14,7 +14,7 @@ class Edit_Commands:
 
     @commands.command(pass_context=True)
     @commands.cooldown(5, 60, commands.BucketType.user)
-    async def edit_pos(self, ctx, x_pos: int, y_pos: int, *args):
+    async def edit_pos(self, ctx, x_pos: int, z_pos: int, *args):
         """
         Edits the position of a location
 
@@ -22,7 +22,7 @@ class Edit_Commands:
         """
         loc = get_name(args)
         try:
-            loc_str = self.bot.bot_commands.edit_pos(x_pos, y_pos, loc, discord_uuid=ctx.message.author.id)
+            loc_str = self.bot.bot_commands.edit_pos(x_pos, z_pos, loc, discord_uuid=ctx.message.author.id)
 
             await ctx.send(
                 '{}, the following location has been updated: \n\n{}'.format(ctx.message.author.mention, loc_str))
