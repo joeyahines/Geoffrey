@@ -60,6 +60,8 @@ class GeoffreyBot(commands.Bot):
                 logger.info('Failed to load extension {}'.format(extension))
                 raise e
 
+        self.loop.create_task(self.username_update())
+
     async def on_ready(self):
         logger.info("%s Online, ID: %s", self.user.name, self.user.id)
         info = await self.application_info()
@@ -128,29 +130,30 @@ class GeoffreyBot(commands.Bot):
             user = await self.get_user_info(user_id)
             await user.send(msg)
 
+    async def username_update(self):
+        await self.wait_until_ready()
 
-async def username_update(bot):
-    await bot.wait_until_ready()
-    while not bot.is_closed:
-        session = bot.bot_commands.interface.database.Session()
-        try:
-            logger.info("Updating MC usernames...")
-            session = bot.bot_commands.interface.database.Session()
-            player_list = session.query(Player).all()
-            for player in player_list:
-                player.name = grab_playername(player.mc_uuid)
+        while not self.is_closed():
+            session = self.bot_commands.interface.database.Session()
+            try:
+                logger.info("Updating MC usernames...")
+                session = self.bot_commands.interface.database.Session()
+                player_list = session.query(Player).all()
+                for player in player_list:
+                    player.name = grab_playername(player.mc_uuid)
 
-            session.commit()
-            logger.info("Username update done.")
+                session.commit()
+                logger.info("Username update done.")
 
-        except UsernameLookupFailed:
-            logger.info("Username lookup error.")
-            session.rollback()
-        except OperationalError:
-            await bot.send_error_message('Error connecting to the MySQL server, is it offline?')
-            logger.info("MySQL connection error")
-        finally:
-            session.close()
+            except UsernameLookupFailed:
+                logger.info("Username lookup error.")
+                session.rollback()
+            except OperationalError:
+                await self.send_error_message('Error connecting to the MySQL server, is it offline?')
+                logger.info("MySQL connection error")
+            finally:
+                session.close()
+
             await asyncio.sleep(600)
 
 
@@ -158,7 +161,7 @@ def setup_logging(config):
     discord_logger = logging.getLogger('discord')
     discord_logger.setLevel(logging.INFO)
     sql_logger = logging.getLogger('sqlalchemy.engine')
-    sql_logger.setLevel(logging.INFO)
+    sql_logger.setLevel(logging.ERROR)
     bot_info_logger = logging.getLogger('geoffrey.bot')
     bot_info_logger.setLevel(logging.INFO)
     log_path = path.abspath(config.log_path)
@@ -188,7 +191,6 @@ def start_bot(config_path="{}/GeoffreyConfig.ini".format(path.dirname(path.abspa
 
         setup_logging(bot_config)
 
-        bot.loop.create_task(username_update(bot))
         bot.run(bot_config.token)
 
     except KeyboardInterrupt:
