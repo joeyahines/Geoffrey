@@ -74,6 +74,11 @@ class TestGeoffreyDatabase(TestCase):
 
         self.assertRaises(DeleteEntryError, self.interface.database.delete_entry, self.session, Location, expr)
 
+    def test_add_player(self):
+        self.add_player()
+        self.assertRaises(PlayerInDBError, self.interface.add_player, self.session, 'BirbHD',
+                          discord_uuid='143072699567177728')
+
     def test_add_shop(self):
         owner = self.add_player()
         shop = self.add_shop(owner)
@@ -99,6 +104,21 @@ class TestGeoffreyDatabase(TestCase):
         tunnel2 = self.interface.find_tunnel_by_owner_name(self.session, 'BirbHD')[0]
         self.assertEqual(tunnel1, tunnel2)
 
+        self.assertRaises(EntryNameNotUniqueError, self.interface.add_tunnel, self.session, player, "South", 155, None)
+
+        loc = self.add_loc(player)
+
+        tunnel3 = self.interface.add_tunnel(self.session, player, "South", 155, 'test')
+
+        tunnel4 = self.interface.find_tunnel_by_owner_name(self.session, 'BirbHD')[0]
+        self.assertEqual(tunnel3, tunnel4)
+
+        self.assertRaises(LocationHasTunnelError, self.interface.add_tunnel, self.session, player, "South", 155,
+                          'test')
+
+        self.assertRaises(LocationLookUpError, self.interface.add_tunnel, self.session, player, "South", 155,
+                          'no u')
+
     def test_add_item(self):
         owner = self.add_player()
         self.add_shop(owner)
@@ -106,6 +126,24 @@ class TestGeoffreyDatabase(TestCase):
 
         shops = self.interface.find_shop_selling_item(self.session, 'dirt')
         self.assertGreater(len(shops), 0)
+
+        self.assertRaises(LocationLookUpError, self.interface.add_item, self.session, owner, 'no u', 'dirt', 1, 15)
+
+    def test_find_player_by_discord_uuid(self):
+        p1 = self.add_player()
+        p2 = self.interface.find_player_by_discord_uuid(self.session, 143072699567177728)
+
+        self.assertEquals(p1, p2)
+
+        self.assertRaises(PlayerNotFound, self.interface.find_player_by_discord_uuid, self.session, 143072698)
+
+    def test_find_player_by_mc_uuid(self):
+        p1 = self.add_player()
+        p2 = self.interface.find_player_by_mc_uuid(self.session, 'fe7e84132570458892032b69ff188bc3')
+
+        self.assertEquals(p1, p2)
+
+        self.assertRaises(PlayerNotFound, self.interface.find_player_by_discord_uuid, self.session, 143072698)
 
     def test_find_location_by_owner(self):
         owner = self.add_player()

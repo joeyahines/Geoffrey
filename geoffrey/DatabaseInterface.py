@@ -117,7 +117,7 @@ class DatabaseInterface:
         return player
 
     def find_player_by_mc_uuid(self, session, uuid):
-        expr = Player.id == uuid
+        expr = Player.mc_uuid == uuid
 
         try:
             player = self.database.query_by_filter(session, Player, expr)[0]
@@ -171,15 +171,6 @@ class DatabaseInterface:
     def delete_location(self, session, owner, name):
         expr = (Location.owner == owner) & (Location.name == name)
         self.database.delete_entry(session, Location, expr)
-
-
-def check_similarity(a, b):
-    ratio = SequenceMatcher(None, a, b).ratio()
-
-    if (ratio > 0.6) or (a[0] == b[0]):
-        return True
-    else:
-        return False
 
 
 def list_to_string(loc_list, str_format='{}\n{}'):
