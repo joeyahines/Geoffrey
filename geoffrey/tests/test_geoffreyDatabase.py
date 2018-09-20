@@ -133,7 +133,7 @@ class TestGeoffreyDatabase(TestCase):
         p1 = self.add_player()
         p2 = self.interface.find_player_by_discord_uuid(self.session, 143072699567177728)
 
-        self.assertEquals(p1, p2)
+        self.assertEqual(p1, p2)
 
         self.assertRaises(PlayerNotFound, self.interface.find_player_by_discord_uuid, self.session, 143072698)
 
@@ -141,7 +141,7 @@ class TestGeoffreyDatabase(TestCase):
         p1 = self.add_player()
         p2 = self.interface.find_player_by_mc_uuid(self.session, 'fe7e84132570458892032b69ff188bc3')
 
-        self.assertEquals(p1, p2)
+        self.assertEqual(p1, p2)
 
         self.assertRaises(PlayerNotFound, self.interface.find_player_by_discord_uuid, self.session, 143072698)
 

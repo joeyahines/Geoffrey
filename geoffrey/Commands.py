@@ -1,6 +1,15 @@
 from geoffrey.DatabaseInterface import *
 
 
+def list_to_string(loc_list, str_format='{}\n{}'):
+    loc_string = ''
+
+    for loc in loc_list:
+        loc_string = str_format.format(loc_string, loc)
+
+    return loc_string
+
+
 class Commands:
     def __init__(self, bot_config, debug=False):
         self.bot_config = bot_config
@@ -107,13 +116,25 @@ class Commands:
         return tunnel_info
 
     def find(self, search):
+        limit = 25
         session = self.interface.database.Session()
         try:
-            result = self.interface.search_all_fields(session, search)
+            locations = self.interface.search_all_fields(session, search, limit)
+            locations_string = ''
+
+            if len(locations) > 0:
+
+                for loc in locations:
+                    locations_string = "{}\n{}".format(locations_string, loc)
+
+                if len(locations) == limit:
+                    locations_string = locations_string + '\n**. . .**'
+            else:
+                raise LocationLookUpError
         finally:
             session.close()
 
-        return result
+        return locations_string
 
     def delete(self, name, discord_uuid=None, mc_uuid=None):
 
@@ -130,10 +151,12 @@ class Commands:
 
         try:
             loc_list = self.interface.find_location_around(session, x_pos, z_pos, radius, dimension)
+
+            loc_list_str = list_to_string(loc_list)
         finally:
             session.close()
 
-        return loc_list
+        return loc_list_str
 
     def add_item(self, item_name, quantity, diamond_price, shop_name=None, discord_uuid=None, mc_uuid=None):
         session = self.interface.database.Session()
@@ -157,10 +180,12 @@ class Commands:
 
             if len(shop_list) == 0:
                 raise ItemNotFound
+
+            shop_list_str = list_to_string(shop_list)
         finally:
             session.close()
 
-        return shop_list
+        return shop_list_str
 
     def info(self, location_name):
         session = self.interface.database.Session()
@@ -277,8 +302,7 @@ class Commands:
 
             shop = self.get_location(session, player, shop_name, Shop)
 
-            expr = (ItemListing.name == item) & (ItemListing.shop == shop)
-            self.interface.database.delete_entry(session, ItemListing, expr)
+            self.interface.delete_item(session, shop, item)
 
             shop_str = shop.name
         finally:

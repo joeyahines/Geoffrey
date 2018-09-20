@@ -87,7 +87,7 @@ class DatabaseInterface:
                (loc_type.z < z_pos + radius + 1) \
                & (loc_type.z > z_pos - radius - 1) & (loc_type.dimension == dimension_obj)
 
-        return list_to_string(self.database.query_by_filter(session, Location, expr))
+        return self.database.query_by_filter(session, Location, expr)
 
     def find_tunnel_by_owner(self, session, owner):
         expr = Tunnel.owner == owner
@@ -100,11 +100,10 @@ class DatabaseInterface:
 
     def find_item(self, session, item_name):
         expr = ItemListing.name.ilike('%{}%'.format(item_name))
-        return self.database.query_by_filter(session, ItemListing, expr)
+        return self.database.query_by_filter(session, ItemListing, expr, sort=ItemListing.normalized_price)
 
     def find_shop_selling_item(self, session, item_name):
-        listings = self.find_item(session, item_name)
-        return list_to_string(listings)
+        return self.find_item(session, item_name)
 
     def find_player(self, session, player_name):
         expr = Player.name.ilike(player_name)
@@ -136,47 +135,16 @@ class DatabaseInterface:
             raise PlayerNotFound
         return player
 
-    def search_all_fields(self, session, search):
-        loc_string = ''
-        limit = 10
-
+    def search_all_fields(self, session, search, limit=25):
         expr = Location.owner.has(Player.name.ilike('%{}%'.format(search))) | Location.name.ilike('%{}%'.format(search))
         locations = self.database.query_by_filter(session, Location, expr, limit=limit)
 
-        if len(locations) > 0:
-            loc_string = loc_string + '\n**Locations:**'
-
-            for loc in locations:
-                loc_string = "{}\n{}".format(loc_string, loc)
-
-            if len(locations) == limit:
-                loc_string = loc_string + '\n**. . .**'
-
-        expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(search))) & Tunnel.location is None
-        tunnels = self.database.query_by_filter(session, Tunnel, expr)
-
-        if len(tunnels) > 0:
-            loc_string = loc_string + '\n\n**Tunnels:**'
-            for tunnel in tunnels:
-                loc_string = "{}\n{}".format(loc_string, tunnel.full_str())
-
-            if len(tunnels) == limit:
-                loc_string = loc_string + '\n**. . .**'
-
-        if len(tunnels) + len(locations) == 0:
-            raise LocationLookUpError
-        else:
-            return loc_string
+        return locations
 
     def delete_location(self, session, owner, name):
         expr = (Location.owner == owner) & (Location.name == name)
         self.database.delete_entry(session, Location, expr)
 
-
-def list_to_string(loc_list, str_format='{}\n{}'):
-    loc_string = ''
-
-    for loc in loc_list:
-        loc_string = str_format.format(loc_string, loc)
-
-    return loc_string
+    def delete_item(self, session, shop, item_name):
+        expr = (ItemListing.name == item_name) & (ItemListing.shop == shop)
+        self.database.delete_entry(session, ItemListing, expr)

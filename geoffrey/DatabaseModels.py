@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, column_property, sessionmaker
 from sqlalchemy.sql import expression
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from geoffrey.BotErrors import *
 from geoffrey.MinecraftAccountInfoGrabber import *
@@ -56,9 +57,9 @@ class GeoffreyDatabase:
             session.rollback()
             raise Exception
 
-    def query_by_filter(self, session, obj_type, *args, limit=10):
+    def query_by_filter(self, session, obj_type, *args, sort=None, limit=10):
         filter_value = self.combine_filter(args)
-        return session.query(obj_type).filter(filter_value).limit(limit).all()
+        return session.query(obj_type).filter(filter_value).order_by(sort).limit(limit).all()
 
     def delete_entry(self, session, obj_type, *args):
 
@@ -289,6 +290,14 @@ class ItemListing(SQL_Base):
         self.price = price
         self.amount = amount
         self.shop = shop
+
+    @hybrid_property
+    def normalized_price(self):
+        return self.price / self.amount
+
+    @normalized_price.expression
+    def normalized_price(cls):
+        return cls.price / cls.amount
 
     def listing_str(self):
         return '**{}** **{}** for **{}D**'.format(self.amount, self.name, self.price)
