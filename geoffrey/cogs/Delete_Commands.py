@@ -47,7 +47,7 @@ class Delete_Commands:
 
             await ctx.send('{}, **{}** has been removed from the inventory of **{}**.'.
                            format(ctx.message.author.mention, item, shop_name))
-        except LocationLookUpError:
+        except NoLocationsInDatabase:
             if shop is None:
                 await ctx.send('{}, you do have any shops in the database.'.format(ctx.message.author.mention))
             else:

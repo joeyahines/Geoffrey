@@ -133,7 +133,7 @@ class Add_Commands:
                                                                                   item_name))
         except NoLocationsInDatabase:
             await ctx.send('{}, you don\'t have any shops in the database.'.format(ctx.message.author.mention))
-        except LocationInitError:
+        except EntryNameNotUniqueError:
             await ctx.send('{}, you have more than one shop in the database, please specify a shop name.'
                            .format(ctx.message.author.mention))
         except LocationLookUpError:

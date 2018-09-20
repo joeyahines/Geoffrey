@@ -1,5 +1,4 @@
 import os
-import time
 from unittest import TestCase
 
 from Commands import *
@@ -22,7 +21,47 @@ class TestCommands(TestCase):
         player = self.commands.get_player(session, discord_uuid='143072699567177728')
 
         self.assertEqual(player.name, 'BirbHD')
-        self.session.close()
+
+        self.assertRaises(AttributeError, self.commands.get_player, session)
+        session.close()
+
+    def test_get_location(self):
+        session = self.commands.interface.database.Session()
+        self.commands.interface.add_player(session, 'BirbHD', discord_uuid='143072699567177728')
+        session.close()
+
+        session = self.commands.interface.database.Session()
+
+        player = self.commands.get_player(session, discord_uuid='143072699567177728')
+
+        self.assertRaises(NoLocationsInDatabase, self.commands.get_location,
+                          session, player, name=None, loc_type=Location)
+
+        session.close()
+
+        self.commands.add_base(0, 0, discord_uuid='143072699567177728')
+        session = self.commands.interface.database.Session()
+
+        self.commands.get_location(session, player, name=None, loc_type=Location)
+
+        session.close()
+
+        self.commands.add_base(0, 0, base_name='Birb', discord_uuid='143072699567177728')
+
+        session = self.commands.interface.database.Session()
+
+        self.assertRaises(EntryNameNotUniqueError, self.commands.get_location,
+                          session, player, name=None, loc_type=Location)
+
+        self.commands.get_location(session, player, name="Birb", loc_type=Location)
+
+        self.assertRaises(LocationLookUpError, self.commands.get_location,
+                          session, player, name="Henlo", loc_type=Location)
+
+        session.close()
+
+
+
 
     def test_register(self):
         self.commands.register('BirbHD', '143072699567177728')
@@ -35,6 +74,8 @@ class TestCommands(TestCase):
         player_name = self.commands.register('BirbHD', '143072699567177728')
         base = self.commands.add_base(0, 0, discord_uuid='143072699567177728')
 
+        self.assertRaises(EntryNameNotUniqueError, self.commands.add_base, 0, 0, discord_uuid='143072699567177728')
+
         if player_name not in base:
             self.fail()
         else:
@@ -44,6 +85,8 @@ class TestCommands(TestCase):
         player_name = self.commands.register('BirbHD', '143072699567177728')
         shop = self.commands.add_shop(0, 0, discord_uuid='143072699567177728')
 
+        self.assertRaises(EntryNameNotUniqueError, self.commands.add_shop, 0, 0, discord_uuid='143072699567177728')
+
         if player_name not in shop:
             self.fail()
         else:
@@ -52,6 +95,7 @@ class TestCommands(TestCase):
     def test_addtunnel(self):
         self.commands.register('BirbHD', '143072699567177728')
         self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='test shop2', discord_uuid='143072699567177728')
 
         tunnel2 = self.commands.add_tunnel("East", 50, location_name='test_shop',
                                            discord_uuid='143072699567177728')
@@ -61,6 +105,9 @@ class TestCommands(TestCase):
 
         self.assertRaises(LocationHasTunnelError, self.commands.add_tunnel, "East", 50,
                           location_name='test_shop', discord_uuid='143072699567177728')
+
+        self.assertRaises(EntryNameNotUniqueError, self.commands.add_tunnel, "East", 50,
+                          discord_uuid='143072699567177728')
 
     def test_find(self):
         self.commands.register('BirbHD', '143072699567177728')
@@ -95,6 +142,9 @@ class TestCommands(TestCase):
 
     def test_additem(self):
         self.commands.register('BirbHD', '143072699567177728')
+        self.assertRaises(NoLocationsInDatabase, self.commands.add_item, 'dirt', 5, 5
+                          , discord_uuid='143072699567177728')
+
         self.commands.add_shop(0, 0, discord_uuid='143072699567177728')
 
         result = self.commands.add_item('dirt', 5, 5, None, discord_uuid='143072699567177728')
@@ -139,7 +189,7 @@ class TestCommands(TestCase):
         else:
             self.fail()
 
-    def test_tunnel(self):
+    def test_add_tunnel(self):
         self.commands.register('BirbHD', '143072699567177728')
 
         self.assertRaises(NoLocationsInDatabase, self.commands.add_tunnel, "soUTH", 50, None,
@@ -155,6 +205,21 @@ class TestCommands(TestCase):
             pass
         else:
             self.fail()
+
+    def test_tunnel(self):
+        self.commands.register('BirbHD', '143072699567177728')
+        self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
+
+        self.assertRaises(LocationLookUpError, self.commands.tunnel, 'BirbHD')
+
+        result = self.commands.add_tunnel("WEST", 50, None, discord_uuid='143072699567177728')
+
+        if "West" in result:
+            pass
+        else:
+            self.fail()
+
+
 
     def test_edit_name(self):
         self.commands.register('BirbHD', '143072699567177728')
@@ -191,7 +256,7 @@ class TestCommands(TestCase):
 
         self.commands.delete(name='test shop', discord_uuid='143072699567177728')
 
-        self.assertRaises(LocationLookUpError, self.commands.edit_pos, 5, 5, None,
+        self.assertRaises(NoLocationsInDatabase, self.commands.edit_pos, 5, 5, None,
                           discord_uuid='143072699567177728')
 
     def test_edit_tunnel(self):
@@ -218,7 +283,6 @@ class TestCommands(TestCase):
 
         self.assertRaises(ItemNotFound, self.commands.selling, 'dirt')
 
-
         self.commands.add_shop(0, 0, shop_name='test shop2', discord_uuid='143072699567177728')
         self.assertRaises(EntryNameNotUniqueError, self.commands.delete_item, 'wood', None,
                           discord_uuid='143072699567177728')
@@ -226,7 +290,7 @@ class TestCommands(TestCase):
         self.commands.delete('test shop', discord_uuid='143072699567177728')
         self.commands.delete('test shop2', discord_uuid='143072699567177728')
 
-        self.assertRaises(LocationLookUpError, self.commands.delete_item, 'wood', None,
+        self.assertRaises(NoLocationsInDatabase, self.commands.delete_item, 'wood', None,
                           discord_uuid='143072699567177728')
 
     def test_me(self):

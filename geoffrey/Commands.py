@@ -16,6 +16,24 @@ class Commands:
 
         return player
 
+    def get_location(self, session, owner, name=None, loc_type=Location):
+        if name is None:
+            loc_list = self.interface.find_location_by_owner(session, owner, loc_type)
+            if len(loc_list) == 1:
+                loc = loc_list[0]
+            elif len(loc_list) == 0:
+                raise NoLocationsInDatabase
+            else:
+                raise EntryNameNotUniqueError
+        else:
+            loc_list = self.interface.find_location_by_name_and_owner(session, owner, name, loc_type)
+            if len(loc_list) == 1:
+                loc = loc_list[0]
+            else:
+                raise LocationLookUpError
+
+        return loc
+
     def register(self, player_name, discord_uuid):
 
         session = self.interface.database.Session()
@@ -77,14 +95,8 @@ class Commands:
 
             player = self.get_player(session, discord_uuid, mc_uuid)
             if location_name is None:
-                location_list = self.interface.find_location_by_owner(session, player)
-
-                if len(location_list) == 0:
-                    raise NoLocationsInDatabase
-                if len(location_list) > 1:
-                    raise EntryNameNotUniqueError
-
-                location_name = location_list[0].name
+                loc = self.get_location(session, player, name=location_name)
+                location_name = loc.name
 
             tunnel = self.interface.add_tunnel(session, player, tunnel_direction, tunnel_number, location_name)
             tunnel_info = tunnel.__str__()
@@ -123,21 +135,14 @@ class Commands:
 
         return loc_list
 
-    def add_item(self, item_name, quantity, diamond_price, shop_name, discord_uuid=None, mc_uuid=None):
+    def add_item(self, item_name, quantity, diamond_price, shop_name=None, discord_uuid=None, mc_uuid=None):
         session = self.interface.database.Session()
         try:
             player = self.get_player(session, discord_uuid, mc_uuid)
-            shop_list = self.interface.find_location_by_owner(session, player, loc_type=Shop)
 
-            if shop_name is None:
-                if len(shop_list) == 1:
-                    shop_name = shop_list[0].name
-                elif len(shop_list) == 0:
-                    raise NoLocationsInDatabase
-                else:
-                    raise LocationInitError
+            shop = self.get_location(session, player, shop_name, Shop)
 
-            item_listing = self.interface.add_item(session, player, shop_name, item_name, diamond_price, quantity)
+            item_listing = self.interface.add_item(session, player, shop.name, item_name, diamond_price, quantity)
             item_listing_str = item_listing.__str__()
         finally:
             session.close()
@@ -190,17 +195,7 @@ class Commands:
 
         try:
             player = self.get_player(session, discord_uuid=discord_uuid, mc_uuid=mc_uuid)
-            if loc_name is None:
-                loc_list = self.interface.find_location_by_owner(session, player)
-
-                if len(loc_list) == 0:
-                    raise LocationLookUpError
-                elif len(loc_list) > 1:
-                    raise EntryNameNotUniqueError
-                else:
-                    location = loc_list[0]
-            else:
-                location = self.interface.find_location_by_name_and_owner(session, player, loc_name)[0]
+            location = self.get_location(session, player, loc_name)
 
             location.x = x
             location.z = z
@@ -255,17 +250,7 @@ class Commands:
 
         try:
             player = self.get_player(session, discord_uuid=discord_uuid, mc_uuid=mc_uuid)
-            if loc_name is None:
-                loc_list = self.interface.find_location_by_owner(session, player)
-
-                if len(loc_list) == 0:
-                    raise LocationLookUpError
-                elif len(loc_list) > 1:
-                    raise EntryNameNotUniqueError
-                else:
-                    location = loc_list[0]
-            else:
-                location = self.interface.find_location_by_name_and_owner(session, player, loc_name)[0]
+            location = self.get_location(session, player, loc_name)
 
             location.name = new_name
             loc_str = location.__str__()
@@ -290,21 +275,7 @@ class Commands:
         try:
             player = self.get_player(session, discord_uuid=discord_uuid, mc_uuid=mc_uuid)
 
-            if shop_name is None:
-                shop_list = self.interface.find_location_by_owner(session, player, loc_type=Shop)
-
-                if len(shop_list) == 0:
-                    raise LocationLookUpError
-                elif len(shop_list) > 1:
-                    raise EntryNameNotUniqueError
-                else:
-                    shop = shop_list[0]
-
-            else:
-                try:
-                    shop = self.interface.find_location_by_name_and_owner(session, player, shop_name, loc_type=Shop)[0]
-                except IndexError:
-                    raise LocationLookUpError
+            shop = self.get_location(session, player, shop_name, Shop)
 
             expr = (ItemListing.name == item) & (ItemListing.shop == shop)
             self.interface.database.delete_entry(session, ItemListing, expr)
