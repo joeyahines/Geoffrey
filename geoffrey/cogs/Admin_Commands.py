@@ -134,9 +134,12 @@ class Admin_Commands:
         """
         Manually add a player to the database
         """
-        str = self.bot.bot_commands.add_player(discord_uuid, mc_name)
-        await ctx.send('{}, user **{}** {}.'
-                       .format(ctx.message.author.mention, mc_name, str))
+        try:
+            db_id = self.bot.bot_commands.add_player(discord_uuid, mc_name)
+            await ctx.send('{}, user **{}** been added to the data base with id {}.'.format(ctx.message.author.mention,
+                                                                                            mc_name, db_id))
+        except PlayerInDBError:
+            await ctx.send('{}, user **{}** is already in the database.'.format(ctx.message.author.mention, mc_name))
 
     @add_player.error
     async def add_player_error(self, ctx, error):
@@ -147,9 +150,12 @@ class Admin_Commands:
         """
         Finds a player in the database
         """
-        id, username, discord_uuid, minecraft_uuid = self.bot.bot_commands.find_player(discord_uuid)
-        await ctx.send('Username: {}, id: {}, Discord UUID: {}, Minecraft UUID: {}'
-                       .format(username, id, discord_uuid, minecraft_uuid))
+        try:
+            db_id, username, discord_uuid, minecraft_uuid = self.bot.bot_commands.find_player(discord_uuid)
+            await ctx.send('Username: {}, id: {}, Discord UUID: {}, Minecraft UUID: {}'
+                           .format(username, db_id, discord_uuid, minecraft_uuid))
+        except PlayerNotFound:
+            await ctx.send('That player is not in the database...')
 
     @find_player.error
     async def find_player_error(self, ctx, error):

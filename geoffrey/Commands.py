@@ -377,18 +377,18 @@ class Commands:
 
         try:
             self.interface.find_player_by_discord_uuid(session, discord_uuid)
-            out = "is already in database."
+            raise PlayerInDBError
         except PlayerNotFound:
             player = Player(mc_name, discord_id=discord_uuid)
             self.interface.database.add_object(session, player)
 
             player = self.interface.find_player_by_discord_uuid(session, discord_uuid)
-            out = "has been added to the database with id {}".format(player.id)
+            id = player.id
 
         finally:
             session.close()
 
-        return out
+        return id
 
     def find_player(self, discord_uuid):
         session = self.interface.database.Session()
