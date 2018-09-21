@@ -25,11 +25,9 @@ class StressTest(TestCase):
             self.commands.add_shop(0, 0, shop_name='test shop{}'.format(i), discord_uuid='143072699567177728')
 
             self.commands.find('BirbHD')
-
             sleep(0.5)
 
     def test_mc_query(self):
-
         for i in range(0, 1000):
             grab_playername('fe7e84132570458892032b69ff188bc3')
 

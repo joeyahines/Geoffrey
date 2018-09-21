@@ -51,17 +51,18 @@ class Config:
             self.engine_args = self.read_engine_arg()
 
             self.token = self.config['Discord']['Token']
-            self.world_name = self.config['Minecraft']['World_Name']
             self.status = self.config['Discord']['Status']
             self.prefix = self.config['Discord']['Prefix']
             self.bot_mod = self.config['Discord']['Bot_Mod'].split(',')
             self.error_users = self.config['Discord']['Error_Users'].split(',')
 
+            self.world_name = self.config['Minecraft']['World_Name']
             self.dynmap_url = self.config['Minecraft']['Dynmap_Url']
 
             self.log_path = self.config['Logging']['log_path']
             self.count = int(self.config['Logging']['Count'])
             self.rotation_duration = int(self.config['Logging']['Rotation_Duration'])
+
             self.special_name_list = dict(self.config.items('Special Names'))
         except Exception as e:
             print("Invalid config file, missing {}.".format(e))
