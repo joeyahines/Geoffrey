@@ -76,9 +76,10 @@ Then to find out more info about a location, use `?info`:
 ```
 
 
-`?selling` can be used to find items for sale:
+`?selling` can be used to find items for sale. Tip is better search for a subset of the item name. 
+ig for `enderchests` search `ender`:
 ```
-?selling dirt
+?selling ender
 ```
 
 You can also search around a position for locations with `?find_around`:
