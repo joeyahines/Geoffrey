@@ -10,37 +10,94 @@ Geoffrey was written in python and uses the [Discord.py rewrite](https://discord
  to interface with Discord and [SQLAlchemy](https://docs.sqlalchemy.org/en/latest/) for database
 access.
 
-## Use Case
-Say I am a new user and I want to add my base to the database. I would first register with Geoffrey:
+## Adding a base
+First you must register with the bot if you are a new user.
 ```
 ?register
 ```
 
 This allows Geoffrey to link your MC name with your Discord account.
 
-I would then be able to add my base to Geoffrey by using the following command:
+Then you can add your first base:
 ```
 ?add_base 500 550
 ```
 
 Your first base does not need a name, it defaults to "[Username]'s Base"
 
-If I wanted to specify a name, I could do the following:
+If you want to specify a name:
 ```
 ?add_base 500 550 My New Base
 ```
 
-If you want to rename a base you can do the following (the quotations around the base names are important!):
+To delete a base:
+```
+?delete "My Base"
+```
+## Adding a shop
+A shop can be added like a base:
+```
+?add_shop 500 550
+```
+
+or
+
+```
+?add_shop 500 550 Cool Shop
+```
+
+The following command then adds dirt to the shop with the price of 5 dirt for 1 diamond:
+```
+?add_item Dirt 5 1 
+```
+
+Then you could delete that entry by:
+```
+?delete_item dirt
+```
+
+To delete a shop:
+```
+?delete "My shop"
+```
+## Adding a shop
+
+If you have more than one shop, you need to specify the shop name.
+
+## Searching in the database
+The `?find` command is used to find bases and shops in Geoffrey. `?find` searches for both location names and owner names:
+```
+?find ZeroHD
+```
+
+Then to find out more info about a location, use `?info`:
+```
+?info ZeroHD's Base
+```
+
+
+`?selling` can be used to find items for sale:
+```
+?selling dirt
+```
+
+You can also search around a position for locations with `?find_around`:
+```
+?find_around 0 0
+```
+
+## Editing Locations
+To rename a base/shop you can do the following (the quotations around the location names are important!):
 ```
 ?edit_name "Cool New Name" "Current Name"
 ```
 
-If you are so done with that base, you could delete it by doing the following:
+To move a location's position, use `?edit_pos`
 ```
-?delete "My Base"
+?edit_pos 420 69 Cool Base
 ```
 
-Geoffrey can do many more things. Make sure to checkout ?help for all the commands he can do! You can also do
-?help [Command] to get more info about a particular command.
-
-
+To change the tunnel of a base, use `?edit_tunnel`:
+```
+?edit_tunnel North 545
+```
