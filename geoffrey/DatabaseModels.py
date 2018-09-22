@@ -215,7 +215,7 @@ class Location(SQL_Base):
             format(bot_config.dynmap_url, bot_config.world_name, self.x, self.z)
 
     def pos_to_str(self):
-        pos_str = '**(x= {}, z= {})** {}'.format(self.x, self.z, self.dimension.value.title())
+        pos_str = '**(x= {}, z= {})**'.format(self.x, self.z)
         if self.tunnel is not None:
             return pos_str + ', Tunnel: **{}**'.format(self.tunnel)
         else:
@@ -303,4 +303,4 @@ class ItemListing(SQL_Base):
         return '**{}** **{}** for **{}D**'.format(self.amount, self.name, self.price)
 
     def __str__(self):
-        return '**{}**, selling {}'.format(self.shop.name, self.listing_str())
+        return '**{}** @ {}, selling {}'.format(self.shop.name, self.shop.pos_to_str(), self.listing_str())

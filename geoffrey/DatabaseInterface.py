@@ -98,9 +98,10 @@ class DatabaseInterface:
         expr = Tunnel.owner.has(Player.name.ilike('%{}%'.format(owner_name)))
         return self.database.query_by_filter(session, Tunnel, expr)
 
-    def find_item(self, session, item_name):
+    def find_item(self, session, item_name, limit=25):
         expr = ItemListing.name.ilike('%{}%'.format(item_name))
-        return self.database.query_by_filter(session, ItemListing, expr, sort=ItemListing.normalized_price)
+        return self.database.query_by_filter(session, ItemListing, expr, limit=limit,
+                                             sort=ItemListing.normalized_price)
 
     def find_shop_selling_item(self, session, item_name):
         return self.find_item(session, item_name)
