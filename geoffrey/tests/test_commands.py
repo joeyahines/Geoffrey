@@ -220,8 +220,6 @@ class TestCommands(TestCase):
         else:
             self.fail()
 
-
-
     def test_edit_name(self):
         self.commands.register(zerohd, '143072699567177728')
         self.commands.add_shop(0, 0, shop_name='test shop', discord_uuid='143072699567177728')
@@ -255,6 +253,12 @@ class TestCommands(TestCase):
         else:
             self.fail()
 
+        self.assertRaises(DatabaseValueError, self.commands.edit_pos, 9999999999999999999999999999999999999999999999999,
+                          5, None, discord_uuid='143072699567177728')
+
+        self.assertRaises(LocationLookUpError, self.commands.edit_pos, 5, 5, 'henlo',
+                          discord_uuid='143072699567177728')
+
         self.commands.delete(name='test shop', discord_uuid='143072699567177728')
 
         self.assertRaises(NoLocationsInDatabase, self.commands.edit_pos, 5, 5, None,
@@ -269,6 +273,15 @@ class TestCommands(TestCase):
         result = self.commands.info('test shop')
 
         if "West" in result:
+            pass
+        else:
+            self.fail()
+
+        self.commands.edit_tunnel("East", 500, 'test shop', discord_uuid='143072699567177728')
+
+        result = self.commands.info('test shop')
+
+        if "East" in result:
             pass
         else:
             self.fail()
@@ -325,3 +338,13 @@ class TestCommands(TestCase):
 
         self.assertRaises(PlayerNotFound, self.commands.add_shop, 0, 0, shop_name='test shop',
                           discord_uuid='143072699567177728')
+
+    def test_add_player(self):
+        self.commands.add_player('143072699567177728', zerohd)
+
+        self.assertRaises(PlayerInDBError, self.commands.add_player, '143072699567177728', zerohd)
+
+        if zerohd in self.commands.find_player('143072699567177728'):
+            pass
+        else:
+            self.fail()

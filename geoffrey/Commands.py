@@ -228,9 +228,6 @@ class Commands:
             session.commit()
 
             loc_str = location.__str__()
-        except IntegrityError:
-            session.rollback()
-            raise EntryNameNotUniqueError
         except DataError:
             session.rollback()
             raise DatabaseValueError
