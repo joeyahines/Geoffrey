@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from geoffrey.DatabaseModels import *
 
 
@@ -105,6 +106,24 @@ class DatabaseInterface:
 
     def find_shop_selling_item(self, session, item_name):
         return self.find_item(session, item_name)
+
+    def find_top_shops_selling_item(self, session, item_name):
+        expr = ItemListing.name.ilike('%{}%'.format(item_name))
+        result = session.query(func.min(ItemListing.normalized_price), ItemListing.shop_id).group_by(
+            ItemListing.shop_id).filter(expr).order_by(func.min(ItemListing.normalized_price)).all()
+
+        shop_list = []
+
+        for item in result:
+            expr = Shop.shop_id == item[1]
+            shop = self.database.query_by_filter(session, Shop, expr, limit=10)
+            shop_list.append(shop)
+
+        return shop_list
+
+    def get_inventory_matches(self, session, shop, item_name):
+        expr = (ItemListing.shop_id == shop.id) & (ItemListing.name.ilike('%{}%'.format(item_name)))
+        return self.database.query_by_filter(session, ItemListing, expr, limit=5, sort=ItemListing.normalized_price)
 
     def find_player(self, session, player_name):
         expr = Player.name.ilike(player_name)

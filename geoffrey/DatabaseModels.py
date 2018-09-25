@@ -267,6 +267,9 @@ class Shop(Location):
     def full_str(self, bot_config):
         return Location.full_str(self, bot_config) + self.inv_to_str()
 
+    def selling_str(self):
+        return "**{}** @ {}, Owner: **{}**".format(self.name, self.pos_to_str(), self.owner.name)
+
     def __str__(self):
         return Location.__str__(self)
 
@@ -303,4 +306,4 @@ class ItemListing(SQL_Base):
         return '**{}** **{}** for **{}D**'.format(self.amount, self.name, self.price)
 
     def __str__(self):
-        return '**{}** @ {}, selling {}'.format(self.shop.name, self.shop.pos_to_str(), self.listing_str())
+        return self.listing_str()

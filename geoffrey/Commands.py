@@ -176,12 +176,15 @@ class Commands:
         session = self.interface.database.Session()
 
         try:
-            shop_list = self.interface.find_shop_selling_item(session, item_name)
+            shop_list = self.interface.find_top_shops_selling_item(session, item_name)
 
             if len(shop_list) == 0:
                 raise ItemNotFound
 
-            shop_list_str = list_to_string(shop_list)
+            shop_list_str = ""
+            for shop in shop_list:
+                shop_list_str = shop_list_str + shop[0].selling_str() + list_to_string(
+                    self.interface.get_inventory_matches(session, shop[0], item_name)) + '\n\n'
         finally:
             session.close()
 
