@@ -25,17 +25,14 @@ class TestGeoffreyDatabase(TestCase):
 
     def test_find_top_shops_selling_items(self):
         owner = self.add_player()
-        self.add_shop(owner)
+        shop = self.add_shop(owner)
         self.interface.add_item(self.session, owner, 'test', 'dirt', 1, 15)
         self.interface.add_item(self.session, owner, 'test', 'dirt', 1, 5)
         self.interface.add_loc(self.session, owner, 'test2', 1, 3, "nether", loc_type=Shop)
         self.interface.add_item(self.session, owner, 'test2', 'dirt', 1, 5)
         shop_list = self.interface.find_top_shops_selling_item(self.session, "Dirt")
 
-        for shop in shop_list:
-            item_list = self.interface.get_inventory_matches(self.session, shop[0], "dirt")
-            print(item_list)
-
+        self.assertEquals(shop_list[0][0].id, shop.id)
 
     def add_shop(self, player):
         shop = self.interface.add_loc(self.session, player, 'test', 1, 3, "nether", loc_type=Shop)

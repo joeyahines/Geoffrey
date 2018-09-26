@@ -62,8 +62,6 @@ class TestCommands(TestCase):
         session.close()
 
 
-
-
     def test_register(self):
         self.commands.register(zerohd, '143072699567177728')
 
@@ -172,13 +170,10 @@ class TestCommands(TestCase):
 
         result = self.commands.selling('cool')
 
-        print(result)
-        '''
         if 'cool' in result:
             pass
         else:
             self.fail()
-        '''
 
     def test_info(self):
         self.commands.register(zerohd, '143072699567177728')
