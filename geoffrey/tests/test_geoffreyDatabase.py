@@ -6,6 +6,7 @@ from BotConfig import *
 
 zerohd = 'BirbHD'
 
+
 class TestGeoffreyDatabase(TestCase):
     def setUp(self):
         path = os.path.dirname(os.path.abspath(__file__))
@@ -223,6 +224,20 @@ class TestGeoffreyDatabase(TestCase):
         loc_list = self.interface.find_location_by_name(self.session, 'test')
 
         self.assertEqual(loc_list[0].name, loc.name)
+
+    def test_find_matching_location_by_name(self):
+        owner = self.add_player()
+        loc = self.add_loc(owner)
+
+        loc_list = self.interface.find_location_by_name_closest_match(self.session, 'test')
+
+        self.assertEqual(loc_list.name, loc.name)
+
+        shop = self.interface.add_loc(self.session, owner, 'tes', 1, 3, "nether", loc_type=Shop)
+
+        loc_list = self.interface.find_location_by_name_closest_match(self.session, shop.name)
+
+        self.assertEqual(loc_list.name, shop.name)
 
     def test_search_all(self):
         owner = self.add_player()

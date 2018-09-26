@@ -199,7 +199,8 @@ class Commands:
     def info(self, location_name):
         session = self.interface.database.Session()
         try:
-            loc = self.interface.find_location_by_name(session, location_name)[0].full_str(self.bot_config)
+            loc = self.interface.find_location_by_name_closest_match(session,
+                                                                     location_name).full_str(self.bot_config)
         finally:
             session.close()
 

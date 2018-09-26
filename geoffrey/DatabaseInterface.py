@@ -70,6 +70,25 @@ class DatabaseInterface:
         expr = loc_type.name.ilike('%{}%'.format(name))
         return self.database.query_by_filter(session, loc_type, expr)
 
+    def find_location_by_name_closest_match(self, session, name, loc_type=Location):
+        expr = loc_type.name.ilike('%{}%'.format(name))
+        loc_list = self.database.query_by_filter(session, loc_type, expr)
+
+        if len(loc_list) == 1:
+            loc = loc_list[0]
+        else:
+            expr = loc_type.name.ilike(name)
+            loc_list = self.database.query_by_filter(session, loc_type, expr)
+
+            if len(loc_list) > 1:
+                raise EntryNameNotUniqueError
+            elif len(loc_list) == 0:
+                raise LocationLookUpError
+            else:
+                loc = loc_list[0]
+
+        return loc
+
     def find_location_by_owner(self, session, owner, loc_type=Location):
         expr = loc_type.owner == owner
         return self.database.query_by_filter(session, loc_type, expr)
