@@ -181,10 +181,16 @@ class Commands:
             if len(shop_list) == 0:
                 raise ItemNotFound
 
-            shop_list_str = ""
+            shop_list_str = "\n"
             for shop in shop_list:
-                shop_list_str = shop_list_str + shop[0].selling_str() + list_to_string(
-                    self.interface.get_inventory_matches(session, shop[0], item_name)) + '\n\n'
+                matches = self.interface.get_inventory_matches(session, shop[0], item_name)
+                shop_list_str = shop_list_str + shop[0].selling_str() + list_to_string(matches)
+
+                if len(matches) == 5:
+                    shop_list_str = shop_list_str + '\n**...**'
+
+                shop_list_str = shop_list_str + '\n\n'
+
         finally:
             session.close()
 
