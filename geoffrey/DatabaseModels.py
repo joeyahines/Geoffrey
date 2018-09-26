@@ -1,11 +1,12 @@
 import enum
 from difflib import SequenceMatcher
+from sys import maxsize
 
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum, create_engine, exists
 from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, column_property, sessionmaker
-from sqlalchemy.sql import expression
+from sqlalchemy.sql import expression, case
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from geoffrey.BotErrors import *
@@ -252,7 +253,6 @@ class Shop(Location):
     }
 
     def inv_to_str(self):
-
         if len(self.inventory.limit(25).all()) != 0:
             inv = '\n**Inventory**:'
             str_format = '{}\n{}'
@@ -300,7 +300,9 @@ class ItemListing(SQL_Base):
 
     @normalized_price.expression
     def normalized_price(cls):
-        return cls.price / cls.amount
+        return case([
+            (cls.amount != 0, cls.price / cls.amount),
+        ], else_=maxsize)
 
     def listing_str(self):
         return '**{}** **{}** for **{}D**'.format(self.amount, self.name, self.price)
