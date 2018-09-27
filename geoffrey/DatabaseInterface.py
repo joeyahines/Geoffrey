@@ -53,8 +53,13 @@ class DatabaseInterface:
 
     def add_player(self, session, player_name, discord_uuid=None):
         try:
-            self.find_player(session, player_name)
-            raise PlayerInDBError
+            player = self.find_player(session, player_name)
+
+            if (discord_uuid is not None) and (discord_uuid == player.discord_uuid):
+                raise PlayerInDBError
+            else:
+                raise PlayerNotFound
+
         except PlayerNotFound:
             mc_uuid = grab_UUID(player_name)
             try:
@@ -145,7 +150,7 @@ class DatabaseInterface:
         return self.database.query_by_filter(session, ItemListing, expr, limit=5, sort=ItemListing.normalized_price)
 
     def find_player(self, session, player_name):
-        expr = Player.name.ilike(player_name)
+        expr = func.lower(Player.name) == func.lower(player_name)
 
         try:
             player = self.database.query_by_filter(session, Player, expr)[0]
