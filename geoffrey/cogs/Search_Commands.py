@@ -130,7 +130,7 @@ class Search_Commands:
 
             info_str = self.bot.bot_commands.info(loc)
             await ctx.send(info_str)
-        except IndexError:
+        except LocationLookUpError:
             await ctx.send('{}, no locations in the database match **{}**.'.format(ctx.message.author.mention, loc))
 
     @commands.command(pass_context=True)
