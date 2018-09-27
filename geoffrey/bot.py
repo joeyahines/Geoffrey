@@ -75,7 +75,7 @@ class GeoffreyBot(commands.Bot):
         else:
             subcommand = ":" + ctx.invoked_subcommand.__str__()
 
-        logger.info("User %s, used command %s%s with context: %s", ctx.message.author, ctx.command, subcommand,
+        logger.info("User %s, used command %s%s with context: %s", ctx.message.author, ctx.command.name, subcommand,
                     ctx.args)
 
         if ctx.invoked_with.lower() == 'help' and ctx.message.guild is not None:
@@ -117,7 +117,9 @@ class GeoffreyBot(commands.Bot):
 
         if error_str is '':
             await self.send_error_message(
-                'Geoffrey encountered unhandled exception: {}. Context:'.format(error, ctx.args))
+                'Geoffrey encountered unhandled exception: {} Command: **{}** Context: {}'.format(error,
+                                                                                                  ctx.command.name,
+                                                                                                  ctx.args))
             error_str = bad_error_message.format(ctx.invoked_with)
 
         logger.error("Geoffrey encountered exception: %s", error)
