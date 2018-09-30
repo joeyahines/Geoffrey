@@ -47,11 +47,10 @@ class Delete_Commands:
 
             await ctx.send('{}, **{}** has been removed from the inventory of **{}**.'.
                            format(ctx.message.author.mention, item, shop_name))
+        except LocationLookUpError:
+            await ctx.send('{}, you do not have a shop called **{}**.'.format(ctx.message.author.mention, shop))
         except NoLocationsInDatabase:
-            if shop is None:
-                await ctx.send('{}, you do have any shops in the database.'.format(ctx.message.author.mention))
-            else:
-                await ctx.send('{}, you do not have a shop called **{}**.'.format(ctx.message.author.mention, shop))
+            await ctx.send('{}, you do have any shops in the database.'.format(ctx.message.author.mention))
         except EntryNameNotUniqueError:
             await ctx.send('{}, you have more than one shop in the database, please specify a shop name.'
                            .format(ctx.message.author.mention))

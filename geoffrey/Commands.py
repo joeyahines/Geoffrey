@@ -241,8 +241,6 @@ class Commands:
         except DataError:
             session.rollback()
             raise DatabaseValueError
-        except IndexError:
-            raise LocationLookUpError
         finally:
             session.close()
 
@@ -253,7 +251,7 @@ class Commands:
 
         try:
             player = self.get_player(session, discord_uuid=discord_uuid, mc_uuid=mc_uuid)
-            location = self.interface.find_location_by_name_and_owner(session, player, loc_name)[0]
+            location = self.get_location(session, player, loc_name)
 
             if location.tunnel is not None:
                 location.tunnel.tunnel_direction = TunnelDirection.str_to_tunnel_dir(tunnel_direction)
