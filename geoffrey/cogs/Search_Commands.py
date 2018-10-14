@@ -57,26 +57,14 @@ class Search_Commands:
         The radius defaults to 200 blocks if no value is given
 
         Default dimension is the overworld
-            ?find_around [X Coordinate] [Z Coordinate] [Radius] [Optional Flags]
-
-            Optional Flags:
-            -d [dimension]
+            ?find_around [X Coordinate] [Z Coordinate] [Radius]
         """
         radius = 200
         dimension = 'Overworld'
 
         try:
             if len(args) > 0:
-                if args[0] == '-d':
-                    dimension = args[1]
-                    if len(args) > 1:
-                        radius = int(args[2])
-                else:
-                    radius = int(args[0])
-
-                    if len(args) > 1:
-                        if args[1] == '-d':
-                            dimension = args[2]
+                radius = int(args[0])
 
             base_string = self.bot.bot_commands.find_around(x_pos, z_pos, radius, dimension)
 
