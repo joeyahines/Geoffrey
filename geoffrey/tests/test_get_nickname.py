@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from DiscordHelperFunctions import get_nickname
+from geoffrey.DiscordHelperFunctions import get_nickname
 
 
 class TestGet_nickname(TestCase):

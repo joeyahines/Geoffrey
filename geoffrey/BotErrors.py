@@ -77,3 +77,6 @@ class NoLocationsInDatabase(DataBaseError):
 
 class FuckyWucky:
     """You made one."""
+
+class EmptryString(DataBaseError):
+    """Empty string provided"""

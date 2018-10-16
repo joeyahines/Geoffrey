@@ -10,6 +10,11 @@ def list_to_string(loc_list, str_format='{}\n{}'):
     return loc_string
 
 
+def checkIfEmpty(str):
+    if len(str) == 0:
+        raise EmptryString
+
+
 class Commands:
     def __init__(self, bot_config, debug=False):
         self.bot_config = bot_config
@@ -69,6 +74,8 @@ class Commands:
             elif base_name is None:
                 raise EntryNameNotUniqueError
 
+            checkIfEmpty(base_name)
+
             base = self.interface.add_loc(session, player, base_name, x_pos, z_pos, loc_type=Base)
 
             base_str = base.__str__()
@@ -89,6 +96,7 @@ class Commands:
             elif shop_name is None:
                 raise EntryNameNotUniqueError
 
+            checkIfEmpty(shop_name)
             shop = self.interface.add_loc(session, player, shop_name, x_pos, z_pos, loc_type=Shop)
 
             shop_name = shop.__str__()
@@ -107,6 +115,7 @@ class Commands:
                 loc = self.get_location(session, player, name=location_name)
                 location_name = loc.name
 
+            checkIfEmpty(location_name)
             tunnel = self.interface.add_tunnel(session, player, tunnel_direction, tunnel_number, location_name)
             tunnel_info = tunnel.__str__()
 
@@ -118,6 +127,7 @@ class Commands:
     def find(self, search):
         limit = 25
         session = self.interface.database.Session()
+        checkIfEmpty(search)
         try:
             locations = self.interface.search_all_fields(session, search, limit)
             locations_string = ''
@@ -137,8 +147,8 @@ class Commands:
         return locations_string
 
     def delete(self, name, discord_uuid=None, mc_uuid=None):
-
         session = self.interface.database.Session()
+        checkIfEmpty(name)
         try:
             player = self.get_player(session, discord_uuid, mc_uuid)
             self.interface.delete_location(session, player, name)
@@ -160,6 +170,7 @@ class Commands:
 
     def add_item(self, item_name, quantity, diamond_price, shop_name=None, discord_uuid=None, mc_uuid=None):
         session = self.interface.database.Session()
+        checkIfEmpty(item_name)
         try:
             player = self.get_player(session, discord_uuid, mc_uuid)
 
@@ -176,6 +187,10 @@ class Commands:
         session = self.interface.database.Session()
 
         try:
+
+            if len(item_name) == 0:
+                raise EmptryString
+
             shop_list = self.interface.find_top_shops_selling_item(session, item_name)
 
             if len(shop_list) == 0:
@@ -199,6 +214,8 @@ class Commands:
     def info(self, location_name):
         session = self.interface.database.Session()
         try:
+            if len(location_name) == 0:
+                raise EmptryString
             loc = self.interface.find_location_by_name_closest_match(session,
                                                                      location_name).full_str(self.bot_config)
         finally:

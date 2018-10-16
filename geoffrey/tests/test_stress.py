@@ -1,8 +1,8 @@
 from unittest import TestCase
 import os
-from Commands import *
-from BotConfig import get_config
-from MinecraftAccountInfoGrabber import *
+from geoffrey.Commands import *
+from geoffrey.BotConfig import get_config
+from Mgeoffrey.inecraftAccountInfoGrabber import *
 from time import sleep
 
 

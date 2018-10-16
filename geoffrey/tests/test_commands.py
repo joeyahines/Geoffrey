@@ -1,10 +1,10 @@
 import os
 from unittest import TestCase
 
-from Commands import *
-from BotConfig import get_config
+from geoffrey.Commands import *
+from geoffrey.BotConfig import get_config
 
-zerohd = 'birbhd'
+zerohd = 'zerohd'
 
 class TestCommands(TestCase):
     def setUp(self):

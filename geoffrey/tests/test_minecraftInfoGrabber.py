@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from MinecraftAccountInfoGrabber import *
+from geoffrey.MinecraftAccountInfoGrabber import *
 
 
 class TestMinecraftInfoGrabber(TestCase):

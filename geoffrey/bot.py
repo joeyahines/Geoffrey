@@ -103,6 +103,8 @@ class GeoffreyBot(commands.Bot):
             elif isinstance(error.original, OperationalError):
                 await self.send_error_message('Error connecting to the MySQL server, is it offline?')
                 error_str = 'Database connection issue, looks like some admin has to fix something.'.format()
+            elif isinstance(error.original, EmptryString):
+                error_str = 'Do not not pass empty string to Geoffrey. Ding dong.'
         elif isinstance(error, commands.CommandOnCooldown):
             return
         elif isinstance(error, commands.UserInputError):

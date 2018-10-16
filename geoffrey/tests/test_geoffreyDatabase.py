@@ -1,10 +1,10 @@
 import os
 from unittest import TestCase
 
-from DatabaseInterface import *
-from BotConfig import *
+from geoffrey.DatabaseInterface import *
+from geoffrey.BotConfig import *
 
-zerohd = 'BirbHD'
+zerohd = 'zerohd'
 
 
 class TestGeoffreyDatabase(TestCase):
