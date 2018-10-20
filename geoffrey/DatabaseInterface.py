@@ -134,7 +134,7 @@ class DatabaseInterface:
     def find_top_shops_selling_item(self, session, item_name):
         expr = ItemListing.name.ilike('%{}%'.format(item_name))
         result = session.query(func.min(ItemListing.normalized_price), ItemListing.shop_id).group_by(
-            ItemListing.shop_id).filter(expr).order_by(func.min(ItemListing.normalized_price)).all()
+            ItemListing.shop_id).filter(expr).order_by(func.min(ItemListing.normalized_price)).limit(5).all()
 
         shop_list = []
 

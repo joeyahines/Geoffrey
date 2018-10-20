@@ -253,7 +253,7 @@ class Shop(Location):
     }
 
     def inv_to_str(self):
-        if len(self.inventory.limit(25).all()) != 0:
+        if len(self.inventory.limit(15).all()) != 0:
             inv = '\n**Inventory**:'
             str_format = '{}\n{}'
 
